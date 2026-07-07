@@ -2,9 +2,9 @@
 
 Full-stack-leaning developer — I like building things end to end, from systems-level code up to the UI.
 
-- 🤖 Currently building **local-first AI agents** — tools that run on your own machine instead of shipping your code to someone else's cloud
-- 🦀 Also poking around in **Rust** (wrote a small x86_64 kernel from scratch, for fun)
-- 🐍 Python and TypeScript for most day-to-day work
+-  Currently building **local-first AI agents** — tools that run on your own machine instead of shipping your code to someone else's cloud
+-  Also poking around in **Rust** (wrote a small x86_64 kernel from scratch, for fun)
+-  Python and TypeScript for most day-to-day work
 - 😭 Currently learning C++ and losing my mind
 
 #### Featured project
