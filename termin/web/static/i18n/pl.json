@@ -1,9 +1,16 @@
 {
-  "meta": { "lang": "pl", "name": "Polski", "plural": "pl" },
+  "meta": {
+    "lang": "pl",
+    "name": "Polski",
+    "plural": "pl"
+  },
   "app": {
     "title": "Termin: najszybszy termin u specjalisty na NFZ",
     "tagline": "Najszybsze terminy u specjalistów na NFZ: gdzie, jak daleko i pod jaki numer zadzwonić.",
-    "skip": "Przejdź do wyszukiwarki"
+    "skip": "Przejdź do wyszukiwarki",
+    "hero_eyebrow": "Kolejki NFZ, aktualizowane co tydzień",
+    "hero_title": "Kto przyjmie Cię najszybciej?",
+    "hero_lead": "Wpisz specjalistę i miejscowość. Pokażemy termin, odległość i numer, pod który warto zadzwonić."
   },
   "form": {
     "what": "Czego szukasz?",
@@ -35,7 +42,8 @@
     "variant_dorosli": "Dla dorosłych",
     "variant_dzieci": "Dla dzieci",
     "candidates_question": "Czy chodziło Ci o:",
-    "required": "Wpisz, czego szukasz, i podaj, gdzie jesteś."
+    "required": "Wpisz, czego szukasz, i podaj, gdzie jesteś.",
+    "popular": "Często szukane"
   },
   "results": {
     "loading": "Szukam terminów…",
@@ -72,7 +80,10 @@
     "car_park": "parking",
     "elevator": "winda",
     "children": "dla dzieci",
-    "rank": "Pozycja {n}"
+    "rank": "Pozycja {n}",
+    "rank_short": "Nr {n}",
+    "km": "{km} km",
+    "from_you": "od Ciebie"
   },
   "when": {
     "today": "dziś",
@@ -81,7 +92,12 @@
     "days_ago": "{days} {days_word} temu"
   },
   "plurals": {
-    "days": { "one": "dzień", "few": "dni", "many": "dni", "other": "dnia" }
+    "days": {
+      "one": "dzień",
+      "few": "dni",
+      "many": "dni",
+      "other": "dnia"
+    }
   },
   "reasons": {
     "earliest": "najwcześniejszy termin w wynikach",
@@ -160,7 +176,11 @@
     "col_places": "Miejscowości",
     "col_n": "Placówek",
     "col_median": "Mediana dni",
-    "export": "Pobierz dane (CSV)"
+    "export": "Pobierz dane (CSV)",
+    "tile_median": "Mediana",
+    "tile_half": "Połowa placówek (dni)",
+    "tile_p90": "90% placówek do",
+    "tile_min": "Najszybciej"
   },
   "settings": {
     "large_text": "Duży tekst",

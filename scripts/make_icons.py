@@ -1,4 +1,4 @@
-"""Generuje ikony PNG aplikacji (bez zależności graficznych): kalendarz z ptaszkiem.
+"""Generuje ikony PNG aplikacji (bez zależności graficznych): bilet z ptaszkiem (jak icon.svg).
 
 Użycie: python scripts/make_icons.py
 """
@@ -10,10 +10,10 @@ import zlib
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[1] / "termin" / "web" / "static" / "icons"
-BLUE = (11, 79, 138, 255)
+INK = (18, 24, 43, 255)
 WHITE = (255, 255, 255, 255)
-LIGHT = (207, 227, 247, 255)
-GREEN = (10, 107, 69, 255)
+PERF = (203, 208, 218, 255)
+SIGNAL = (255, 106, 26, 255)
 CLEAR = (0, 0, 0, 0)
 
 
@@ -53,11 +53,18 @@ def dist_to_segment(px: float, py: float, ax: float, ay: float, bx: float, by: f
     return ((px - ax - t * dx) ** 2 + (py - ay - t * dy) ** 2) ** 0.5
 
 
+def inside_ticket(x: float, y: float) -> bool:
+    """Bilet 44×32 z półkolistymi wcięciami po bokach (jak ścieżka w icon.svg)."""
+    if not (10 <= x <= 54 and 16 <= y <= 48):
+        return False
+    return all((x - cx) ** 2 + (y - 32) ** 2 >= 25 for cx in (10, 54))
+
+
 def draw(size: int, *, maskable: bool) -> bytes:
     # Układ w jednostkach 64×64 (jak icon.svg). Wariant maskable ma pełne tło i
-    # treść zmniejszoną do strefy bezpiecznej (80%).
+    # treść zmniejszoną do strefy bezpiecznej.
     scale = size / 64
-    shrink = 0.72 if maskable else 1.0
+    shrink = 0.78 if maskable else 1.0
     offset = 32 * (1 - shrink)
     rows = []
     for py in range(size):
@@ -65,23 +72,19 @@ def draw(size: int, *, maskable: bool) -> bytes:
         for px in range(size):
             u = (px + 0.5) / scale
             v = (py + 0.5) / scale
-            if maskable:
-                color = BLUE
-            else:
-                color = BLUE if inside_round_rect(u, v, 0, 0, 64, 64, 14) else CLEAR
+            inside = maskable or inside_round_rect(u, v, 0, 0, 64, 64, 14)
+            color = INK if inside else CLEAR
             x = (u - offset) / shrink
             y = (v - offset) / shrink
-            if inside_round_rect(x, y, 14, 17, 50, 50, 5):
-                color = LIGHT if y < 26 else WHITE
-            if inside_round_rect(x, y, 21, 11, 26, 22, 2) or inside_round_rect(
-                x, y, 38, 11, 43, 22, 2
-            ):
+            if inside_ticket(x, y):
                 color = WHITE
-            if (
-                min(dist_to_segment(x, y, 23, 38, 29, 44), dist_to_segment(x, y, 29, 44, 41, 31))
-                <= 2.5
-            ):
-                color = GREEN
+                if 23 <= x <= 25 and 18 <= y <= 46 and int((y - 18) // 3) % 2 == 0:
+                    color = PERF
+            check = min(
+                dist_to_segment(x, y, 31, 32, 36, 37), dist_to_segment(x, y, 36, 37, 46, 26)
+            )
+            if check <= 2.5:
+                color = SIGNAL
             row.append(color)
         rows.append(row)
     return png(size, rows)

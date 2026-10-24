@@ -170,7 +170,7 @@ function formParams() {
   return params;
 }
 
-async function runSearch(params) {
+async function runSearch(params, { auto = false } = {}) {
   const error = $("#form-error");
   error.hidden = true;
   if (!params.get("q") || (!params.get("where") && !params.get("lat"))) {
@@ -197,7 +197,9 @@ async function runSearch(params) {
     if (data.status === "ok") STORE.set("last", { params: params.toString(), data, savedAt: new Date().toISOString() });
     renderResponse(data);
     // Fokus na wynikach: czytnik ekranu przeczyta nagłówek, a telefon przewinie do listy.
-    if (data.status === "ok" && !location.hash.includes("wynik=")) $("#results-heading").focus();
+    // Przy wyszukiwaniu z udostępnionego linku (bez akcji użytkownika) nie przewijamy strony,
+    // żeby nie było przeskoku układu (CLS).
+    if (data.status === "ok" && !location.hash.includes("wynik=")) $("#results-heading").focus({ preventScroll: auto });
   } catch {
     const saved = STORE.get("last");
     if (saved && saved.params === params.toString()) {
@@ -299,14 +301,55 @@ function directionsHref(r, data) {
   return `https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${from}%3B${to}`;
 }
 
-function renderCard(r, index, data) {
-  const dateBlock = r.first_date
-    ? h("p", { class: "date" }, fmtDate(r.first_date), h("small", {}, whenText(r.days_until)))
-    : h("p", { class: "date none" }, t("card.no_date"));
-  const distance = [];
-  if (r.distance_km != null) distance.push(t("card.distance", { km: r.distance_km }));
-  if (r.travel_min != null) distance.push(t("card.travel", { min: Math.round(r.travel_min) }));
+const SVG_NS = "http://www.w3.org/2000/svg";
+const ICONS = {
+  phone: "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z",
+  route: "M3 11l19-9-9 19-2-8-8-2z",
+  bell: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0",
+  share: "M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13",
+  calendar: "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM16 2v4M8 2v4M3 10h18",
+};
 
+function icon(name) {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  for (const [k, v] of Object.entries({ width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
+    "stroke-width": 2.2, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" })) svg.setAttribute(k, v);
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+
+function fmtDayMonth(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat(state.lang === "en" ? "en-GB" : state.lang, { day: "2-digit", month: "2-digit" })
+    .format(new Date(Date.UTC(y, m - 1, d)));
+}
+
+function renderStub(r, index, top) {
+  let date;
+  if (r.first_date) {
+    // Czytnik ekranu dostaje pełną datę, wzrok: duże „03.11” jak numerek z automatu.
+    date = h("p", { class: "ticket-date" },
+      h("span", { class: "visually-hidden" }, `${fmtDate(r.first_date)}, ${whenText(r.days_until)}`),
+      h("span", { class: "dm", "aria-hidden": "true" }, fmtDayMonth(r.first_date)),
+      h("span", { class: "yr", "aria-hidden": "true" }, `${r.first_date.slice(0, 4)} · ${whenText(r.days_until)}`));
+  } else {
+    date = h("p", { class: "ticket-date none" }, t("card.no_date"));
+  }
+  let dist = null;
+  if (r.travel_min != null || r.distance_km != null) {
+    const main = r.distance_km != null ? t("card.km", { km: r.distance_km }) : t("card.travel", { min: Math.round(r.travel_min) });
+    const sub = r.distance_km != null && r.travel_min != null ? t("card.travel", { min: Math.round(r.travel_min) }) : t("card.from_you");
+    dist = h("p", { class: "stub-dist" }, h("strong", {}, main), h("small", {}, sub));
+  }
+  return h("div", { class: "ticket-stub" },
+    h("div", { class: "stub-main" }, h("span", { class: "rank" }, t("card.rank_short", { n: index + 1 })), date),
+    dist);
+}
+
+function renderCard(r, index, data) {
+  const top = index === 0 && r.first_date != null && r.days_until >= 0;
   const reasons = r.reasons.map((x) => t(`reasons.${x.code}`, x.params));
   const why = reasons.length ? h("p", { class: "why" }, h("strong", {}, t("card.why")), " ", capitalize(reasons.join(", "))) : null;
   const alerts = r.alerts.length ? h("ul", { class: "alerts" }, r.alerts.map((a) => h("li", {}, t(`alerts.${a.code}`, a.params)))) : null;
@@ -315,15 +358,17 @@ function renderCard(r, index, data) {
   const tags = [];
   if (r.for_children) tags.push(t("card.children"));
   if (r.awaiting != null) tags.push(t("card.waiting", { n: r.awaiting }));
-  if (access.length) tags.push(`${t("card.accessibility")} ${access.join(", ")}`);
+  for (const a of access) tags.push(a);
 
   const tel = telHref(r.phone);
+  const call = tel
+    ? h("a", { class: `btn ${top ? "btn-signal" : "btn-ink"} call`, href: tel }, icon("phone"), `${t("card.call")}: ${r.phone}`)
+    : null;
   const actions = h("div", { class: "actions" },
-    tel ? h("a", { class: "btn btn-primary", href: tel }, `📞 ${t("card.call")}: ${r.phone}`) : null,
-    h("a", { class: "btn btn-secondary", href: directionsHref(r, data), rel: "noopener", target: "_blank" }, t("card.directions")),
-    h("button", { type: "button", class: "btn btn-secondary", onclick: () => openWatch(r, data) }, t("card.watch")),
-    h("button", { type: "button", class: "btn btn-secondary", onclick: () => share(data) }, t("card.share")),
-    h("a", { class: "btn btn-secondary", href: `/api/ics/${encodeURIComponent(r.id)}`, download: "zadzwon.ics" }, t("card.reminder")),
+    h("a", { class: "btn btn-outline", href: directionsHref(r, data), rel: "noopener", target: "_blank" }, icon("route"), t("card.directions")),
+    h("button", { type: "button", class: "btn btn-outline", onclick: () => openWatch(r, data) }, icon("bell"), t("card.watch")),
+    h("button", { type: "button", class: "btn btn-outline", onclick: () => share(data) }, icon("share"), t("card.share")),
+    h("a", { class: "btn btn-outline", href: `/api/ics/${encodeURIComponent(r.id)}`, download: "zadzwon.ics" }, icon("calendar"), t("card.reminder")),
   );
 
   const history = h("details", { class: "history", ontoggle: (e) => e.target.open && loadHistory(r.id, e.target) },
@@ -331,16 +376,17 @@ function renderCard(r, index, data) {
   const script = h("details", { class: "script" }, h("summary", {}, t("card.script")), renderScript(r, data));
 
   return h("li", {},
-    h("article", { class: "card result", id: `r-${r.id}`, "aria-label": `${t("card.rank", { n: index + 1 })}: ${r.provider || ""}` },
-      h("div", { class: "result-top" }, dateBlock, distance.length ? h("p", { class: "distance" }, distance.join(" · ")) : null),
-      h("h3", { class: "provider" }, r.provider || r.place || "—"),
-      r.place && r.place !== r.benefit ? h("p", { class: "address" }, r.place) : null,
-      h("p", { class: "address" }, [r.address, r.locality].filter(Boolean).join(", ")),
-      r.as_at ? h("p", { class: "asat" }, t("card.as_at", { date: r.as_at })) : null,
-      why, alerts,
-      tags.length ? h("ul", { class: "tags" }, tags.map((x) => h("li", {}, x))) : null,
-      actions, script, history,
-    ));
+    h("article", { class: `ticket${top ? " ticket--top" : ""}`, id: `r-${r.id}`, "aria-label": `${t("card.rank", { n: index + 1 })}: ${r.provider || ""}` },
+      renderStub(r, index, top),
+      h("div", { class: "ticket-perf", "aria-hidden": "true" }),
+      h("div", { class: "ticket-body" },
+        h("h3", { class: "provider" }, r.provider || r.place || "—"),
+        r.place && r.place !== r.benefit ? h("p", { class: "address" }, r.place) : null,
+        h("p", { class: "address" }, [r.address, r.locality].filter(Boolean).join(", ")),
+        r.as_at ? h("p", { class: "asat" }, t("card.as_at", { date: r.as_at })) : null,
+        why, alerts,
+        tags.length ? h("ul", { class: "tags" }, tags.map((x) => h("li", {}, x))) : null,
+        call, actions, script, history)));
 }
 
 function capitalize(text) { return text ? text[0].toUpperCase() + text.slice(1) : text; }
@@ -413,7 +459,7 @@ function chart(points) {
 
 function heatColor(days, min, max) {
   const ratio = max > min ? (days - min) / (max - min) : 0;
-  const palette = ["#1a7f37", "#4d9a2a", "#b58900", "#cb6d00", "#b42318"];
+  const palette = ["#1f4fb8", "#5677c2", "#d08a3c", "#e2671f", "#b23f00"]; // niebieski → pomarańcz
   return palette[Math.min(palette.length - 1, Math.floor(ratio * palette.length))];
 }
 
@@ -436,8 +482,15 @@ async function toggleStats() {
     const medians = s.districts.map((d) => d.median_days);
     const [min, max] = [Math.min(...medians), Math.max(...medians)];
     const exportParams = new URLSearchParams({ q: state.lastParams.get("q"), province });
+    const days = (v) => `${fmtNumber(v)} ${plural("days", Math.round(v))}`;
+    const tile = (label, value, extra = "") => h("div", { class: `stat-tile${extra}` }, h("span", {}, label), h("strong", {}, value));
     box.replaceChildren(
       h("h3", {}, t("stats.title", { label: s.label, province: s.province_name })),
+      h("div", { class: "stat-tiles", "aria-hidden": "true" },
+        tile(t("stats.tile_median"), days(s.median)),
+        tile(t("stats.tile_half"), `${fmtNumber(s.p25)}–${fmtNumber(s.p75)}`),
+        tile(t("stats.tile_p90"), days(s.p90)),
+        tile(t("stats.tile_min"), days(s.minimum), " stat-tile--signal")),
       h("p", {}, t("stats.summary", { median: fmtNumber(s.median), p25: fmtNumber(s.p25), p75: fmtNumber(s.p75), p90: fmtNumber(s.p90), n: s.with_date })),
       h("div", { class: "table-wrap" }, h("table", {},
         h("thead", {}, h("tr", {}, ...["col_district", "col_places", "col_n", "col_median"].map((k) => h("th", { scope: "col" }, t(`stats.${k}`))))),
@@ -491,7 +544,7 @@ function drawMarkers(data) {
   state.mapLayer = L.layerGroup().addTo(state.map);
   const bounds = [];
   if (data.point) {
-    L.circleMarker([data.point.lat, data.point.lon], { radius: 8, color: "#0b4f8a" }).addTo(state.mapLayer);
+    L.circleMarker([data.point.lat, data.point.lon], { radius: 9, color: "#12182b", fillColor: "#ff6a1a", fillOpacity: 1 }).addTo(state.mapLayer);
     bounds.push([data.point.lat, data.point.lon]);
   }
   data.results.forEach((r, i) => {
@@ -594,7 +647,8 @@ function applyUrlParams() {
   $("#co").value = q.get("q");
   if (q.get("gdzie")) $("#gdzie").value = q.get("gdzie");
   if (q.get("lat") && q.get("lon")) state.point = { lat: Number(q.get("lat")), lon: Number(q.get("lon")) };
-  if (q.get("r")) $("#promien").value = q.get("r");
+  const radius = document.querySelector(`input[name=radius][value="${q.get("r")}"]`);
+  if (radius) radius.checked = true;
   const mode = document.querySelector(`input[name=mode][value="${q.get("tryb")}"]`);
   if (mode) mode.checked = true;
   const kase = document.querySelector(`input[name=case][value="${q.get("przypadek")}"]`);
@@ -627,6 +681,14 @@ function bind() {
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
   });
   $("#kmday").addEventListener("input", updateKmOutput);
+  for (const chip of document.querySelectorAll(".popular .chip")) {
+    chip.addEventListener("click", () => {
+      $("#co").value = chip.dataset.q;
+      state.variant = null;
+      if ($("#gdzie").value.trim() || state.point) runSearch(formParams());
+      else $("#gdzie").focus();
+    });
+  }
   $("#lang").addEventListener("change", (e) => { STORE.set("lang", e.target.value); loadLang(e.target.value); });
   $("#large-text").addEventListener("click", () => setLargeText(!document.documentElement.classList.contains("large-text")));
   $("#toggle-map").addEventListener("click", toggleMap);
@@ -643,7 +705,7 @@ async function init() {
   state.config = config;
   $("#kmday").value = $("#kmday").value || config.km_per_day;
   updateKmOutput();
-  if (applyUrlParams()) runSearch(formParams());
+  if (applyUrlParams()) runSearch(formParams(), { auto: true });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 

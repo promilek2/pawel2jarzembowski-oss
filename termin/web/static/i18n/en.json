@@ -1,9 +1,16 @@
 {
-  "meta": { "lang": "en", "name": "English", "plural": "en" },
+  "meta": {
+    "lang": "en",
+    "name": "English",
+    "plural": "en"
+  },
   "app": {
     "title": "Termin: the earliest NFZ specialist appointment",
     "tagline": "The earliest publicly funded (NFZ) specialist appointments in Poland: where, how far, and which number to call.",
-    "skip": "Skip to search"
+    "skip": "Skip to search",
+    "hero_eyebrow": "NFZ waiting lists, updated weekly",
+    "hero_title": "Who can see you soonest?",
+    "hero_lead": "Enter a specialist and a town. We will show the date, the distance and the number worth calling."
   },
   "form": {
     "what": "What are you looking for?",
@@ -35,7 +42,8 @@
     "variant_dorosli": "Adults",
     "variant_dzieci": "Children",
     "candidates_question": "Did you mean:",
-    "required": "Type what you are looking for and where you are."
+    "required": "Type what you are looking for and where you are.",
+    "popular": "Popular searches"
   },
   "results": {
     "loading": "Searching…",
@@ -72,7 +80,10 @@
     "car_park": "parking",
     "elevator": "lift",
     "children": "for children",
-    "rank": "Position {n}"
+    "rank": "Position {n}",
+    "rank_short": "No. {n}",
+    "km": "{km} km",
+    "from_you": "from you"
   },
   "when": {
     "today": "today",
@@ -81,7 +92,10 @@
     "days_ago": "{days} {days_word} ago"
   },
   "plurals": {
-    "days": { "one": "day", "other": "days" }
+    "days": {
+      "one": "day",
+      "other": "days"
+    }
   },
   "reasons": {
     "earliest": "earliest date in the results",
@@ -160,7 +174,11 @@
     "col_places": "Towns",
     "col_n": "Facilities",
     "col_median": "Median days",
-    "export": "Download data (CSV)"
+    "export": "Download data (CSV)",
+    "tile_median": "Median",
+    "tile_half": "Half of facilities (days)",
+    "tile_p90": "90% of facilities within",
+    "tile_min": "Earliest"
   },
   "settings": {
     "large_text": "Large text",

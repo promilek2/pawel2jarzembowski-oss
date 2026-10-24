@@ -10,6 +10,7 @@
 | Kody pocztowe offline (opcjonalnie) | GeoNames `PL.zip`, generowane przez `scripts/build_postal_centroids.py` | CC BY 4.0, wymagane podanie źródła: „GeoNames, https://www.geonames.org/” | Plik nie jest w repo. Generujesz go lokalnie do `<data_dir>/postal_codes.csv`. |
 | Granice województw (`termin/core/provinces.py`) | Przybliżone prostokąty ograniczające, zebrane ręcznie | Fakty geograficzne, MIT | Wybór województw do odpytania przy wyszukiwaniu w promieniu (zawyżone celowo). |
 | Leaflet (`termin/web/static/vendor/leaflet/`) | npm `leaflet@1.9.4` | BSD-2-Clause | Mapa w panelu web, hostowana lokalnie (bez CDN). |
+| Krój Bricolage Grotesque (`termin/web/static/vendor/bricolage/`) | npm `@fontsource-variable/bricolage-grotesque@5.3.0` (oś wght, podzbiory latin i latin-ext) | SIL Open Font License 1.1 (`OFL.txt` obok plików) | Nagłówki i daty w panelu, hostowane lokalnie (bez Google Fonts). Cyrylica spada na krój systemowy. |
 
 ## Czego nie robimy
 

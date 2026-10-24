@@ -1,5 +1,5 @@
 // Service worker: powłoka aplikacji offline + ostatnie wyniki (network-first dla API).
-const VERSION = "termin-v1";
+const VERSION = "termin-v2";
 const SHELL = [
   "/",
   "/static/style.css",
@@ -9,6 +9,8 @@ const SHELL = [
   "/static/i18n/uk.json",
   "/static/icons/icon.svg",
   "/static/icons/icon-192.png",
+  "/static/vendor/bricolage/bricolage-grotesque-latin-wght-normal.woff2",
+  "/static/vendor/bricolage/bricolage-grotesque-latin-ext-wght-normal.woff2",
   "/manifest.webmanifest",
 ];
 

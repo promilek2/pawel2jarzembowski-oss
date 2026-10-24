@@ -43,6 +43,9 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   `style.css`, `i18n/{pl,en,uk}.json` (klucze muszą być zgodne, pilnuje tego test),
   `sw.js`, `manifest.webmanifest`, Leaflet w `vendor/` (ładowany leniwie). Budżet własnego
   kodu 150 KB (test). Serwer z atrapą NFZ do pracy nad UI: `python -m tests.e2e.server`.
+- Wygląd: kierunek „Numerek” (ADR-0009): wyniki jako bilety z perforacją, ciemny panel
+  wyszukiwarki, tokeny kolorów w `:root` w `style.css`, krój Bricolage Grotesque w
+  `vendor/bricolage/` (OFL). Pomarańcz `--signal` zawsze z atramentowym tekstem, nigdy jako tekst.
 - `termin/notify/`: `channels.py` (ntfy JSON, Telegram, SMTP, notify-send), `message.py`
   (treść), `subscribe.py` (tworzenie subskrypcji, wspólne dla CLI/web/bota),
   `watcher.py` (grupowanie po zapytaniu, deduplikacja „tylko lepszy termin”, cooldown),

@@ -358,7 +358,7 @@ def create_app(
         body = (
             f"<p>Obserwujesz: <strong>{html.escape(sub.label)}</strong> "
             f"({html.escape(sub.area_label or '')}).</p>"
-            f'<form method="post"><button type="submit" class="btn btn-primary">'
+            f'<form method="post"><button type="submit" class="btn btn-signal btn-big">'
             "Przestań obserwować i usuń dane</button></form>"
         )
         return HTMLResponse(_page("Przestać obserwować?", body))
