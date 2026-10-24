@@ -26,6 +26,17 @@ jobs:
       - run: ruff format --check .
       - run: mypy --strict termin
 
+  audit:
+    name: Audyt zależności (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - run: uv pip install -e . pip-audit
+      - run: pip-audit --skip-editable --progress-spinner off
+
   test:
     name: Testy (Python ${{ matrix.python }})
     runs-on: ubuntu-latest

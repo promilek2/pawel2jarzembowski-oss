@@ -77,6 +77,7 @@ async def subscribe(rt: Runtime, **kw: Any) -> Subscription:
         "target": "termin-test-123",
         "point": GDYNIA,
         "radius_km": 30,
+        "consent": True,
     }
     params.update(kw)
     return await create_subscription(rt, SubscribeRequest(**params))
@@ -233,6 +234,13 @@ async def test_run_forever_stops(rt: Runtime, services: FakeNotifyServices) -> N
     assert calls == 1
 
 
+async def test_consent_is_required(rt: Runtime) -> None:
+    with pytest.raises(SubscribeError, match="zgody"):
+        await subscribe(rt, consent=False)
+    sub = await subscribe(rt)
+    assert sub.consent_at is not None
+
+
 async def test_subscribe_validation(rt: Runtime) -> None:
     with pytest.raises(SubscribeError, match="kanał"):
         await subscribe(rt, channel="sms")
@@ -286,7 +294,9 @@ async def test_store_privacy_and_wipe(rt: Runtime) -> None:
         )
     rt.conn.execute("INSERT INTO geocode_cache VALUES ('h', 1, 2, 'Gdynia', '11', '2026-10-24')")
     counts = wipe_user_data(rt.conn)
-    assert counts == {"subscriptions": 1, "geocode_cache": 1}
+    assert counts["subscriptions"] == 1
+    assert counts["geocode_cache"] == 1
+    assert {"users", "sessions", "email_tokens"} <= counts.keys()
     assert store.active() == []
     assert store.delete("nope") is False
 

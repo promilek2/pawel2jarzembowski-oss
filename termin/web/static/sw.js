@@ -1,5 +1,5 @@
-// Service worker: powłoka aplikacji offline + ostatnie wyniki (network-first dla API).
-const VERSION = "termin-v2";
+// Service worker: pliki aplikacji offline (stale-while-revalidate), bez danych z API.
+const VERSION = "termin-v3";
 const SHELL = [
   "/",
   "/static/style.css",
@@ -30,21 +30,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== location.origin) return;
 
-  if (url.pathname.startsWith("/api/search") || url.pathname === "/api/config") {
-    // network-first: świeże dane, a bez sieci ostatnia odpowiedź z cache
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(VERSION).then((cache) => cache.put(event.request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(event.request).then((hit) => hit || Response.error())),
-    );
-    return;
-  }
+  // Odpowiedzi API (w tym wyniki wyszukiwania) nie trafiają do cache: mogą zawierać dane
+  // osobowe. Wyniki offline zapisuje sama aplikacja, tylko za zgodą (strona /cookies).
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/stop/")) return;
 
   // stale-while-revalidate dla plików statycznych

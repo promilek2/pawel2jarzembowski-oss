@@ -46,6 +46,7 @@ def test_watch_flow(services: FakeNotifyServices) -> None:
             "Gdynia",
             "-r",
             "30",
+            "--zgoda",
         ],
     )
     assert add.exit_code == 0, add.output
@@ -65,11 +66,13 @@ def test_watch_flow(services: FakeNotifyServices) -> None:
 
 def test_watch_errors(services: FakeNotifyServices) -> None:
     bad = runner.invoke(
-        cli.app, ["obserwuj", "dodaj", "okulista", "-k", "sms", "-c", "x", "-g", "Gdynia"]
+        cli.app,
+        ["obserwuj", "dodaj", "okulista", "-k", "sms", "-c", "x", "-g", "Gdynia", "--zgoda"],
     )
     assert bad.exit_code == 2
     woj = runner.invoke(
-        cli.app, ["obserwuj", "dodaj", "okulista", "-k", "ntfy", "-c", "x", "-w", "Bawaria"]
+        cli.app,
+        ["obserwuj", "dodaj", "okulista", "-k", "ntfy", "-c", "x", "-w", "Bawaria", "--zgoda"],
     )
     assert woj.exit_code == 2
     ok = runner.invoke(
@@ -87,6 +90,7 @@ def test_watch_errors(services: FakeNotifyServices) -> None:
             "--przed",
             "31.12.2026",
             "--pilny",
+            "--zgoda",
         ],
     )
     assert ok.exit_code == 0, ok.output
@@ -94,7 +98,8 @@ def test_watch_errors(services: FakeNotifyServices) -> None:
 
 def test_data_commands(services: FakeNotifyServices, tmp_path: Any) -> None:
     runner.invoke(
-        cli.app, ["obserwuj", "dodaj", "okulista", "-k", "ntfy", "-c", "t", "-g", "Gdynia"]
+        cli.app,
+        ["obserwuj", "dodaj", "okulista", "-k", "ntfy", "-c", "t", "-g", "Gdynia", "--zgoda"],
     )
     shown = runner.invoke(cli.app, ["dane", "pokaz"])
     assert "subscriptions: 1" in shown.output
@@ -103,6 +108,14 @@ def test_data_commands(services: FakeNotifyServices, tmp_path: Any) -> None:
     assert wiped.exit_code == 0
     assert "subscriptions: 1" in wiped.output
     assert "subscriptions: 0" in runner.invoke(cli.app, ["dane", "pokaz"]).output
+
+
+def test_watch_requires_consent(services: FakeNotifyServices) -> None:
+    r = runner.invoke(
+        cli.app, ["obserwuj", "dodaj", "okulista", "-k", "ntfy", "-c", "t", "-g", "Gdynia"]
+    )
+    assert r.exit_code == 2
+    assert "zgody" in r.output
 
 
 def test_telegram_requires_token(services: FakeNotifyServices) -> None:

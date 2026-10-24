@@ -38,11 +38,19 @@ log = get_logger(__name__)
 HELP = (
     "Cześć! Szukam najszybszych terminów u specjalistów na NFZ.\n\n"
     "<b>/szukaj</b> okulista; 81-310 Gdynia\n"
-    "<b>/obserwuj</b> rezonans; Gdańsk; przed 31.12.2026; 40 km\n"
+    "<b>/obserwuj</b> rezonans; Gdańsk; przed 31.12.2026; 40 km; zgoda\n"
     "<b>/lista</b>: Twoje obserwowane wyszukiwania\n"
     "<b>/stop</b> token albo <b>/stop wszystko</b>\n\n"
     "Dane: NFZ (aktualizowane przez placówki ok. raz w tygodniu). Zawsze potwierdź termin "
     "telefonicznie. To nie jest oficjalna aplikacja NFZ."
+)
+
+CONSENT_PROMPT = (
+    "Zanim zacznę obserwować: zapiszę ID tego czatu oraz to, jakiego świadczenia szukasz. "
+    "Taka informacja może dotyczyć zdrowia, dlatego potrzebuję Twojej wyraźnej zgody "
+    "(art. 9 ust. 2 lit. a RODO). Zgodę wycofasz w każdej chwili komendą /stop, "
+    "a szczegóły są w polityce prywatności.\n\n"
+    "Jeśli się zgadzasz, wyślij:\n/obserwuj {args}; zgoda"
 )
 
 _RADIUS = re.compile(r"^(\d{1,3}(?:[.,]\d+)?)\s*km$", re.IGNORECASE)
@@ -55,6 +63,7 @@ class ParsedQuery:
     where: str | None
     before: str | None = None
     radius_km: float | None = None
+    consent: bool = False
 
 
 def parse_query(text: str) -> ParsedQuery:
@@ -69,14 +78,17 @@ def parse_query(text: str) -> ParsedQuery:
     where: str | None = None
     before: str | None = None
     radius: float | None = None
+    consent = False
     for part in rest:
-        if m := _BEFORE.match(part):
+        if part.lower() in {"zgoda", "zgadzam się", "zgadzam sie"}:
+            consent = True
+        elif m := _BEFORE.match(part):
             before = m.group(1)
         elif m := _RADIUS.match(part):
             radius = float(m.group(1).replace(",", "."))
         elif where is None:
             where = part
-    return ParsedQuery(what, where, before, radius)
+    return ParsedQuery(what, where, before, radius, consent)
 
 
 class TelegramBot:
@@ -206,6 +218,9 @@ class TelegramBot:
         if not q.what or not q.where:
             await self.reply(chat_id, "Napisz np.: /obserwuj okulista; Gdynia; przed 31.12.2026")
             return
+        if not q.consent:
+            await self.reply(chat_id, CONSENT_PROMPT.format(args=html.escape(args)))
+            return
         try:
             before = parse_date(q.before) if q.before else None
             sub = await create_subscription(
@@ -217,6 +232,7 @@ class TelegramBot:
                     before_date=before,
                     channel="telegram",
                     target=chat_id,
+                    consent=True,
                 ),
             )
         except SubscribeError as exc:

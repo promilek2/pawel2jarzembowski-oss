@@ -38,6 +38,9 @@ class Subscription:
     last_notified_at: dt.datetime | None = None
     last_checked_at: dt.datetime | None = None
     active: bool = True
+    user_id: int | None = None
+    consent_at: dt.datetime | None = None
+    """Wyraźna zgoda na przetwarzanie informacji o świadczeniu (art. 9 ust. 2 lit. a RODO)."""
 
     @property
     def has_point(self) -> bool:
@@ -58,6 +61,7 @@ class Subscription:
                 self.last_notified_date.isoformat() if self.last_notified_date else None
             ),
             "created_at": self.created_at.isoformat(),
+            "consent_at": self.consent_at.isoformat() if self.consent_at else None,
         }
 
 
@@ -90,7 +94,8 @@ class SubscriptionStore:
             self.conn.execute(
                 "INSERT INTO subscriptions (token, created_at, label, benefit_query, variant,"
                 " exclude, case_no, province, lat, lon, radius_km, area_label, before_date,"
-                " channel, target, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+                " channel, target, active, user_id, consent_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)",
                 (
                     sub.token,
                     sub.created_at.isoformat(),
@@ -107,6 +112,8 @@ class SubscriptionStore:
                     sub.before_date.isoformat() if sub.before_date else None,
                     sub.channel,
                     sub.target,
+                    sub.user_id,
+                    sub.consent_at.isoformat() if sub.consent_at else None,
                 ),
             )
         stored = self.get(sub.token)
@@ -135,6 +142,8 @@ class SubscriptionStore:
             last_notified_at=_dt(row["last_notified_at"]),
             last_checked_at=_dt(row["last_checked_at"]),
             active=bool(row["active"]),
+            user_id=row["user_id"],
+            consent_at=_dt(row["consent_at"]),
         )
 
     def get(self, token: str) -> Subscription | None:
@@ -151,6 +160,12 @@ class SubscriptionStore:
         rows = self.conn.execute(
             "SELECT * FROM subscriptions WHERE channel = ? AND target = ? ORDER BY created_at",
             (channel, target),
+        ).fetchall()
+        return [self._from_row(r) for r in rows]
+
+    def for_user(self, user_id: int) -> list[Subscription]:
+        rows = self.conn.execute(
+            "SELECT * FROM subscriptions WHERE user_id = ? ORDER BY created_at", (user_id,)
         ).fetchall()
         return [self._from_row(r) for r in rows]
 
@@ -190,12 +205,12 @@ class SubscriptionStore:
 
 
 def wipe_user_data(conn: sqlite3.Connection, *, include_history: bool = False) -> dict[str, int]:
-    """Usuwa wszystkie dane pochodzące od użytkowników (subskrypcje, cache geokodowania).
+    """Usuwa wszystkie dane pochodzące od użytkowników (konta, sesje, subskrypcje, geokody).
 
     `include_history=True` usuwa też snapshoty (publiczne dane NFZ) i cache odpowiedzi NFZ.
     """
     counts: dict[str, int] = {}
-    tables = ["subscriptions", "geocode_cache"]
+    tables = ["subscriptions", "geocode_cache", "email_tokens", "sessions", "users"]
     if include_history:
         tables += ["snapshots", "http_cache"]
     with conn:

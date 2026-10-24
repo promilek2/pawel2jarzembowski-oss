@@ -42,7 +42,13 @@ def last(services: FakeNotifyServices) -> str:
     [
         ("okulista; Gdynia", "okulista", "Gdynia", None, None),
         ("okulista w Gdyni", "okulista", "Gdyni", None, None),
-        ("rezonans; Gdańsk; przed 31.12.2026; 40 km", "rezonans", "Gdańsk", "31.12.2026", 40.0),
+        (
+            "rezonans; Gdańsk; przed 31.12.2026; 40 km; zgoda",
+            "rezonans",
+            "Gdańsk",
+            "31.12.2026",
+            40.0,
+        ),
         ("", "", None, None, None),
     ],
 )
@@ -82,6 +88,9 @@ async def test_search(bot: tuple[TelegramBot, FakeNotifyServices]) -> None:
 async def test_watch_list_stop(bot: tuple[TelegramBot, FakeNotifyServices]) -> None:
     b, services = bot
     await b.handle("9", "/obserwuj okulista; Gdynia; przed 31.12.2026; 30 km")
+    assert "zgody" in last(services)  # najpierw prośba o wyraźną zgodę
+    assert not SubscriptionStore(b.runtime.conn).for_target("telegram", "9")
+    await b.handle("9", "/obserwuj okulista; Gdynia; przed 31.12.2026; 30 km; zgoda")
     assert "Obserwuję" in last(services)
     store = SubscriptionStore(b.runtime.conn)
     (sub,) = store.for_target("telegram", "9")
@@ -97,13 +106,13 @@ async def test_watch_list_stop(bot: tuple[TelegramBot, FakeNotifyServices]) -> N
     await b.handle("9", "/lista")
     assert "Nic nie obserwujesz" in last(services)
 
-    await b.handle("9", "/obserwuj okulista; Gdynia")
-    await b.handle("9", "/obserwuj rezonans; Sopot")
+    await b.handle("9", "/obserwuj okulista; Gdynia; zgoda")
+    await b.handle("9", "/obserwuj rezonans; Sopot; zgoda")
     await b.handle("9", "/stop wszystko")
     assert "Usunięto obserwacje: 2" in last(services)
     await b.handle("9", "/obserwuj okulista")
     assert "Napisz np." in last(services)
-    await b.handle("9", "/obserwuj okulista; Gdynia; przed wczoraj")
+    await b.handle("9", "/obserwuj okulista; Gdynia; przed wczoraj; zgoda")
     assert "Nie rozumiem daty" in last(services)
 
 

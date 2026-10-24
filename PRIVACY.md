@@ -1,8 +1,10 @@
 # Prywatność w Termin
 
-Termin nie ma kont użytkowników, nie używa analityki ani trackerów stron trzecich i
-nie sprzedaje danych. Ten dokument opisuje, co przechowuje **instancja** Termina
-(Twój komputer albo serwer, na którym ktoś go uruchomił).
+Termin nie używa analityki ani trackerów stron trzecich i nie sprzedaje danych. Konto jest
+**opcjonalne**: z wyszukiwarki i obserwowania można korzystać bez logowania. Ten dokument
+opisuje, co przechowuje **instancja** Termina (Twój komputer albo serwer, na którym ktoś go
+uruchomił). Wiążąca dla użytkowników instancji jest jej polityka prywatności pod adresem
+`/prywatnosc` (szablon: `termin/web/legal_docs/prywatnosc.html`).
 
 ## Wyszukiwanie
 
@@ -17,7 +19,17 @@ Adres wpisany do wyszukiwarki jest wysyłany do usługi geokodowania Nominatim
 (OpenStreetMap Foundation), chyba że instancja działa w trybie `TERMIN_GEOCODER=offline`
 albo korzysta z własnego serwera Nominatim.
 
+## Konto (opcjonalne)
+
+Przechowujemy: adres e-mail, skrót hasła (scrypt z solą), daty rejestracji, akceptacji
+regulaminu, potwierdzenia adresu i ostatniego logowania. Sesja to losowy token w ciasteczku
+HttpOnly; w bazie jest tylko jego skrót. Konto usuniesz sam (razem z obserwacjami), a dane
+pobierzesz jako JSON („Pobierz moje dane”). Konta z niepotwierdzonym e-mailem usuwamy po 7 dniach.
+
 ## Obserwowanie (powiadomienia)
+
+Informacja, jakiego świadczenia szukasz, może dotyczyć zdrowia, dlatego obserwacja wymaga
+**wyraźnej zgody** (art. 9 ust. 2 lit. a RODO). Datę zgody zapisujemy razem z obserwacją.
 
 Subskrypcja to jedyne miejsce, gdzie przechowujemy dane, które **sam podajesz**:
 
@@ -34,6 +46,7 @@ Temat ntfy działa jak hasło: wybierz trudny do zgadnięcia.
 - jedna obserwacja: link „Przestań obserwować” w każdym powiadomieniu (`/stop/<token>`),
   `/stop <token>` w bocie Telegram albo `termin obserwuj usun <token>`,
 - wszystkie Twoje obserwacje w Telegramie: `/stop wszystko`,
+- konto i wszystkie powiązane obserwacje: „Usuń konto” w panelu,
 - **wszystkie dane użytkowników w instancji** (administrator): `termin dane usun`.
   Z opcją `--z-historia` znikają też snapshoty NFZ i cache.
 
@@ -49,7 +62,7 @@ Temat ntfy działa jak hasło: wybierz trudny do zgadnięcia.
 
 ## Panel web
 
-Brak ciasteczek śledzących i analityki. Preferencje (język, tryb „duży tekst”, ostatnie
-wyniki offline) zapisujemy wyłącznie w pamięci Twojej przeglądarki (`localStorage`,
-cache service workera). Ograniczenie liczby zapytań (rate limiting) korzysta z adresu IP
+Brak ciasteczek śledzących i analityki. Ciasteczko sesji powstaje tylko po zalogowaniu.
+Preferencje (język, tryb „duży tekst”) zapisujemy w pamięci przeglądarki. Ostatnie wyniki
+offline zapisujemy wyłącznie po wyrażeniu zgody w banerze (szczegóły: `/cookies`). Ograniczenie liczby zapytań (rate limiting) korzysta z adresu IP
 tylko w pamięci procesu, bez zapisu.

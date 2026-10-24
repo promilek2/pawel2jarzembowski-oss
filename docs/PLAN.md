@@ -55,6 +55,8 @@ Decyzje architektoniczne są w `docs/adr/`.
 | 5 | Web mobile-first, PWA, WCAG 2.1 AA, duży tekst, skrypt rozmowy, .ics, i18n pl/en/uk | ✅ |
 | 6 | Docker, compose + Caddy, /healthz, /metrics, rate limiting, e2e Playwright + axe, PyPI | ✅ |
 | 7 | README pl/en, CONTRIBUTING, CoC, MIT, szablony issue/PR, 5 × good first issue | ✅ |
+| 8 | Wygląd „Numerek” (Claude Design, ADR-0009) | ✅ |
+| 9 | Opcjonalne konta, zgody RODO, dokumenty prawne, bezpieczeństwo, instalacja PWA (ADR-0010) | ✅ |
 
 Każda faza kończy się zielonymi `pytest`, `ruff check`, `ruff format --check`
 i `mypy --strict termin` oraz commitem w stylu Conventional Commits.

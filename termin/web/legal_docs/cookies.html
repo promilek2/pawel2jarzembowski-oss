@@ -1,0 +1,27 @@
+<h1>Cookies i pamięć przeglądarki</h1>
+<p class="legal-meta">Obowiązuje od: $effective_date</p>
+<p>Zgodnie z art. 399 ustawy z dnia 12 lipca 2024 r. – Prawo komunikacji elektronicznej informujemy, jakie informacje zapisujemy w Twoim urządzeniu. <strong>Nie używamy ciasteczek reklamowych, analitycznych ani śledzących, także stron trzecich.</strong></p>
+
+<h2>Niezbędne (bez zgody)</h2>
+<p>Te informacje są konieczne, żeby działała usługa, o którą sam prosisz, dlatego nie wymagają zgody.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Tabela (przewiń w poziomie)"><table>
+  <thead><tr><th scope="col">Nazwa</th><th scope="col">Rodzaj</th><th scope="col">Po co</th><th scope="col">Jak długo</th></tr></thead>
+  <tbody>
+    <tr><td><code>$session_cookie</code></td><td>ciasteczko (HttpOnly, Secure, SameSite=Lax)</td><td>utrzymanie zalogowania; tylko gdy się zalogujesz</td><td>do wylogowania, maks. $session_days dni</td></tr>
+    <tr><td><code>termin:lang</code>, <code>termin:large</code></td><td>pamięć przeglądarki (localStorage)</td><td>zapamiętanie wybranego języka i trybu „duży tekst”</td><td>do usunięcia danych strony w przeglądarce</td></tr>
+    <tr><td><code>termin:consent</code></td><td>pamięć przeglądarki</td><td>zapamiętanie Twojego wyboru dotyczącego zapisu wyników offline</td><td>jw.</td></tr>
+    <tr><td>Pamięć podręczna aplikacji (service worker)</td><td>Cache Storage</td><td>pliki samej aplikacji (wygląd, skrypty, ikony), żeby działała po zainstalowaniu i bez internetu</td><td>do aktualizacji aplikacji albo usunięcia danych strony</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Funkcjonalne (tylko za zgodą)</h2>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Tabela (przewiń w poziomie)"><table>
+  <thead><tr><th scope="col">Nazwa</th><th scope="col">Rodzaj</th><th scope="col">Po co</th><th scope="col">Jak długo</th></tr></thead>
+  <tbody>
+    <tr><td><code>termin:last</code></td><td>pamięć przeglądarki</td><td>ostatnie wyniki wyszukiwania, żeby były dostępne bez internetu. Zawierają wpisane świadczenie i miejsce, dlatego zapisujemy je tylko po kliknięciu „Zgadzam się”.</td><td>do następnego wyszukiwania albo wycofania zgody</td></tr>
+  </tbody>
+</table></div>
+<p><button type="button" class="btn btn-outline" id="consent-reset">Zmień moją decyzję</button> Wycofanie zgody od razu usuwa zapisane wyniki.</p>
+
+<h2>Jak usunąć te dane</h2>
+<p>W ustawieniach przeglądarki: „Wyczyść dane witryny” albo „Usuń pliki cookie i dane witryn” dla tej strony. Po zainstalowaniu aplikacji: odinstaluj ją, a potem wyczyść dane witryny.</p>

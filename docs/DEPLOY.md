@@ -23,7 +23,43 @@ Wszystkie opcje to zmienne środowiskowe z prefiksem `TERMIN_` (pełna lista w
 | `TERMIN_WATCH_INTERVAL_MIN` | `60` | Co ile minut sprawdzać obserwacje. |
 | `TERMIN_TRACKED_QUERIES` | `[]` | Zapytania do cyklicznych snapshotów, np. `["REZONANS@07"]`. |
 
+| `TERMIN_OPERATOR_NAME`, `_ADDRESS`, `_EMAIL` | brak | **Wymagane**: dane usługodawcy w regulaminie i polityce prywatności. |
+| `TERMIN_OPERATOR_ID`, `TERMIN_DPO_EMAIL`, `TERMIN_HOSTING_PROVIDER` | brak | NIP/KRS, inspektor ochrony danych, dostawca serwera (do polityki prywatności). |
+| `TERMIN_SECURITY_CONTACT` | `operator_email` | Kontakt w `/.well-known/security.txt`. |
+| `TERMIN_ACCOUNTS_ENABLED` | `true` | Konta użytkowników (opcjonalne dla użytkownika). |
+| `TERMIN_SESSION_DAYS`, `TERMIN_MAX_FAILED_LOGINS`, `TERMIN_LOCKOUT_MINUTES` | 30, 10, 15 | Sesje i blokada logowania. |
+
 Szablon: `.env.example`.
+
+## Zanim uruchomisz instancję publicznie (prawo i RODO)
+
+Termin dostarcza szablony dokumentów i mechanizmy (zgody, eksport i usuwanie danych), ale
+**to nie jest porada prawna**. Administrator instancji odpowiada za:
+
+1. **Dane usługodawcy** w zmiennych `TERMIN_OPERATOR_*`. Strony `/regulamin`, `/prywatnosc`,
+   `/kontakt` pokazują ostrzeżenie, dopóki ich brakuje.
+2. **Przegląd dokumentów przez prawnika**: regulaminu (ustawa o świadczeniu usług drogą
+   elektroniczną, art. 8), polityki prywatności (art. 13 RODO) i informacji o cookies
+   (art. 399 Prawa komunikacji elektronicznej). Szablony są w `termin/web/legal_docs/`.
+3. **Dane o zdrowiu (art. 9 RODO)**: informacja, jakiego świadczenia ktoś szuka, połączona z
+   e-mailem lub czatem, może być daną o zdrowiu. Aplikacja zbiera wyraźną zgodę, ale
+   administrator powinien:
+   - prowadzić **rejestr czynności przetwarzania** (art. 30; zwolnienie dla małych podmiotów
+     nie obejmuje danych szczególnych kategorii),
+   - ocenić, czy potrzebna jest **ocena skutków dla ochrony danych (DPIA, art. 35)**,
+   - rozważyć wyznaczenie **inspektora ochrony danych** (art. 37), jeśli przetwarzanie jest na dużą skalę.
+4. **Umowy powierzenia** (art. 28 RODO) z dostawcą serwera i poczty e-mail.
+5. **HTTPS** z prawidłowym certyfikatem (profil `https` w `docker-compose.yml`).
+6. **Szyfrowane kopie zapasowe** bazy i procedurę zgłaszania naruszeń (72 h do UODO, art. 33).
+7. Jeśli Termin jest prowadzony w ramach działalności gospodarczej: obowiązki informacyjne
+   przedsiębiorcy (NIP/KRS w `TERMIN_OPERATOR_ID`).
+
+## Instalacja na telefonie i komputerze
+
+Termin to PWA: po otwarciu strony przez HTTPS przeglądarka pozwala ją zainstalować
+(przycisk „Zainstaluj” w panelu albo menu przeglądarki; na iPhonie: Udostępnij → Do ekranu
+początkowego). Nie trzeba publikować aplikacji w sklepach. Jeśli chcesz ją mieć w Google
+Play, możesz opakować PWA w Trusted Web Activity (np. narzędziem Bubblewrap) bez zmian w kodzie.
 
 ## Docker Compose na VPS (zalecane)
 

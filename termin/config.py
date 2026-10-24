@@ -99,6 +99,34 @@ class Settings(BaseSettings):
     tile_url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     tile_attribution: str = "© OpenStreetMap contributors"
 
+    # --- Konta i bezpieczeństwo ---
+    accounts_enabled: bool = True
+    """Konta są opcjonalne: wyszukiwanie i obserwowanie działają też bez logowania."""
+    session_days: int = Field(default=30, ge=1, le=365)
+    cookie_secure: bool | None = None
+    """Flaga Secure ciasteczek. None = automatycznie (gdy public_url zaczyna się od https)."""
+    login_rate_limit: str = "10/minute"
+    max_failed_logins: int = Field(default=10, ge=3)
+    lockout_minutes: int = Field(default=15, ge=1)
+    unverified_account_days: int = Field(default=7, ge=1)
+    """Po tylu dniach usuwamy konta z niepotwierdzonym adresem e-mail (gdy działa poczta)."""
+    max_body_kb: int = Field(default=64, ge=4)
+
+    # --- Dane operatora (do regulaminu, polityki prywatności, security.txt) ---
+    operator_name: str | None = None
+    """Nazwa administratora danych / usługodawcy, np. „Jan Kowalski” albo nazwa firmy."""
+    operator_address: str | None = None
+    operator_email: str | None = None
+    operator_id: str | None = None
+    """Opcjonalnie NIP / KRS / REGON."""
+    dpo_email: str | None = None
+    """Inspektor ochrony danych, jeśli jest wyznaczony."""
+    security_contact: str | None = None
+    """Adres do zgłaszania podatności (domyślnie operator_email)."""
+    legal_effective_date: str = "2026-10-25"
+    hosting_provider: str | None = None
+    """Dostawca serwera (podmiot przetwarzający), np. „Hetzner Online GmbH”."""
+
     # --- Logi ---
     log_level: str = "INFO"
     log_json: bool = False
@@ -107,6 +135,16 @@ class Settings(BaseSettings):
     @classmethod
     def _strip_slash(cls, v: str) -> str:
         return v.rstrip("/")
+
+    @property
+    def secure_cookies(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
+        return self.public_url.startswith("https://")
+
+    @property
+    def mail_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_from)
 
     @property
     def db_path(self) -> Path:

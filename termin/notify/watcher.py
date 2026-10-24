@@ -28,6 +28,7 @@ from termin.metrics import NOTIFICATIONS
 from termin.notify.base import Notifier, NotifyError
 from termin.notify.message import build_notification
 from termin.runtime import Runtime
+from termin.store.accounts import AccountStore
 from termin.store.subscriptions import Subscription, SubscriptionStore
 
 log = get_logger(__name__)
@@ -109,6 +110,7 @@ class Watcher:
         report = WatchReport()
         subs = self.store.active()
         report.subscriptions = len(subs)
+        self._housekeeping()
         if not subs:
             return report
 
@@ -181,6 +183,14 @@ class Watcher:
             errors=len(report.errors),
         )
         return report
+
+    def _housekeeping(self) -> None:
+        """Usuwa wygasłe sesje i tokeny; niepotwierdzone konta tylko gdy działa poczta."""
+        settings = self.runtime.settings
+        unverified = (
+            dt.timedelta(days=settings.unverified_account_days) if settings.mail_enabled else None
+        )
+        AccountStore(self.runtime.conn, now=self._now).purge(unverified_after=unverified)
 
     async def _notify(
         self, sub: Subscription, best: RankedResult, report: WatchReport, now: dt.datetime

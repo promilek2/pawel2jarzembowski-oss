@@ -161,6 +161,7 @@ def test_subscriptions_api_and_stop_page(client: TestClient) -> None:
         "radius": 30,
         "channel": "ntfy",
         "target": "termin-abc",
+        "consent": True,
     }
     r = client.post("/api/subscriptions", json=payload)
     assert r.status_code == 201, r.text

@@ -32,6 +32,9 @@ class SubscribeRequest:
     benefit_query: str | None = None
     default_variant: Variant = Variant.ADULT
     """Wariant, gdy zapytanie jest dwuznaczne, a nie da się dopytać (np. bot)."""
+    user_id: int | None = None
+    consent: bool = False
+    """Wyraźna zgoda na przetwarzanie informacji o obserwowanym świadczeniu (art. 9 RODO)."""
 
 
 def parse_date(value: str) -> dt.date:
@@ -49,6 +52,11 @@ async def create_subscription(runtime: Runtime, req: SubscribeRequest) -> Subscr
         raise SubscribeError(f"Nieznany kanał „{req.channel}”. Dostępne: {', '.join(CHANNELS)}.")
     if req.channel != "desktop" and not req.target.strip():
         raise SubscribeError("Podaj, dokąd wysyłać powiadomienia (temat ntfy, czat, e-mail).")
+    if not req.consent:
+        raise SubscribeError(
+            "Obserwowanie wymaga zgody na przetwarzanie informacji o tym, jakiego świadczenia "
+            "szukasz (to może być informacja o zdrowiu)."
+        )
     if req.before_date is not None and req.before_date <= runtime.today():
         raise SubscribeError("Data „przed” musi być w przyszłości.")
 
@@ -98,5 +106,7 @@ async def create_subscription(runtime: Runtime, req: SubscribeRequest) -> Subscr
         radius_km=radius if point else None,
         area_label=area,
         before_date=req.before_date,
+        user_id=req.user_id,
+        consent_at=dt.datetime.now(dt.UTC),
     )
     return SubscriptionStore(runtime.conn).add(sub)

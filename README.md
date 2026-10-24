@@ -38,8 +38,14 @@ dać znać, gdy pojawi się wcześniejszy termin. Bez kont i bez reklam. To proj
   na pulpicie. Pisze tylko wtedy, gdy pojawi się coś lepszego.
 - 📈 **Pokazuje trendy**: czy kolejka w placówce się skraca, mediana czasu oczekiwania
   w województwie, mapa cieplna powiatów.
-- 📱 **Działa na telefonie i offline** (PWA), w trzech językach: polskim, angielskim i ukraińskim.
-  Spełnia WCAG 2.1 AA.
+- 📱 **Instalujesz jak aplikację** na telefonie (Android, iPhone) i komputerze, bez sklepu z
+  aplikacjami (PWA). Działa też offline, w trzech językach (polski, angielski, ukraiński) i
+  spełnia WCAG 2.1 AA.
+- 👤 **Opcjonalne konto**: obserwacje na wielu urządzeniach, eksport i usunięcie danych
+  jednym kliknięciem. Bez konta też wszystko działa.
+- 🔒 **Bezpieczeństwo i prywatność**: zgoda RODO na dane o zdrowiu, brak śledzenia,
+  bezpieczne sesje, ochrona CSRF, CSP, limity logowania (szczegóły w [SECURITY.md](SECURITY.md)).
+  Regulamin, polityka prywatności, cookies i deklaracja dostępności są wbudowane.
 
 ## Szybki start w 30 sekund
 
@@ -66,11 +72,12 @@ Więcej komend: `termin --help` (`statystyki`, `historia`, `eksport`, `obserwuj`
 **Powiadomienia przez ntfy** (aplikacja ntfy na telefon, bez konta):
 
 ```bash
-termin obserwuj dodaj okulista --gdzie Gdynia --promien 30 --kanal ntfy --cel moj-tajny-temat-123
+termin obserwuj dodaj okulista --gdzie Gdynia --promien 30 --kanal ntfy --cel moj-tajny-temat-123 --zgoda
 termin watcher            # sprawdza co godzinę i wysyła powiadomienia
 ```
 
-Wdrożenie na serwer (VPS, Fly.io, Render): [docs/DEPLOY.md](docs/DEPLOY.md).
+Wdrożenie na serwer (VPS, Fly.io, Render) i lista obowiązków prawnych przed publicznym
+uruchomieniem: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Dla dziennikarzy i badaczy
 
@@ -108,8 +115,13 @@ Nie. Pokazujemy wyłącznie fakty o terminach i nie oceniamy, gdzie leczą lepie
 specjalisty iść, decyduje lekarz, który wystawia skierowanie.
 
 **Co z moimi danymi?**
-Nie mamy kont ani analityki. Do obserwowania zapisujemy tylko to, co sam podasz, a każdą
-obserwację usuniesz jednym kliknięciem. Szczegóły: [PRIVACY.md](PRIVACY.md).
+Nie mamy analityki ani reklam, a konto jest opcjonalne. Do obserwowania zapisujemy tylko to,
+co sam podasz, za Twoją wyraźną zgodą. Każdą obserwację i całe konto usuniesz jednym
+kliknięciem. Szczegóły: [PRIVACY.md](PRIVACY.md) i strona `/prywatnosc` w panelu.
+
+**Jak zainstalować na telefonie?**
+Otwórz panel w przeglądarce i kliknij „Zainstaluj”. Na iPhonie: Udostępnij → Do ekranu
+początkowego. Nie potrzebujesz sklepu z aplikacjami.
 
 **Nie mogę znaleźć świadczenia.**
 Sprawdź, jak nazywa je NFZ: `termin swiadczenia <fragment>`. Brakujący synonim możesz dodać

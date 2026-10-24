@@ -38,7 +38,9 @@ from termin.notify.watcher import Watcher
 from termin.runtime import Runtime, Transports
 from termin.store.snapshots import to_csv, to_json
 from termin.store.subscriptions import SubscriptionStore
+from termin.web.auth import Mailer, build_auth_router, csrf_guard, current_user, default_mailer
 from termin.web.ics import call_reminder
+from termin.web.legal import LEGAL_PAGES, missing_operator_fields, render_legal, security_txt
 
 log = get_logger(__name__)
 
@@ -59,6 +61,8 @@ class SubscriptionIn(BaseModel):
     case: Literal[1, 2] = 1
     channel: Literal["ntfy", "telegram", "email"]
     target: str = Field(min_length=1, max_length=200)
+    consent: bool = False
+    """Wyraźna zgoda na przetwarzanie informacji o świadczeniu (art. 9 ust. 2 lit. a RODO)."""
 
 
 def create_app(
@@ -67,6 +71,7 @@ def create_app(
     transports: Transports | None = None,
     today: Callable[[], dt.date] = dt.date.today,
     start_watcher: bool = False,
+    mailer: Mailer | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
 
@@ -75,6 +80,9 @@ def create_app(
         configure_logging(settings.log_level, json=settings.log_json)
         runtime = Runtime(settings, transports=transports, today=today)
         app.state.runtime = runtime
+        missing = missing_operator_fields(settings)
+        if missing:
+            log.warning("legal.operator_missing", fields=",".join(missing))
         task: asyncio.Task[None] | None = None
         stop = asyncio.Event()
         if start_watcher:
@@ -119,6 +127,9 @@ def create_app(
             headers={"Retry-After": "60"},
         )
 
+    app.state.mailer = mailer if mailer is not None else default_mailer(settings)
+    app.include_router(build_auth_router(settings, limiter))
+
     def rt(request: Request) -> Runtime:
         runtime: Runtime = request.app.state.runtime
         return runtime
@@ -158,6 +169,9 @@ def create_app(
             "official_url": NFZ_OFFICIAL,
             "repo_url": REPO_URL,
             "provinces": {code: p.name for code, p in PROVINCES.items()},
+            "accounts_enabled": settings.accounts_enabled,
+            "mail_enabled": settings.mail_enabled,
+            "legal_pages": LEGAL_PAGES,
         }
 
     @app.get("/api/suggest")
@@ -313,6 +327,8 @@ def create_app(
                     case=Case(payload.case),
                     channel=payload.channel,
                     target=payload.target,
+                    consent=payload.consent,
+                    user_id=user.id if (user := current_user(request)) else None,
                 ),
             )
         except SubscribeError as exc:
@@ -374,6 +390,22 @@ def create_app(
         )
         return HTMLResponse(_page(title, body), 200 if removed else 404)
 
+    def legal_route(name: str, title: str) -> None:
+        async def page() -> HTMLResponse:
+            return HTMLResponse(_page(title, render_legal(name, settings), legal=True))
+
+        app.add_api_route(
+            f"/{name}", page, methods=["GET"], response_class=HTMLResponse, include_in_schema=False
+        )
+
+    for name, title in LEGAL_PAGES.items():
+        legal_route(name, title)
+
+    @app.get("/.well-known/security.txt", include_in_schema=False)
+    async def security_txt_route() -> PlainTextResponse:
+        expires = (dt.datetime.now(dt.UTC) + dt.timedelta(days=180)).strftime("%Y-%m-%dT00:00:00Z")
+        return PlainTextResponse(security_txt(settings, expires))
+
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
     async def index() -> HTMLResponse:
         return HTMLResponse(STATIC_DIR.joinpath("index.html").read_text("utf-8"))
@@ -400,21 +432,41 @@ def create_app(
 
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+    max_body = settings.max_body_kb * 1024
+
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Any) -> Response:
         started = time.perf_counter()
-        response: Response = await call_next(request)
+        length = request.headers.get("content-length")
+        if length and length.isdigit() and int(length) > max_body:
+            response: Response = JSONResponse({"detail": "Za duże zapytanie."}, 413)
+        elif (blocked := await csrf_guard(request)) is not None:
+            response = blocked
+        else:
+            response = await call_next(request)
         route = _route(request)
         HTTP_REQUESTS.labels(request.method, route, str(response.status_code)).inc()
         HTTP_LATENCY.labels(route).observe(time.perf_counter() - started)
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("Referrer-Policy", "no-referrer")
-        response.headers.setdefault("Permissions-Policy", "geolocation=(self)")
+        h = response.headers
+        h.setdefault("X-Content-Type-Options", "nosniff")
+        h.setdefault("Referrer-Policy", "no-referrer")
+        h.setdefault("X-Frame-Options", "DENY")
+        h.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+        h.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+        h.setdefault(
+            "Permissions-Policy",
+            "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()",
+        )
+        if settings.secure_cookies:
+            h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+        if request.url.path.startswith("/api/"):
+            h.setdefault("Cache-Control", "no-store")
         tile_origin = _origin(settings.tile_url)
-        response.headers.setdefault(
+        h.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; img-src 'self' data: " + tile_origin + "; "
-            "style-src 'self'; script-src 'self'; connect-src 'self'; "
+            "style-src 'self'; script-src 'self'; connect-src 'self'; font-src 'self'; "
+            "manifest-src 'self'; worker-src 'self'; object-src 'none'; "
             "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
         )
         return response
@@ -438,11 +490,25 @@ def _origin(url: str) -> str:
     return "/".join(url.split("/")[:3]).replace("{s}.", "*.")
 
 
-def _page(title: str, body: str) -> str:
+def _page(title: str, body: str, *, legal: bool = False) -> str:
+    links = "".join(
+        f'<li><a href="/{name}">{html.escape(label)}</a></li>'
+        for name, label in LEGAL_PAGES.items()
+    )
+    heading = "" if legal else f"<h1>{html.escape(title)}</h1>"
     return f"""<!doctype html>
 <html lang="pl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)} · Termin</title>
-<link rel="stylesheet" href="/static/style.css"></head>
-<body><main id="main" class="page"><h1>{html.escape(title)}</h1>{body}
-<p><a href="/">Wróć do wyszukiwarki</a></p></main></body></html>"""
+<link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+<script type="module" src="/static/page.js"></script></head>
+<body>
+<header class="site-header wrap">
+<a class="brand" href="/"><span class="brand-name">Termin</span></a>
+<a class="pill" href="/">Wróć do wyszukiwarki</a></header>
+<main id="main" class="wrap page legal">{heading}{body}</main>
+<footer class="site-footer"><div class="wrap footer-grid">
+<ul class="footer-links">{links}</ul>
+<p class="small">Termin nie jest oficjalną aplikacją NFZ.</p></div></footer>
+</body></html>"""

@@ -77,6 +77,11 @@ async function loadLang(lang) {
   state.lang = lang;
   document.documentElement.lang = lang;
   $("#lang").value = lang;
+  for (const el of document.querySelectorAll("[data-i18n-label]")) {
+    const text = lookup(el.dataset.i18nLabel);
+    if (typeof text === "string") el.setAttribute("aria-label", text);
+  }
+  if (state.auth) updateAccountButton();
   for (const el of document.querySelectorAll("[data-i18n]")) {
     const text = lookup(el.dataset.i18n);
     if (typeof text === "string") el.textContent = text;
@@ -194,7 +199,10 @@ async function runSearch(params, { auto = false } = {}) {
       return;
     }
     state.last = data;
-    if (data.status === "ok") STORE.set("last", { params: params.toString(), data, savedAt: new Date().toISOString() });
+    // Wyniki offline zapisujemy tylko za zgodą (zawierają wpisane świadczenie i miejsce).
+    if (data.status === "ok" && STORE.get("consent") === "granted") {
+      STORE.set("last", { params: params.toString(), data, savedAt: new Date().toISOString() });
+    }
     renderResponse(data);
     // Fokus na wynikach: czytnik ekranu przeczyta nagłówek, a telefon przewinie do listy.
     // Przy wyszukiwaniu z udostępnionego linku (bez akcji użytkownika) nie przewijamy strony,
@@ -420,7 +428,7 @@ async function loadHistory(id, details) {
     box.replaceChildren(
       h("p", {}, t(`history.${trend.direction}`, { days: change })),
       chart(points),
-      h("div", { class: "table-wrap" }, h("table", {},
+      h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": t("history.title") }, h("table", {},
         h("caption", {}, t("history.title")),
         h("thead", {}, h("tr", {}, h("th", { scope: "col" }, t("history.col_day")), h("th", { scope: "col" }, t("history.col_date")), h("th", { scope: "col" }, t("history.col_wait")))),
         h("tbody", {}, trend.points.map((p) => h("tr", {}, h("td", {}, fmtDate(p.taken_on)), h("td", {}, fmtDate(p.first_date) || "—"), h("td", {}, p.wait_days ?? "—")))))));
@@ -492,7 +500,7 @@ async function toggleStats() {
         tile(t("stats.tile_p90"), days(s.p90)),
         tile(t("stats.tile_min"), days(s.minimum), " stat-tile--signal")),
       h("p", {}, t("stats.summary", { median: fmtNumber(s.median), p25: fmtNumber(s.p25), p75: fmtNumber(s.p75), p90: fmtNumber(s.p90), n: s.with_date })),
-      h("div", { class: "table-wrap" }, h("table", {},
+      h("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": t("stats.button") }, h("table", {},
         h("thead", {}, h("tr", {}, ...["col_district", "col_places", "col_n", "col_median"].map((k) => h("th", { scope: "col" }, t(`stats.${k}`))))),
         h("tbody", {}, [...s.districts].sort((a, b) => a.median_days - b.median_days).map((d) => h("tr", {},
           h("td", {}, d.teryt), h("td", {}, d.localities.slice(0, 3).join(", ")), h("td", {}, d.n),
@@ -586,6 +594,7 @@ function openWatch(r, data) {
   state.watchFor = { r, data };
   $("#watch-title").textContent = t("watch.title", { label: data.label });
   $("#watch-result").textContent = "";
+  $("#watch-consent").checked = false;
   $("#watch-target").value = "";
   $("#watch-channels").replaceChildren(...state.config.channels.map((c, i) =>
     h("label", {}, h("input", { type: "radio", name: "channel", value: c, checked: i === 0, onchange: updateWatchTarget }), " ", t(`watch.channel_${c}`))));
@@ -597,6 +606,12 @@ async function submitWatch() {
   const { data } = state.watchFor;
   const form = new FormData($("#watch-form"));
   const p = state.lastParams;
+  const out = $("#watch-result");
+  if (!$("#watch-consent").checked) {
+    out.textContent = t("consent.required");
+    $("#watch-consent").focus();
+    return;
+  }
   const payload = {
     q: p.get("q"),
     variant: data.variant === "wszystkie" ? null : data.variant,
@@ -605,14 +620,13 @@ async function submitWatch() {
     channel: form.get("channel"),
     target: (form.get("target") || "").trim(),
     before: form.get("before") || null,
+    consent: true,
   };
   if (p.get("lat")) { payload.lat = Number(p.get("lat")); payload.lon = Number(p.get("lon")); }
   else payload.where = p.get("where");
-  const out = $("#watch-result");
   try {
-    const res = await fetch("/api/subscriptions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    const body = await res.json();
-    out.textContent = res.ok ? t("watch.ok", { label: body.label, url: body.unsubscribe_url }) : (typeof body.detail === "string" ? body.detail : t("results.error"));
+    const { ok, body } = await api("/api/subscriptions", { method: "POST", json: payload });
+    out.textContent = ok ? t("watch.ok", { label: body.label, url: body.unsubscribe_url }) : errorText(body);
   } catch {
     out.textContent = t("results.error");
   }
@@ -626,6 +640,205 @@ async function share(data) {
   }
   try { await navigator.clipboard.writeText(url); announce(t("share.copied")); }
   catch { prompt(text, url); }
+}
+
+// ------------------------------------------------------------------ API z ochroną CSRF
+
+async function api(path, { method = "GET", json } = {}) {
+  const headers = {};
+  if (json !== undefined) headers["Content-Type"] = "application/json";
+  if (method !== "GET" && state.auth?.csrf) headers["X-CSRF-Token"] = state.auth.csrf;
+  const res = await fetch(path, { method, headers, body: json === undefined ? undefined : JSON.stringify(json), credentials: "same-origin" });
+  let body = null;
+  try { body = res.status === 204 ? null : await res.json(); } catch { body = null; }
+  return { ok: res.ok, status: res.status, body };
+}
+
+function errorText(body) {
+  if (body && typeof body.detail === "string") return body.detail;
+  if (body && Array.isArray(body.detail)) return t("auth.invalid");
+  return t("results.error");
+}
+
+// ------------------------------------------------------------------ konto
+
+function updateAccountButton() {
+  const user = state.auth?.user;
+  $("#account-label").textContent = user ? t("auth.account_button") : t("auth.login_button");
+  $("#account-btn").hidden = state.config ? !state.config.accounts_enabled : false;
+}
+
+async function loadMe() {
+  try {
+    const { body } = await api("/api/auth/me");
+    state.auth = body;
+  } catch {
+    state.auth = { user: null, csrf: null };
+  }
+  updateAccountButton();
+}
+
+function closeOnButtons(dialog) {
+  for (const b of dialog.querySelectorAll("[data-close]")) b.addEventListener("click", () => dialog.close());
+}
+
+const AUTH_VIEWS = {
+  login: { title: "auth.title_login", submit: "auth.submit_login", email: true, password: true, terms: false, forgot: true, autocomplete: "current-password" },
+  register: { title: "auth.title_register", submit: "auth.submit_register", email: true, password: true, terms: true, forgot: false, autocomplete: "new-password" },
+  forgot: { title: "auth.title_forgot", submit: "auth.submit_forgot", email: true, password: false, terms: false, forgot: false, intro: "auth.forgot_intro" },
+  reset: { title: "auth.title_reset", submit: "auth.submit_reset", email: false, password: true, terms: false, forgot: false, autocomplete: "new-password" },
+};
+
+function setAuthView(view, token = null) {
+  const cfg = AUTH_VIEWS[view];
+  state.authView = view;
+  state.resetToken = token ?? state.resetToken;
+  $("#auth-title").textContent = t(cfg.title);
+  $("#auth-submit").textContent = t(cfg.submit);
+  $("#auth-intro").textContent = cfg.intro ? t(cfg.intro) : "";
+  $("#auth-email-field").hidden = !cfg.email;
+  $("#auth-password-field").hidden = !cfg.password;
+  $("#auth-terms-field").hidden = !cfg.terms;
+  $("#auth-forgot").hidden = !cfg.forgot || !state.config?.mail_enabled;
+  $("#auth-tabs").hidden = !(view === "login" || view === "register");
+  $("#auth-password").setAttribute("autocomplete", cfg.autocomplete || "off");
+  $("#auth-password-label").textContent = view === "reset" ? t("account.new_password") : t("auth.password");
+  $("#auth-password-hint").textContent = cfg.terms || view === "reset" ? t("auth.password_rules") : "";
+  for (const tab of document.querySelectorAll("#auth-tabs [role=tab]")) tab.setAttribute("aria-selected", String(tab.dataset.view === view));
+  $("#auth-error").hidden = true;
+  $("#auth-status").textContent = "";
+}
+
+function openAuth(view = "login", token = null) {
+  setAuthView(view, token);
+  $("#auth-dialog").showModal();
+  (view === "reset" ? $("#auth-password") : $("#auth-email")).focus();
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+  const view = state.authView;
+  const email = $("#auth-email").value.trim();
+  const password = $("#auth-password").value;
+  const error = $("#auth-error");
+  error.hidden = true;
+  let res;
+  if (view === "login") res = await api("/api/auth/login", { method: "POST", json: { email, password } });
+  else if (view === "register") {
+    if (!$("#auth-terms").checked) { error.textContent = t("auth.terms_required"); error.hidden = false; return; }
+    res = await api("/api/auth/register", { method: "POST", json: { email, password, accept_terms: true } });
+  } else if (view === "forgot") res = await api("/api/auth/request-reset", { method: "POST", json: { email } });
+  else res = await api("/api/auth/reset", { method: "POST", json: { token: state.resetToken, password } });
+
+  if (!res.ok) { error.textContent = errorText(res.body); error.hidden = false; return; }
+  if (view === "forgot") { $("#auth-status").textContent = errorText(res.body); return; }
+  state.auth = res.body;
+  updateAccountButton();
+  $("#auth-password").value = "";
+  $("#auth-dialog").close();
+  announce(view === "register" ? t("auth.registered") : t("auth.logged_in"));
+}
+
+async function openAccount() {
+  if (!state.auth?.user) { openAuth("login"); return; }
+  const user = state.auth.user;
+  $("#account-email").textContent = user.email;
+  const verify = $("#account-verify");
+  verify.replaceChildren();
+  if (!user.verified && state.config?.mail_enabled) {
+    verify.append(t("account.unverified"), " ",
+      h("button", { type: "button", class: "link-btn", onclick: async () => {
+        const r = await api("/api/auth/resend-verification", { method: "POST" });
+        $("#account-status").textContent = r.ok ? t("account.verification_sent") : errorText(r.body);
+      } }, t("account.resend")));
+  }
+  $("#account-status").textContent = "";
+  await renderAccountSubs();
+  $("#account-dialog").showModal();
+}
+
+async function renderAccountSubs() {
+  const list = $("#account-subs");
+  const { ok, body } = await api("/api/account/subscriptions");
+  if (!ok) { list.replaceChildren(h("li", {}, errorText(body))); return; }
+  if (!body.length) { list.replaceChildren(h("li", {}, t("account.no_subscriptions"))); return; }
+  list.replaceChildren(...body.map((sub) => h("li", {},
+    h("span", {}, sub.label, h("small", {}, sub.area_label || "")),
+    h("button", { type: "button", class: "btn btn-outline", onclick: async () => {
+      const r = await api(`/api/account/subscriptions/${encodeURIComponent(sub.token)}`, { method: "DELETE" });
+      $("#account-status").textContent = r.ok ? t("account.subscription_removed") : errorText(r.body);
+      renderAccountSubs();
+    } }, t("account.remove")))));
+}
+
+async function logout(all = false) {
+  await api(all ? "/api/account/logout-all" : "/api/auth/logout", { method: "POST" });
+  state.auth = { user: null, csrf: null };
+  updateAccountButton();
+  $("#account-dialog").close();
+  announce(t("auth.logged_out"));
+}
+
+async function handleAccountLinks() {
+  const q = new URLSearchParams(location.search);
+  const action = q.get("konto");
+  const token = q.get("token");
+  if (action === "panel") { history.replaceState(null, "", location.pathname); openAccount(); return; }
+  if (!action || !token) return;
+  history.replaceState(null, "", location.pathname); // token nie zostaje w historii ani w linku
+  if (action === "weryfikacja") {
+    const r = await api("/api/auth/verify", { method: "POST", json: { token } });
+    announce(r.ok ? t("auth.verified") : errorText(r.body));
+    await loadMe();
+  } else if (action === "reset") {
+    openAuth("reset", token);
+  }
+}
+
+// ------------------------------------------------------------------ instalacja (PWA)
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+}
+
+function isIos() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function setupInstall() {
+  const button = $("#install-btn");
+  if (isStandalone()) return;
+  if (isIos()) button.hidden = false; // Safari nie ma zdarzenia instalacji: pokazujemy instrukcję
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    state.installPrompt = event;
+    button.hidden = false;
+  });
+  window.addEventListener("appinstalled", () => { button.hidden = true; state.installPrompt = null; announce(t("install.done")); });
+  button.addEventListener("click", async () => {
+    if (state.installPrompt) {
+      state.installPrompt.prompt();
+      const choice = await state.installPrompt.userChoice;
+      if (choice.outcome === "accepted") button.hidden = true;
+      state.installPrompt = null;
+    } else {
+      $("#install-dialog").showModal();
+    }
+  });
+}
+
+// ------------------------------------------------------------------ pamięć w urządzeniu (zgoda)
+
+function setupStorageBanner() {
+  const banner = $("#storage-banner");
+  if (STORE.get("consent") === null) banner.hidden = false;
+  const decide = (value) => {
+    STORE.set("consent", value);
+    if (value !== "granted") { try { localStorage.removeItem("termin:last"); } catch { /* */ } }
+    banner.hidden = true;
+  };
+  $("#storage-accept").addEventListener("click", () => decide("granted"));
+  $("#storage-deny").addEventListener("click", () => decide("denied"));
 }
 
 // ------------------------------------------------------------------ ustawienia i start
@@ -694,6 +907,36 @@ function bind() {
   $("#toggle-map").addEventListener("click", toggleMap);
   $("#show-stats").addEventListener("click", toggleStats);
   $("#watch-submit").addEventListener("click", submitWatch);
+  for (const d of ["#auth-dialog", "#account-dialog", "#install-dialog"]) closeOnButtons($(d));
+  $("#account-btn").addEventListener("click", openAccount);
+  $("#auth-form").addEventListener("submit", submitAuth);
+  for (const tab of document.querySelectorAll("#auth-tabs [role=tab]")) tab.addEventListener("click", () => setAuthView(tab.dataset.view));
+  $("#auth-forgot").addEventListener("click", () => setAuthView("forgot"));
+  $("#auth-show").addEventListener("click", () => {
+    const input = $("#auth-password");
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    $("#auth-show").setAttribute("aria-pressed", String(show));
+  });
+  $("#account-logout").addEventListener("click", () => logout(false));
+  $("#account-logout-all").addEventListener("click", () => logout(true));
+  $("#password-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const r = await api("/api/account/password", { method: "POST", json: { current: $("#pw-current").value, new: $("#pw-new").value } });
+    if (r.ok) { state.auth = r.body; e.target.reset(); }
+    $("#account-status").textContent = r.ok ? t("account.password_changed") : errorText(r.body);
+  });
+  $("#delete-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const r = await api("/api/account/delete", { method: "POST", json: { password: $("#delete-password").value } });
+    if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
+    state.auth = { user: null, csrf: null };
+    updateAccountButton();
+    $("#account-dialog").close();
+    announce(t("account.deleted"));
+  });
+  setupInstall();
+  setupStorageBanner();
 }
 
 async function init() {
@@ -703,6 +946,8 @@ async function init() {
   const preferred = STORE.get("lang") || ((navigator.language || "").startsWith("uk") ? "uk" : "pl");
   const [config] = await Promise.all([fetch("/api/config").then((r) => r.json()), loadLang(LANGS.includes(preferred) ? preferred : "pl")]);
   state.config = config;
+  await loadMe();
+  handleAccountLinks();
   $("#kmday").value = $("#kmday").value || config.km_per_day;
   updateKmOutput();
   if (applyUrlParams()) runSearch(formParams(), { auto: true });

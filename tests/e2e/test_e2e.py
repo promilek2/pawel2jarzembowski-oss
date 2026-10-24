@@ -18,6 +18,8 @@ axe_module = pytest.importorskip("axe_playwright_python.sync_playwright")
 from tests.e2e.server import running_server  # noqa: E402
 
 MOBILE = {"width": 360, "height": 780}
+# Decyzja o pamięci podjęta: baner nie zasłania przycisków w testach (ma osobny test).
+NO_BANNER = "try { localStorage.setItem('termin:consent', JSON.stringify('denied')); } catch (e) {}"
 
 
 @pytest.fixture(scope="module")
@@ -38,6 +40,7 @@ def browser() -> Iterator[object]:
 @pytest.fixture
 def page(browser, base_url):  # type: ignore[no-untyped-def]
     context = browser.new_context(viewport=MOBILE, locale="pl-PL")
+    context.add_init_script(NO_BANNER)
     pg = context.new_page()
     errors: list[str] = []
     pg.on("pageerror", lambda e: errors.append(str(e)))
@@ -75,6 +78,7 @@ def test_search_flow_with_variant_choice(page) -> None:  # type: ignore[no-untyp
 
 def test_shared_link_runs_search(browser, base_url) -> None:  # type: ignore[no-untyped-def]
     context = browser.new_context(viewport=MOBILE)
+    context.add_init_script(NO_BANNER)
     pg = context.new_page()
     pg.goto(f"{base_url}/?q=okulista&gdzie=Gdynia&wariant=dzieci&r=100")
     pg.wait_for_selector("#result-list li")
@@ -140,6 +144,9 @@ def test_watch_dialog_subscribes(page) -> None:  # type: ignore[no-untyped-def]
     page.locator("#result-list article").first.get_by_role("button", name="Obserwuj").click()
     assert page.locator("#watch-target").input_value().startswith("termin-")
     page.click("#watch-submit")
+    page.wait_for_selector("#watch-result:has-text('zgod')")  # bez zgody nie zapisujemy
+    page.check("#watch-consent")
+    page.click("#watch-submit")
     # (wait_for_function używa eval, który nasza CSP słusznie blokuje)
     page.wait_for_selector("#watch-result:has-text('/stop/')")
 
@@ -188,6 +195,7 @@ def test_pwa_assets(page, base_url) -> None:  # type: ignore[no-untyped-def]
 
 def test_axe_dark_mode(browser, base_url) -> None:  # type: ignore[no-untyped-def]
     context = browser.new_context(viewport=MOBILE, color_scheme="dark")
+    context.add_init_script(NO_BANNER)
     pg = context.new_page()
     pg.goto(base_url)
     search(pg, "okulista dorośli")
@@ -202,3 +210,72 @@ def test_pwa_installable(page) -> None:  # type: ignore[no-untyped-def]
     cdp = page.context.new_cdp_session(page)
     result = cdp.send("Page.getInstallabilityErrors")
     assert result["installabilityErrors"] == [], result
+
+
+def test_storage_banner_consent(browser, base_url) -> None:  # type: ignore[no-untyped-def]
+    context = browser.new_context(viewport=MOBILE)
+    pg = context.new_page()
+    pg.goto(base_url)
+    banner = pg.locator("#storage-banner")
+    banner.wait_for(state="visible")
+    assert _axe_violations(pg) == []
+    pg.click("#storage-deny")
+    assert banner.is_hidden()
+    search(pg, "okulista dorośli")
+    pg.wait_for_selector("#result-list li")
+    # bez zgody nic nie zapisujemy
+    assert pg.evaluate("localStorage.getItem('termin:last')") is None
+    pg.reload()
+    assert pg.locator("#storage-banner").is_hidden()
+    pg.evaluate("localStorage.setItem('termin:consent', JSON.stringify('granted'))")
+    search(pg, "okulista dorośli")
+    pg.wait_for_selector("#result-list li")
+    assert pg.evaluate("localStorage.getItem('termin:last') !== null")
+    context.close()
+
+
+def test_register_login_account_flow(page) -> None:  # type: ignore[no-untyped-def]
+    page.click("#account-btn")
+    dialog = page.locator("#auth-dialog")
+    assert dialog.evaluate("d => d.open")
+    assert _axe_violations(page) == []
+    page.click("#tab-register")
+    page.fill("#auth-email", "babcia@example.com")
+    page.fill("#auth-password", "Kolejka-do-okulisty-7")
+    page.click("#auth-submit")
+    page.wait_for_selector("#auth-error:not([hidden])")  # bez akceptacji regulaminu
+    page.check("#auth-terms")
+    page.click("#auth-submit")
+    page.wait_for_selector("#account-label:has-text('Konto')")
+    assert not dialog.evaluate("d => d.open")
+    # obserwacja zapisana na koncie
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    page.locator("#result-list article").first.get_by_role("button", name="Obserwuj").click()
+    page.check("#watch-consent")
+    page.click("#watch-submit")
+    page.wait_for_selector("#watch-result:has-text('/stop/')")
+    page.keyboard.press("Escape")
+    page.click("#account-btn")
+    page.wait_for_selector("#account-subs li button")
+    assert "babcia@example.com" in page.locator("#account-email").inner_text()
+    assert _axe_violations(page) == []
+    page.click("#account-logout")
+    page.wait_for_selector("#account-label:has-text('Zaloguj')")
+    # ponowne logowanie
+    page.click("#account-btn")
+    page.fill("#auth-email", "babcia@example.com")
+    page.fill("#auth-password", "Kolejka-do-okulisty-7")
+    page.click("#auth-submit")
+    page.wait_for_selector("#account-label:has-text('Konto')")
+
+
+def test_install_dialog_and_legal_pages(page, base_url) -> None:  # type: ignore[no-untyped-def]
+    page.evaluate("document.querySelector('#install-dialog').showModal()")
+    assert "Do ekranu początkowego" in page.locator("#install-dialog").inner_text()
+    assert _axe_violations(page) == []
+    page.keyboard.press("Escape")
+    for path in ("/regulamin", "/prywatnosc", "/cookies", "/dostepnosc", "/kontakt"):
+        page.goto(base_url + path)
+        assert page.locator("h1").first.inner_text()
+        assert _axe_violations(page) == [], path

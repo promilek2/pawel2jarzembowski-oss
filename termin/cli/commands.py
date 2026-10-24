@@ -422,6 +422,11 @@ def watch_add(
     before: str | None = typer.Option(None, "--przed", help="Tylko terminy przed tą datą."),
     urgent: bool = typer.Option(False, "--pilny"),
     children: bool = typer.Option(False, "--dla-dzieci"),
+    consent: bool = typer.Option(
+        False,
+        "--zgoda",
+        help="Zgoda na przetwarzanie informacji o świadczeniu (wymagana, art. 9 RODO).",
+    ),
 ) -> None:
     """Dodaj obserwację: dostaniesz powiadomienie, gdy pojawi się wcześniejszy termin."""
     settings = get_settings()
@@ -444,6 +449,7 @@ def watch_add(
                     before_date=parse_date(before) if before else None,
                     case=Case.URGENT if urgent else Case.STABLE,
                     variant=Variant.CHILD if children else None,
+                    consent=consent,
                 ),
             )
 

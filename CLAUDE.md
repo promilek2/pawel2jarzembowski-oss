@@ -86,6 +86,19 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
 - Środowisko, w którym powstało v1.0, nie miało dostępu do `api.nfz.gov.pl`, Nominatim ani OSRM.
   Fixtures są zrekonstruowane (`tests/fixtures/README.md`).
 
+## Konta, prawo, bezpieczeństwo (ADR-0010)
+
+- Konta opcjonalne: `termin/store/accounts.py` (użytkownicy, sesje, tokeny e-mail jako skrót
+  SHA-256), `termin/security.py` (scrypt, polityka haseł, e-mail), `termin/web/auth.py`
+  (API `/api/auth/*`, `/api/account/*`, ciasteczko sesji, `csrf_guard`). Zapytania
+  zmieniające stan z sesją wymagają nagłówka `X-CSRF-Token` (wartość z `/api/auth/me`).
+- Obserwacja wymaga zgody (`consent`): API, `--zgoda` w CLI, `; zgoda` w bocie. Bez niej
+  `SubscribeError`.
+- Strony prawne: szablony `termin/web/legal_docs/*.html` (string.Template, `$zmienne`),
+  renderowane przez `termin/web/legal.py` z danymi `TERMIN_OPERATOR_*`.
+- Frontend: wyniki offline (`termin:last`) tylko po zgodzie z banera (`termin:consent`).
+  Service worker nie cache'uje API.
+
 ## Wdrożenie i narzędzia
 
 - `Dockerfile` (non-root UID 10001, healthcheck `/healthz`, opcjonalny sekret `ca` dla proxy

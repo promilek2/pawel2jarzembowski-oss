@@ -27,6 +27,14 @@
       <span class="brand-name">Termin</span>
     </a>
     <div class="toolbar">
+      <button type="button" id="install-btn" class="pill pill-signal" hidden>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        <span class="pill-label" data-i18n="install.button">Zainstaluj</span>
+      </button>
+      <button type="button" id="account-btn" class="pill" aria-haspopup="dialog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <span class="pill-label" id="account-label" data-i18n="auth.login_button">Zaloguj</span>
+      </button>
       <button type="button" id="large-text" class="pill" aria-pressed="false">
         <span aria-hidden="true">A+</span> <span class="pill-label" data-i18n="settings.large_text">Duży tekst</span>
       </button>
@@ -173,6 +181,10 @@
         <label for="watch-before" data-i18n="watch.before">Tylko terminy przed (opcjonalnie)</label>
         <input id="watch-before" name="before" type="date">
       </div>
+      <label class="check">
+        <input type="checkbox" id="watch-consent" required>
+        <span><span data-i18n="consent.watch">Wyrażam wyraźną zgodę na przetwarzanie informacji o tym, jakiego świadczenia szukam (może to być informacja o zdrowiu), w celu wysyłania powiadomień. Zgodę wycofam w każdej chwili, usuwając obserwację.</span> <a href="/prywatnosc" target="_blank" rel="noopener" data-i18n="consent.more">Polityka prywatności</a></span>
+      </label>
       <p class="hint" data-i18n="watch.privacy">Zapisujemy tylko to, co tu podajesz. Lokalizację zaokrąglamy do ok. 1 km.</p>
       <p id="watch-result" class="watch-result" role="status"></p>
       <div class="dialog-actions">
@@ -182,12 +194,142 @@
     </form>
   </dialog>
 
+  <dialog id="auth-dialog" aria-labelledby="auth-title">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2 id="auth-title"></h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="tabs" role="tablist" id="auth-tabs">
+        <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="auth-form" data-view="login" data-i18n="auth.tab_login">Logowanie</button>
+        <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="auth-form" data-view="register" data-i18n="auth.tab_register">Nowe konto</button>
+      </div>
+      <form id="auth-form" novalidate>
+        <p id="auth-intro" class="hint"></p>
+        <div class="field" id="auth-email-field">
+          <label for="auth-email" data-i18n="auth.email">Adres e-mail</label>
+          <input id="auth-email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field" id="auth-password-field">
+          <label for="auth-password" id="auth-password-label" data-i18n="auth.password">Hasło</label>
+          <div class="input-row">
+            <input id="auth-password" name="password" type="password" autocomplete="current-password" required aria-describedby="auth-password-hint">
+            <button type="button" id="auth-show" class="btn btn-outline" aria-pressed="false" data-i18n="auth.show">Pokaż</button>
+          </div>
+          <p id="auth-password-hint" class="hint"></p>
+        </div>
+        <label class="check" id="auth-terms-field">
+          <input type="checkbox" id="auth-terms" name="accept_terms">
+          <span><span data-i18n="auth.terms_prefix">Akceptuję</span> <a href="/regulamin" target="_blank" rel="noopener" data-i18n="auth.terms_link">Regulamin</a> <span data-i18n="auth.terms_mid">i zapoznałem/zapoznałam się z</span> <a href="/prywatnosc" target="_blank" rel="noopener" data-i18n="auth.privacy_link">Polityką prywatności</a>. <span data-i18n="auth.terms_age">Mam ukończone 16 lat.</span></span>
+        </label>
+        <p id="auth-error" class="error" role="alert" hidden></p>
+        <p id="auth-status" class="watch-result" role="status"></p>
+        <button type="submit" id="auth-submit" class="btn btn-signal btn-big"></button>
+        <button type="button" id="auth-forgot" class="link-btn" data-i18n="auth.forgot">Nie pamiętam hasła</button>
+        <p class="hint" data-i18n="auth.optional">Konto jest opcjonalne: wyszukiwanie i obserwowanie działają też bez logowania.</p>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="account-dialog" aria-labelledby="account-title">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2 id="account-title" data-i18n="account.title">Twoje konto</h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p id="account-email" class="account-email"></p>
+      <p id="account-verify" class="hint"></p>
+      <section aria-labelledby="account-subs-title">
+        <h3 id="account-subs-title" data-i18n="account.subscriptions">Moje obserwacje</h3>
+        <ul id="account-subs" class="account-subs"></ul>
+      </section>
+      <section aria-labelledby="account-data-title">
+        <h3 id="account-data-title" data-i18n="account.data">Moje dane</h3>
+        <div class="account-actions">
+          <a class="btn btn-outline" href="/api/account/export" download="termin-moje-dane.json" data-i18n="account.export">Pobierz moje dane (JSON)</a>
+          <button type="button" id="account-logout" class="btn btn-outline" data-i18n="account.logout">Wyloguj</button>
+          <button type="button" id="account-logout-all" class="btn btn-outline" data-i18n="account.logout_all">Wyloguj ze wszystkich urządzeń</button>
+        </div>
+      </section>
+      <details class="more-light">
+        <summary data-i18n="account.change_password">Zmień hasło</summary>
+        <form id="password-form" class="stack" novalidate>
+          <div class="field"><label for="pw-current" data-i18n="account.current_password">Obecne hasło</label>
+            <input id="pw-current" type="password" autocomplete="current-password" required></div>
+          <div class="field"><label for="pw-new" data-i18n="account.new_password">Nowe hasło</label>
+            <input id="pw-new" type="password" autocomplete="new-password" required aria-describedby="pw-hint">
+            <p id="pw-hint" class="hint" data-i18n="auth.password_rules">Co najmniej 10 znaków. Najlepiej kilka słów, które łatwo zapamiętać.</p></div>
+          <button type="submit" class="btn btn-ink" data-i18n="account.save_password">Zapisz nowe hasło</button>
+        </form>
+      </details>
+      <details class="more-light danger">
+        <summary data-i18n="account.delete">Usuń konto</summary>
+        <form id="delete-form" class="stack" novalidate>
+          <p data-i18n="account.delete_warning">Usuniemy konto i wszystkie Twoje obserwacje. Tego nie da się cofnąć.</p>
+          <div class="field"><label for="delete-password" data-i18n="account.confirm_password">Potwierdź hasłem</label>
+            <input id="delete-password" type="password" autocomplete="current-password" required></div>
+          <button type="submit" class="btn btn-danger" data-i18n="account.delete_confirm">Usuń konto na zawsze</button>
+        </form>
+      </details>
+      <p id="account-status" class="watch-result" role="status"></p>
+    </div>
+  </dialog>
+
+  <dialog id="install-dialog" aria-labelledby="install-title">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2 id="install-title" data-i18n="install.title">Zainstaluj Termin</h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p data-i18n="install.intro">Termin działa jak zwykła aplikacja: ikona na ekranie, osobne okno i dostęp do ostatnich wyników bez internetu. Nie potrzebujesz sklepu z aplikacjami.</p>
+      <h3 data-i18n="install.ios_title">iPhone i iPad (Safari)</h3>
+      <ol>
+        <li data-i18n="install.ios_1">Stuknij przycisk „Udostępnij” (kwadrat ze strzałką w górę).</li>
+        <li data-i18n="install.ios_2">Wybierz „Do ekranu początkowego”.</li>
+        <li data-i18n="install.ios_3">Stuknij „Dodaj”.</li>
+      </ol>
+      <h3 data-i18n="install.android_title">Android (Chrome)</h3>
+      <ol>
+        <li data-i18n="install.android_1">Otwórz menu (trzy kropki w prawym górnym rogu).</li>
+        <li data-i18n="install.android_2">Wybierz „Zainstaluj aplikację” albo „Dodaj do ekranu głównego”.</li>
+      </ol>
+      <h3 data-i18n="install.desktop_title">Komputer (Chrome, Edge)</h3>
+      <ol>
+        <li data-i18n="install.desktop_1">Kliknij ikonę instalacji na końcu paska adresu albo w menu wybierz „Zainstaluj Termin”.</li>
+      </ol>
+    </div>
+  </dialog>
+
+  <div id="storage-banner" class="storage-banner" role="region" aria-labelledby="storage-title" hidden>
+    <div class="wrap storage-inner">
+      <div>
+        <h2 id="storage-title" data-i18n="storage.title">Bez śledzenia</h2>
+        <p data-i18n="storage.text">Nie używamy ciasteczek reklamowych ani analitycznych. Czy zapisywać w tym urządzeniu ostatnie wyniki wyszukiwania, żeby były dostępne bez internetu?</p>
+        <a href="/cookies" data-i18n="storage.more">Szczegóły o cookies i pamięci</a>
+      </div>
+      <div class="storage-actions">
+        <button type="button" id="storage-deny" class="btn btn-outline-light" data-i18n="storage.deny">Tylko niezbędne</button>
+        <button type="button" id="storage-accept" class="btn btn-signal" data-i18n="storage.accept">Zgadzam się</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer">
     <div class="wrap footer-grid">
       <p class="disclaimer" data-i18n="footer.disclaimer">Termin nie jest oficjalną aplikacją NFZ i nie udziela porad medycznych. Pokazujemy dane z publicznego API NFZ „Terminy leczenia”, które placówki aktualizują mniej więcej raz w tygodniu. Zawsze potwierdź termin telefonicznie.</p>
       <ul class="footer-links">
+        <li><a href="/regulamin" data-i18n="footer.terms">Regulamin</a></li>
+        <li><a href="/prywatnosc" data-i18n="footer.privacy">Polityka prywatności</a></li>
+        <li><a href="/cookies" data-i18n="footer.cookies">Cookies</a></li>
+        <li><a href="/dostepnosc" data-i18n="footer.accessibility">Dostępność</a></li>
+        <li><a href="/kontakt" data-i18n="footer.contact">Kontakt</a></li>
         <li><a href="https://terminyleczenia.nfz.gov.pl" rel="noopener" data-i18n="footer.official">Oficjalna wyszukiwarka NFZ</a></li>
-        <li><a href="https://github.com/promilek2/pawel2jarzembowski-oss/blob/main/PRIVACY.md" rel="noopener" data-i18n="footer.privacy">Prywatność</a></li>
         <li><a href="https://github.com/promilek2/pawel2jarzembowski-oss" rel="noopener" data-i18n="footer.source">Kod źródłowy</a></li>
       </ul>
       <p class="small" data-i18n="footer.data">Dane: NFZ. Mapa: © współtwórcy OpenStreetMap.</p>
