@@ -28,6 +28,9 @@ log = get_logger(__name__)
 
 MAX_MANY_PLACES_LOOKUPS = 30
 
+FetchedHook = Callable[[str, str, int, list[QueueEntry]], None]
+"""(fragment świadczenia, województwo, przypadek, pozycje) → None."""
+
 
 class SearchError(ValueError):
     """Błąd po stronie zapytania użytkownika (komunikat do pokazania)."""
@@ -81,6 +84,7 @@ class SearchService:
         catalog: BenefitCatalog | None = None,
         router: Router | None = None,
         today: Callable[[], dt.date] = dt.date.today,
+        on_fetched: FetchedHook | None = None,
     ) -> None:
         self.settings = settings
         self.client = client
@@ -88,6 +92,8 @@ class SearchService:
         self.catalog = catalog or BenefitCatalog.load()
         self.router = router
         self._today = today
+        self.on_fetched = on_fetched
+        """Wywoływane z surowymi wynikami per województwo (np. zapis snapshotu)."""
 
     def resolve(self, req: SearchRequest) -> Resolution:
         if req.benefit_query:
@@ -146,6 +152,10 @@ class SearchService:
                 for code in provinces
             )
         )
+        if self.on_fetched is not None:
+            for code, entries in zip(provinces, pages, strict=True):
+                self.on_fetched(resolution.query, code, int(req.case), entries)
+
         seen: set[str] = set()
         fetched: list[tuple[str | None, QueueEntry]] = []
         for code, entries in zip(provinces, pages, strict=True):

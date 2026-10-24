@@ -3,27 +3,32 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
+import json
 import sys
 from contextlib import closing
 from dataclasses import replace
 from enum import StrEnum
+from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.table import Table
 
 from termin import __version__
 from termin.cli.render import print_json, print_results
 from termin.config import Settings, get_settings
-from termin.core.benefits import Resolution, Variant
+from termin.core.benefits import BenefitCatalog, Resolution, Variant
 from termin.core.cache import SqliteCache
 from termin.core.client import NfzClient, NfzError
 from termin.core.geo import GeocodingError
 from termin.core.models import Case, SortMode
-from termin.core.provinces import province_code
+from termin.core.provinces import PROVINCES, province_code
 from termin.core.search import SearchError, SearchRequest, SearchResponse
 from termin.logs import configure_logging
 from termin.runtime import Runtime
 from termin.store.db import connect
+from termin.store.snapshots import SnapshotStore, WaitStats, to_csv, to_json
 
 app = typer.Typer(
     name="termin",
@@ -201,6 +206,184 @@ def search(
         print_json(console, response)
     else:
         print_results(console, response)
+
+
+@app.command("historia")
+def history(
+    queue_id: str = typer.Argument(..., help="Identyfikator kolejki (pole 'id' z --json)."),
+    days: int = typer.Option(180, "--dni", help="Ile dni wstecz."),
+    as_json: bool = typer.Option(False, "--json", help="Wynik jako JSON."),
+) -> None:
+    """Historia pierwszego wolnego terminu w placówce i kierunek zmian kolejki."""
+    settings = get_settings()
+    with closing(connect(settings.db_path)) as conn:
+        trend = SnapshotStore(conn).trend(queue_id, days)
+    if as_json:
+        console.print_json(json.dumps(trend.to_dict(), ensure_ascii=False))
+        return
+    if not trend.points:
+        console.print(
+            "Brak historii dla tej kolejki. Historia powstaje z kolejnych wyszukiwań "
+            "i snapshotów (termin snapshot)."
+        )
+        return
+    table = Table("Dzień", "Pierwszy termin", "Czekanie (dni)", "Oczekujący", "Stan na")
+    for p in trend.points:
+        table.add_row(
+            f"{p.taken_on:%d.%m.%Y}",
+            f"{p.first_date:%d.%m.%Y}" if p.first_date else "—",
+            str(p.wait_days) if p.wait_days is not None else "—",
+            str(p.awaiting) if p.awaiting is not None else "—",
+            f"{p.as_at:%d.%m.%Y}" if p.as_at else "—",
+        )
+    console.print(table)
+    console.print(TREND_TEXT[trend.direction].format(change=abs(trend.change_days or 0)))
+
+
+TREND_TEXT = {
+    "shorter": "Kolejka się skraca (o {change} dni w badanym okresie).",
+    "longer": "Kolejka się wydłuża (o {change} dni w badanym okresie).",
+    "stable": "Kolejka jest stabilna.",
+    "unknown": "Za mało danych, żeby ocenić trend.",
+}
+
+
+@app.command("statystyki")
+def stats(
+    what: list[str] = typer.Argument(..., help="Świadczenie, np. okulista, rezonans."),
+    province: str = typer.Option(..., "--wojewodztwo", "-w", help="Województwo: nazwa albo kod."),
+    urgent: bool = typer.Option(False, "--pilny", help="Przypadek pilny."),
+    children: bool | None = typer.Option(
+        None, "--dla-dzieci/--dla-doroslych", help="Tylko wariant dla dzieci / dla dorosłych."
+    ),
+    as_json: bool = typer.Option(False, "--json", help="Wynik jako JSON."),
+) -> None:
+    """Mediana i percentyle czasu oczekiwania w województwie, z podziałem na powiaty."""
+    code = province_code(province)
+    if code is None:
+        err_console.print(f"Nie znam województwa „{province}”.")
+        raise typer.Exit(2)
+    settings = get_settings()
+    case_no = 2 if urgent else 1
+
+    async def run() -> WaitStats:
+        async with make_runtime(settings) as rt:
+            resolution = rt.catalog.resolve(" ".join(what), Variant.ANY)
+            query = resolution.query
+            today = rt.today()
+            latest = rt.snapshots.latest_snapshot_id(query, code, case_no)
+            if latest is None or latest[1] < today:
+                await rt.take_snapshot(query, code, case_no, source="search")
+            return rt.snapshots.wait_stats(query, code, case_no, for_children=children)
+
+    try:
+        result = asyncio.run(run())
+    except NfzError as exc:
+        err_console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(4) from exc
+    if as_json:
+        console.print_json(json.dumps(result.to_dict(), ensure_ascii=False))
+        return
+    console.print(
+        f"[bold]{result.query}[/bold] · {PROVINCES[code].name} · "
+        f"{'pilny' if urgent else 'stabilny'} · stan z {result.taken_on or '—'}"
+    )
+    if result.median is None:
+        console.print("Brak placówek z podanym terminem.")
+        return
+    console.print(
+        f"Placówek: {result.n} (z terminem: {result.with_date}). Czas oczekiwania w dniach: "
+        f"mediana {result.median:g}, 25% placówek ≤ {result.p25:g}, 75% ≤ {result.p75:g}, "
+        f"90% ≤ {result.p90:g}, min {result.minimum}, maks {result.maximum}."
+    )
+    table = Table("Powiat (TERYT)", "Miejscowości", "Placówek", "Mediana dni")
+    for d in sorted(result.districts, key=lambda d: d.median_days):
+        table.add_row(d.teryt, ", ".join(d.localities[:4]), str(d.n), f"{d.median_days:g}")
+    console.print(table)
+
+
+class ExportFormat(StrEnum):
+    csv = "csv"
+    json = "json"
+
+
+@app.command("eksport")
+def export(
+    fmt: ExportFormat = typer.Option(ExportFormat.csv, "--format", "-f"),
+    what: str | None = typer.Option(None, "--swiadczenie", "-s", help="Fragment świadczenia."),
+    province: str | None = typer.Option(None, "--wojewodztwo", "-w"),
+    since: str | None = typer.Option(None, "--od", help="Data od (RRRR-MM-DD)."),
+    until: str | None = typer.Option(None, "--do", help="Data do (RRRR-MM-DD)."),
+    output: Path | None = typer.Option(None, "--plik", "-o", help="Plik wyjściowy."),
+) -> None:
+    """Eksport zebranych snapshotów (CSV/JSON) dla dziennikarzy i badaczy."""
+    code = province_code(province) if province else None
+    try:
+        since_d = dt.date.fromisoformat(since) if since else None
+        until_d = dt.date.fromisoformat(until) if until else None
+    except ValueError as exc:
+        err_console.print("Daty podaj w formacie RRRR-MM-DD.")
+        raise typer.Exit(2) from exc
+    query = BenefitCatalog.load().resolve(what, Variant.ANY).query if what else None
+    settings = get_settings()
+    with closing(connect(settings.db_path)) as conn:
+        rows = SnapshotStore(conn).export_rows(
+            query=query, province=code, since=since_d, until=until_d
+        )
+    text = to_csv(rows) if fmt is ExportFormat.csv else to_json(rows)
+    if output:
+        output.write_text(text, encoding="utf-8")
+        err_console.print(f"Zapisano {len(rows)} wierszy do {output}")
+    else:
+        sys.stdout.write(text)
+
+
+@app.command("snapshot")
+def snapshot(
+    what: list[str] = typer.Argument(None, help="Świadczenie (puste = tracked_queries z configu)."),
+    province: str | None = typer.Option(None, "--wojewodztwo", "-w"),
+    urgent: bool = typer.Option(False, "--pilny"),
+) -> None:
+    """Zapisz snapshot kolejek (do cyklicznego uruchamiania, np. z crona)."""
+    settings = get_settings()
+    jobs: list[tuple[str, str, int]] = []
+    if what:
+        code = province_code(province or "")
+        if code is None:
+            err_console.print("Podaj województwo (--wojewodztwo).")
+            raise typer.Exit(2)
+        query = BenefitCatalog.load().resolve(" ".join(what), Variant.ANY).query
+        jobs.append((query, code, 2 if urgent else 1))
+    else:
+        jobs = parse_tracked(settings.tracked_queries)
+        if not jobs:
+            err_console.print("Brak zapytań: podaj świadczenie albo ustaw tracked_queries.")
+            raise typer.Exit(2)
+
+    async def run() -> None:
+        async with make_runtime(settings) as rt:
+            for query, code, case_no in jobs:
+                await rt.take_snapshot(query, code, case_no)
+                console.print(f"snapshot: {query} · {PROVINCES[code].name} · przypadek {case_no}")
+
+    try:
+        asyncio.run(run())
+    except NfzError as exc:
+        err_console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(4) from exc
+
+
+def parse_tracked(items: list[str]) -> list[tuple[str, str, int]]:
+    """'REZONANS@07' / 'PORADNIA OKULISTYCZNA@11@2' → (fragment, kod, przypadek)."""
+    out = []
+    for item in items:
+        parts = [p.strip() for p in item.split("@")]
+        code = province_code(parts[1]) if len(parts) > 1 else None
+        if not parts[0] or code is None:
+            continue
+        case_no = 2 if len(parts) > 2 and parts[2] == "2" else 1
+        out.append((parts[0].upper(), code, case_no))
+    return out
 
 
 def main() -> None:

@@ -72,6 +72,11 @@ class Settings(BaseSettings):
     data_dir: Path = Field(default_factory=_data_dir)
     database_url: Path | None = None
     """Ścieżka pliku SQLite. Domyślnie <data_dir>/termin.db."""
+    snapshot_on_search: bool = True
+    """Zapisuj snapshot wyników NFZ przy każdym wyszukiwaniu (historia i trendy)."""
+    snapshot_retention_days: int = 730
+    tracked_queries: list[str] = Field(default_factory=list)
+    """Zapytania do cyklicznych snapshotów: "FRAGMENT@WOJ[@PRZYPADEK]", np. "REZONANS@07"."""
 
     # --- Powiadomienia ---
     public_url: str = "http://localhost:8000"

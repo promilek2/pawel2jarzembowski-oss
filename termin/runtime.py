@@ -14,11 +14,13 @@ import httpx
 from termin.config import Settings
 from termin.core.benefits import BenefitCatalog
 from termin.core.cache import SqliteCache
-from termin.core.client import NfzClient
+from termin.core.client import NfzClient, QueueQuery
 from termin.core.geo import Geocoder
+from termin.core.models import QueueEntry
 from termin.core.routing import Router
 from termin.core.search import SearchService
 from termin.store.db import connect
+from termin.store.snapshots import SnapshotStore
 
 
 @dataclass
@@ -52,8 +54,33 @@ class Runtime:
             Router(settings.osrm_url, transport=self.transports.osrm) if settings.osrm_url else None
         )
         self.today = today
+        self.snapshots = SnapshotStore(self.conn)
         self.search = SearchService(
-            settings, self.client, self.geocoder, self.catalog, self.router, today=today
+            settings,
+            self.client,
+            self.geocoder,
+            self.catalog,
+            self.router,
+            today=today,
+            on_fetched=self._save_snapshot if settings.snapshot_on_search else None,
+        )
+
+    def _save_snapshot(
+        self, query: str, province: str, case_no: int, entries: list[QueueEntry]
+    ) -> None:
+        self.snapshots.save(
+            query=query, province=province, case_no=case_no, entries=entries, source="search"
+        )
+
+    async def take_snapshot(
+        self, query: str, province: str, case_no: int = 1, source: str = "scheduler"
+    ) -> int:
+        """Pobiera kolejki z NFZ i zapisuje snapshot (np. dla statystyk albo schedulera)."""
+        entries = await self.client.queues(
+            QueueQuery(benefit=query, province=province, case=case_no)
+        )
+        return self.snapshots.save(
+            query=query, province=province, case_no=case_no, entries=entries, source=source
         )
 
     async def __aenter__(self) -> Self:
