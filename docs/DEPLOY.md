@@ -180,11 +180,23 @@ W `fly.toml` dopisz:
 Potem `fly secrets set TERMIN_TELEGRAM_TOKEN=...` i `fly deploy`. Jedna maszyna wystarczy.
 SQLite nie lubi wielu replik, więc nie skaluj poziomo.
 
-## Render
+## Render (najprościej: jedno kliknięcie)
 
-New → Web Service → repozytorium → środowisko **Docker**. Dodaj **Disk** zamontowany w `/data`
-(1 GB), zmienną `TERMIN_PUBLIC_URL` i Health Check Path `/healthz`. Darmowy plan usypia
-usługę, więc obserwator nie będzie działał niezawodnie. Do powiadomień wybierz plan płatny.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/promilek2/pawel2jarzembowski-oss/tree/claude/termin-nfz-setup-inoylh)
+
+Przycisk czyta `render.yaml`: darmowy plan, Docker, health check `/healthz`, HTTPS i adres
+`https://<nazwa>.onrender.com` (trafia sam do `TERMIN_PUBLIC_URL` przez `RENDER_EXTERNAL_URL`).
+Po kilku minutach otwórz ten adres na telefonie i kliknij „Zainstaluj”.
+
+Ograniczenia darmowego planu:
+
+- usługa zasypia po 15 min bez ruchu, pierwsze wejście potem trwa około minuty,
+- bez dysku: baza (historia, obserwacje, konta) znika przy restarcie i każdym wdrożeniu.
+  Na stałe: plan płatny i w `render.yaml` odkomentuj sekcję `disk`,
+- obserwator powiadomień nie działa niezawodnie, bo usługa śpi,
+- aplikacja nie ufa nagłówkowi `X-Forwarded-For` (Render nie czyści go, więc klient mógłby
+  podać dowolne IP), dlatego limity zapytań są wspólne dla wszystkich użytkowników instancji.
+  Do użytku prywatnego to nie przeszkadza; publiczną instancję postaw na VPS z Caddy.
 
 ## Monitoring
 

@@ -1,0 +1,22 @@
+# Render Blueprint: jedno kliknięcie w docs/DEPLOY.md → „Render”.
+# Darmowy plan: usługa zasypia bez ruchu, a baza znika przy restarcie (brak dysku).
+services:
+  - type: web
+    name: termin
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # Dockerfile słucha na 8000; Render kieruje ruch na port z PORT.
+      - key: PORT
+        value: "8000"
+      # TERMIN_PUBLIC_URL nie trzeba: aplikacja bierze RENDER_EXTERNAL_URL.
+      # Instancja publiczna: dodaj w panelu Render TERMIN_OPERATOR_NAME, _EMAIL, _ADDRESS
+      # (regulamin i polityka prywatności, docs/DEPLOY.md).
+    # Stała baza (tylko plan płatny):
+    # disk:
+    #   name: termin-data
+    #   mountPath: /data
+    #   sizeGB: 1

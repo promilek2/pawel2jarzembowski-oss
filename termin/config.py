@@ -79,7 +79,10 @@ class Settings(BaseSettings):
     """Zapytania do cyklicznych snapshotów: "FRAGMENT@WOJ[@PRZYPADEK]", np. "REZONANS@07"."""
 
     # --- Powiadomienia ---
-    public_url: str = "http://localhost:8000"
+    public_url: str = Field(
+        default_factory=lambda: os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:8000"
+    )
+    """Publiczny adres panelu. Na Render domyślnie RENDER_EXTERNAL_URL (render.yaml)."""
     ntfy_server: str = "https://ntfy.sh"
     telegram_token: str | None = None
     smtp_host: str | None = None

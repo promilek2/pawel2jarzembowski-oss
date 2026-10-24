@@ -76,6 +76,11 @@ termin obserwuj dodaj okulista --gdzie Gdynia --promien 30 --kanal ntfy --cel mo
 termin watcher            # sprawdza co godzinę i wysyła powiadomienia
 ```
 
+**Na telefonie bez własnego serwera:** kliknij
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/promilek2/pawel2jarzembowski-oss/tree/claude/termin-nfz-setup-inoylh),
+zaloguj się w Render (darmowy plan), a po kilku minutach otwórz adres `https://….onrender.com`
+na telefonie i kliknij „Zainstaluj”.
+
 Wdrożenie na serwer (VPS, Fly.io, Render) i lista obowiązków prawnych przed publicznym
 uruchomieniem: [docs/DEPLOY.md](docs/DEPLOY.md).
 

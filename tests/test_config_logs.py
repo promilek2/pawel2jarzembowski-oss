@@ -28,6 +28,16 @@ def test_toml_and_env_precedence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert Settings().km_per_day == 7.0
 
 
+def test_public_url_falls_back_to_render(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("TERMIN_PUBLIC_URL", raising=False)
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://termin-abc.onrender.com")
+    s = Settings()
+    assert s.public_url == "https://termin-abc.onrender.com"
+    assert s.secure_cookies
+    monkeypatch.setenv("TERMIN_PUBLIC_URL", "https://termin.example.org/")
+    assert Settings().public_url == "https://termin.example.org"
+
+
 def test_concurrency_is_capped_at_four(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TERMIN_NFZ_CONCURRENCY", "10")
     with pytest.raises(ValueError, match="nfz_concurrency"):
