@@ -164,11 +164,12 @@ async def test_nominatim_empty_and_foreign_results(tmp_path: Path) -> None:
     settings = Settings(data_dir=tmp_path, geocoder="nominatim")
     Geocoder._next_slot = 0.0
     calls: list[httpx.Request] = []
-    geo = Geocoder(settings, transport=_nominatim(calls, []))
+    clock = Clock()
+    geo = Geocoder(settings, transport=_nominatim(calls, []), sleep=clock.sleep, clock=clock)
     assert await geo.geocode("nigdzie") is None
     await geo.aclose()
     paris = [{"lat": "48.85", "lon": "2.35", "address": {}}]
-    geo = Geocoder(settings, transport=_nominatim(calls, paris))
+    geo = Geocoder(settings, transport=_nominatim(calls, paris), sleep=clock.sleep, clock=clock)
     assert await geo.geocode("Paryż") is None
     await geo.aclose()
 

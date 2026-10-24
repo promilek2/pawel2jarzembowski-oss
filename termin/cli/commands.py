@@ -26,9 +26,21 @@ from termin.core.models import Case, SortMode
 from termin.core.provinces import PROVINCES, province_code
 from termin.core.search import SearchError, SearchRequest, SearchResponse
 from termin.logs import configure_logging
+from termin.notify.base import Notifier
+from termin.notify.channels import build_notifiers
+from termin.notify.message import unsubscribe_url
+from termin.notify.subscribe import (
+    SubscribeError,
+    SubscribeRequest,
+    create_subscription,
+    parse_date,
+)
+from termin.notify.telegram_bot import TelegramBot
+from termin.notify.watcher import Watcher, WatchReport
 from termin.runtime import Runtime
 from termin.store.db import connect
 from termin.store.snapshots import SnapshotStore, WaitStats, to_csv, to_json
+from termin.store.subscriptions import Subscription, SubscriptionStore, wipe_user_data
 
 app = typer.Typer(
     name="termin",
@@ -384,6 +396,167 @@ def parse_tracked(items: list[str]) -> list[tuple[str, str, int]]:
         case_no = 2 if len(parts) > 2 and parts[2] == "2" else 1
         out.append((parts[0].upper(), code, case_no))
     return out
+
+
+watch_app = typer.Typer(help="Obserwowanie: powiadomienia o wcześniejszym terminie.")
+app.add_typer(watch_app, name="obserwuj")
+data_app = typer.Typer(help="Twoje dane: podgląd i usuwanie.")
+app.add_typer(data_app, name="dane")
+
+
+def make_notifiers(settings: Settings) -> dict[str, Notifier]:
+    """Punkt wstrzyknięcia kanałów powiadomień (testy podmieniają transport)."""
+    return build_notifiers(settings)
+
+
+@watch_app.command("dodaj")
+def watch_add(
+    what: list[str] = typer.Argument(..., help="Czego szukasz."),
+    channel: str = typer.Option(..., "--kanal", "-k", help="ntfy | telegram | email | desktop"),
+    target: str = typer.Option(
+        "", "--cel", "-c", help="Temat ntfy, ID czatu Telegram albo adres e-mail."
+    ),
+    where: str | None = typer.Option(None, "--gdzie", "-g"),
+    radius: float | None = typer.Option(None, "--promien", "-r"),
+    province: str | None = typer.Option(None, "--wojewodztwo", "-w"),
+    before: str | None = typer.Option(None, "--przed", help="Tylko terminy przed tą datą."),
+    urgent: bool = typer.Option(False, "--pilny"),
+    children: bool = typer.Option(False, "--dla-dzieci"),
+) -> None:
+    """Dodaj obserwację: dostaniesz powiadomienie, gdy pojawi się wcześniejszy termin."""
+    settings = get_settings()
+    code = province_code(province) if province else None
+    if province and code is None:
+        err_console.print(f"Nie znam województwa „{province}”.")
+        raise typer.Exit(2)
+
+    async def run() -> Subscription:
+        async with make_runtime(settings) as rt:
+            return await create_subscription(
+                rt,
+                SubscribeRequest(
+                    text=" ".join(what),
+                    channel=channel,
+                    target=target,
+                    where=where,
+                    province=code,
+                    radius_km=radius,
+                    before_date=parse_date(before) if before else None,
+                    case=Case.URGENT if urgent else Case.STABLE,
+                    variant=Variant.CHILD if children else None,
+                ),
+            )
+
+    try:
+        sub = asyncio.run(run())
+    except SubscribeError as exc:
+        err_console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(2) from exc
+    console.print(f"Obserwuję: [bold]{sub.label}[/bold] · {sub.area_label}")
+    console.print(f"Token: {sub.token}")
+    console.print(f"Wyłączenie: termin obserwuj usun {sub.token}")
+    console.print(f"albo w przeglądarce: {unsubscribe_url(settings, sub.token)}")
+
+
+@watch_app.command("lista")
+def watch_list() -> None:
+    """Pokaż obserwacje zapisane w tej instancji."""
+    settings = get_settings()
+    with closing(connect(settings.db_path)) as conn:
+        subs = SubscriptionStore(conn).active()
+    if not subs:
+        console.print("Brak obserwacji.")
+        return
+    table = Table("Token", "Co", "Obszar", "Kanał", "Ostatnio zgłoszony")
+    for s in subs:
+        last = f"{s.last_notified_date:%d.%m.%Y}" if s.last_notified_date else "—"
+        table.add_row(s.token, s.label, s.area_label or "", s.channel, last)
+    console.print(table)
+
+
+@watch_app.command("usun")
+def watch_remove(token: str = typer.Argument(..., help="Token obserwacji.")) -> None:
+    """Usuń obserwację."""
+    settings = get_settings()
+    with closing(connect(settings.db_path)) as conn:
+        removed = SubscriptionStore(conn).delete(token)
+    if not removed:
+        err_console.print("Nie ma takiej obserwacji.")
+        raise typer.Exit(1)
+    console.print("Usunięto.")
+
+
+@app.command("watcher")
+def watcher(
+    once: bool = typer.Option(False, "--raz", help="Jeden przebieg i koniec (np. z crona)."),
+) -> None:
+    """Sprawdzaj obserwacje cyklicznie i wysyłaj powiadomienia."""
+    settings = get_settings()
+
+    async def run() -> WatchReport | None:
+        async with make_runtime(settings) as rt:
+            w = Watcher(rt, make_notifiers(settings))
+            if once:
+                return await w.run_once()
+            await w.run_forever()
+            return None
+
+    report = asyncio.run(run())
+    if report is not None:
+        console.print(
+            f"obserwacji: {report.subscriptions}, zapytań do NFZ: {report.queries}, "
+            f"powiadomień: {report.notified}, bez poprawy: {report.not_better}, "
+            f"cooldown: {report.cooldown}, brak pasujących: {report.no_match}"
+        )
+        for error in report.errors:
+            err_console.print(f"[yellow]{error}[/yellow]")
+
+
+@app.command("telegram")
+def telegram() -> None:
+    """Uruchom bota Telegram (wymaga TERMIN_TELEGRAM_TOKEN)."""
+    settings = get_settings()
+    if not settings.telegram_token:
+        err_console.print("Ustaw TERMIN_TELEGRAM_TOKEN (token od @BotFather).")
+        raise typer.Exit(2)
+    token = settings.telegram_token
+
+    async def run() -> None:
+        async with make_runtime(settings) as rt:
+            bot = TelegramBot(rt, token)
+            try:
+                await bot.run_forever()
+            finally:
+                await bot.aclose()
+
+    asyncio.run(run())
+
+
+@data_app.command("usun")
+def data_delete(
+    history: bool = typer.Option(
+        False, "--z-historia", help="Usuń też snapshoty NFZ i cache (dane publiczne)."
+    ),
+    yes: bool = typer.Option(False, "--tak", help="Nie pytaj o potwierdzenie."),
+) -> None:
+    """Usuń wszystkie dane użytkowników: obserwacje i cache geokodowania."""
+    if not yes and not typer.confirm("Usunąć wszystkie obserwacje i zapamiętane lokalizacje?"):
+        raise typer.Exit(1)
+    settings = get_settings()
+    with closing(connect(settings.db_path)) as conn:
+        counts = wipe_user_data(conn, include_history=history)
+    console.print("Usunięto: " + ", ".join(f"{k}: {v}" for k, v in counts.items()))
+
+
+@data_app.command("pokaz")
+def data_show() -> None:
+    """Pokaż, jakie dane przechowuje ta instancja (liczby wierszy)."""
+    settings = get_settings()
+    with closing(connect(settings.db_path)) as conn:
+        for table in ("subscriptions", "geocode_cache", "snapshots", "snapshot_rows", "http_cache"):
+            n = conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0]  # noqa: S608
+            console.print(f"{table}: {n}")
+    console.print(f"Plik bazy: {settings.db_path}")
 
 
 def main() -> None:

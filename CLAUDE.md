@@ -34,7 +34,12 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
 - `termin/runtime.py`: `Runtime` składa zależności (klient, geokoder, wyszukiwarka, baza).
   `Transports` pozwala wstrzyknąć `httpx.MockTransport` w testach.
 - `termin/cli/commands.py`: Typer (`make_runtime` to punkt wstrzyknięcia dla testów).
-  `termin/web/`: FastAPI + statyczny frontend. `termin/notify/`: kanały powiadomień.
+  `termin/web/`: FastAPI + statyczny frontend.
+- `termin/notify/`: `channels.py` (ntfy JSON, Telegram, SMTP, notify-send), `message.py`
+  (treść), `subscribe.py` (tworzenie subskrypcji, wspólne dla CLI/web/bota),
+  `watcher.py` (grupowanie po zapytaniu, deduplikacja „tylko lepszy termin”, cooldown),
+  `telegram_bot.py` (long polling). Subskrypcje: `termin/store/subscriptions.py`
+  (token, współrzędne zaokrąglone do 0,01°, `wipe_user_data`).
 - `termin/config.py`: `Settings` (env `TERMIN_*`, plik `~/.config/termin/config.toml`,
   nadpisywany przez `TERMIN_CONFIG`).
 - `termin/logs.py`: structlog z procesorem `redact_pii`. **Nigdy nie loguj lokalizacji

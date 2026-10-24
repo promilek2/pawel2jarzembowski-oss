@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import hashlib
 import io
 import re
 import sqlite3
@@ -21,6 +22,7 @@ from importlib import resources
 from pathlib import Path
 
 import httpx
+from rapidfuzz import fuzz, process
 
 from termin import USER_AGENT
 from termin.config import Settings
@@ -38,6 +40,7 @@ _STREET = re.compile(
     r"\b(ul|ulica|al|aleja|aleje|pl|plac|os|osiedle|rondo)\.?\s+[^,]*", re.IGNORECASE
 )
 NOMINATIM_MIN_INTERVAL_S = 1.0
+FUZZY_LOCALITY_SCORE = 80.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +104,21 @@ class Gazetteer:
                     place = self._by_name.get(" ".join(words[start : start + size]))
                     if place is not None:
                         return place
+        return self._fuzzy_locality(parts)
+
+    def _fuzzy_locality(self, parts: list[str]) -> Place | None:
+        """Odmiana i literówki: „w Gdyni”, „Krakowie”, „Wroclawiu” → miejscowość."""
+        names = list(self._by_name)
+        for part in reversed(parts):
+            words = [w for w in fold(part).split() if len(w) >= 4 and not w.isdigit()]
+            for size in (2, 1):
+                for start in range(len(words) - size, -1, -1):
+                    phrase = " ".join(words[start : start + size])
+                    match = process.extractOne(
+                        phrase, names, scorer=fuzz.ratio, score_cutoff=FUZZY_LOCALITY_SCORE
+                    )
+                    if match is not None:
+                        return self._by_name[match[0]]
         return None
 
     def lookup(self, text: str) -> GeoPoint | None:
@@ -184,7 +202,9 @@ class Geocoder:
         if mode == "offline":
             return self.gazetteer.lookup(text)
 
-        key = fold(text)
+        # Klucz cache to skrót (SHA-256) znormalizowanego adresu: w bazie nie ma adresów
+        # w czytelnej postaci (PRIVACY.md).
+        key = hashlib.sha256(fold(text).encode()).hexdigest()
         cached = self._cache_get(key)
         if cached is not None:
             return cached
