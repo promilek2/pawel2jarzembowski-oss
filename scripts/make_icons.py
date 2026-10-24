@@ -1,4 +1,7 @@
-"""Generuje ikony PNG aplikacji (bez zależności graficznych): bilet z ptaszkiem (jak icon.svg).
+"""Generuje ikony PNG aplikacji (bez zależności graficznych), zgodne z icon.svg.
+
+Znak: bilet z półkolistymi wcięciami (przez które widać tło), białe „T” i pomarańczowa
+kropka. Krawędzie wygładzane próbkowaniem 4×4 na piksel.
 
 Użycie: python scripts/make_icons.py
 """
@@ -10,23 +13,21 @@ import zlib
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[1] / "termin" / "web" / "static" / "icons"
-INK = (18, 24, 43, 255)
-WHITE = (255, 255, 255, 255)
-PERF = (203, 208, 218, 255)
-SIGNAL = (255, 106, 26, 255)
-CLEAR = (0, 0, 0, 0)
+INK = (18, 24, 43)
+WHITE = (255, 255, 255)
+SIGNAL = (255, 106, 26)
+GROUND = (237, 239, 243)
+SAMPLES = 4
+
+Color = tuple[int, int, int, int]
 
 
-def png(width: int, pixels: list[list[tuple[int, int, int, int]]]) -> bytes:
+def png(width: int, pixels: list[list[Color]]) -> bytes:
     raw = b"".join(b"\x00" + bytes(c for px in row for c in px) for row in pixels)
 
     def chunk(kind: bytes, data: bytes) -> bytes:
-        return (
-            struct.pack(">I", len(data))
-            + kind
-            + data
-            + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
-        )
+        crc = struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+        return struct.pack(">I", len(data)) + kind + data + crc
 
     header = struct.pack(">IIBBBBB", width, width, 8, 6, 0, 0, 0)  # RGBA
     return (
@@ -37,9 +38,7 @@ def png(width: int, pixels: list[list[tuple[int, int, int, int]]]) -> bytes:
     )
 
 
-def inside_round_rect(
-    x: float, y: float, x0: float, y0: float, x1: float, y1: float, r: float
-) -> bool:
+def in_round_rect(x: float, y: float, x0: float, y0: float, x1: float, y1: float, r: float) -> bool:
     if not (x0 <= x <= x1 and y0 <= y <= y1):
         return False
     cx = min(max(x, x0 + r), x1 - r)
@@ -47,54 +46,59 @@ def inside_round_rect(
     return (x - cx) ** 2 + (y - cy) ** 2 <= r * r
 
 
-def dist_to_segment(px: float, py: float, ax: float, ay: float, bx: float, by: float) -> float:
-    dx, dy = bx - ax, by - ay
-    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
-    return ((px - ax - t * dx) ** 2 + (py - ay - t * dy) ** 2) ** 0.5
+def mark_color(x: float, y: float) -> tuple[int, int, int] | None:
+    """Kolor znaku w punkcie (układ 64×64 jak icon.svg) albo None poza znakiem."""
+    if (x - 45) ** 2 + (y - 42) ** 2 <= 4.5**2:
+        return SIGNAL
+    if (20 <= x <= 44 and 20 <= y <= 26) or (29 <= x <= 35 and 26 <= y <= 44):
+        return WHITE
+    if not in_round_rect(x, y, 4, 10, 60, 54, 8):
+        return None
+    if (x - 4) ** 2 + (y - 32) ** 2 < 36 or (x - 60) ** 2 + (y - 32) ** 2 < 36:
+        return None  # wcięcia: tło przechodzi przez bilet
+    return INK
 
 
-def inside_ticket(x: float, y: float) -> bool:
-    """Bilet 44×32 z półkolistymi wcięciami po bokach (jak ścieżka w icon.svg)."""
-    if not (10 <= x <= 54 and 16 <= y <= 48):
-        return False
-    return all((x - cx) ** 2 + (y - 32) ** 2 >= 25 for cx in (10, 54))
-
-
-def draw(size: int, *, maskable: bool) -> bytes:
-    # Układ w jednostkach 64×64 (jak icon.svg). Wariant maskable ma pełne tło i
-    # treść zmniejszoną do strefy bezpiecznej.
-    scale = size / 64
-    shrink = 0.78 if maskable else 1.0
-    offset = 32 * (1 - shrink)
-    rows = []
+def draw(size: int, *, background: tuple[int, int, int] | None, scale: float) -> bytes:
+    """`background`: pełne tło (ikona maskowalna / Apple) albo przezroczystość."""
+    unit = size / 64
+    offset = 32 * (1 - scale)
+    rows: list[list[Color]] = []
     for py in range(size):
-        row = []
+        row: list[Color] = []
         for px in range(size):
-            u = (px + 0.5) / scale
-            v = (py + 0.5) / scale
-            inside = maskable or inside_round_rect(u, v, 0, 0, 64, 64, 14)
-            color = INK if inside else CLEAR
-            x = (u - offset) / shrink
-            y = (v - offset) / shrink
-            if inside_ticket(x, y):
-                color = WHITE
-                if 23 <= x <= 25 and 18 <= y <= 46 and int((y - 18) // 3) % 2 == 0:
-                    color = PERF
-            check = min(
-                dist_to_segment(x, y, 31, 32, 36, 37), dist_to_segment(x, y, 36, 37, 46, 26)
-            )
-            if check <= 2.5:
-                color = SIGNAL
-            row.append(color)
+            acc = [0.0, 0.0, 0.0, 0.0]
+            for sy in range(SAMPLES):
+                for sx in range(SAMPLES):
+                    u = (px + (sx + 0.5) / SAMPLES) / unit
+                    v = (py + (sy + 0.5) / SAMPLES) / unit
+                    color = mark_color((u - offset) / scale, (v - offset) / scale)
+                    if color is None and background is not None:
+                        color = background
+                    if color is not None:
+                        acc[0] += color[0]
+                        acc[1] += color[1]
+                        acc[2] += color[2]
+                        acc[3] += 255
+            n = SAMPLES * SAMPLES
+            alpha = acc[3] / n
+            if alpha == 0:
+                row.append((0, 0, 0, 0))
+            else:
+                k = acc[3] / 255  # średnia kolorów tylko z próbek pokrytych
+                row.append((round(acc[0] / k), round(acc[1] / k), round(acc[2] / k), round(alpha)))
         rows.append(row)
     return png(size, rows)
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "icon-192.png").write_bytes(draw(192, maskable=False))
-    (OUT / "icon-512.png").write_bytes(draw(512, maskable=False))
-    (OUT / "icon-maskable-512.png").write_bytes(draw(512, maskable=True))
+    (OUT / "icon-192.png").write_bytes(draw(192, background=None, scale=1.0))
+    (OUT / "icon-512.png").write_bytes(draw(512, background=None, scale=1.0))
+    # maskowalna: pełne tło w kolorze strony, znak w strefie bezpiecznej (~62%)
+    (OUT / "icon-maskable-512.png").write_bytes(draw(512, background=GROUND, scale=0.62))
+    # iOS nie obsługuje przezroczystości ikon: tło w kolorze strony
+    (OUT / "icon-apple-180.png").write_bytes(draw(180, background=GROUND, scale=0.78))
     print("ok")
 
 

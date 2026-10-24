@@ -111,9 +111,10 @@ a:hover { color: var(--signal-ink); }
 /* --- nagłówek --- */
 .site-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1rem 0.25rem; }
 .brand { display: inline-flex; align-items: center; gap: 0.625rem; text-decoration: none; min-height: 44px; }
-.brand-mark .mark-ticket { fill: var(--ink); }
-.brand-mark .mark-perf { stroke: var(--ground); }
-.brand-mark .mark-check { stroke: var(--signal); }
+.brand-mark { flex: none; }
+.brand-mark .logo-tile { fill: var(--ink); }      /* w ciemnym motywie jasny bilet */
+.brand-mark .logo-t { fill: var(--surface); }
+.brand-mark .logo-dot { fill: var(--signal); }
 .brand-name { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; letter-spacing: -0.03em; white-space: nowrap; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: flex-end; }
 
