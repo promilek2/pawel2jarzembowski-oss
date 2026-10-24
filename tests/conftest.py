@@ -65,3 +65,12 @@ async def runtime(settings: Settings, fake_nfz: FakeNfz) -> AsyncIterator[Runtim
     yield rt
     await rt.aclose()
     rt.conn.close()
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Testy e2e/live tylko na żądanie (-m e2e / -m live), nawet przy wskazaniu pliku."""
+    selected = config.getoption("-m") or ""
+    for item in items:
+        for marker in ("e2e", "live"):
+            if item.get_closest_marker(marker) and marker not in selected:
+                item.add_marker(pytest.mark.skip(reason=f"uruchom z -m {marker}"))

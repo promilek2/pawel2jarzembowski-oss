@@ -156,3 +156,8 @@ async def test_dictionary_pagination(settings: Settings, fake_nfz: FakeNfz) -> N
     async with NfzClient(settings, cache=MemoryCache(), transport=fake_nfz.transport()) as c:
         names = await c.benefits("PORADNIA")
     assert len(names) == 60
+
+
+async def test_missing_queue_returns_none(client: NfzClient) -> None:
+    assert await client.queue("nie-ma") is None
+    assert await client.many_places("nie-ma") == ()

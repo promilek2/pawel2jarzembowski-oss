@@ -78,7 +78,11 @@ markers = [
   "live: testy na prawdziwym API NFZ (domyślnie pomijane, uruchom: pytest -m live)",
   "e2e: testy przeglądarkowe Playwright (uruchom: pytest -m e2e)",
 ]
-filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning", "error::ResourceWarning"]
+filterwarnings = [
+  "error::pytest.PytestUnraisableExceptionWarning",
+  "error::ResourceWarning",
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
 
 [tool.coverage.run]
 source = ["termin"]

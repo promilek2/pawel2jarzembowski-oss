@@ -559,5 +559,34 @@ def data_show() -> None:
     console.print(f"Plik bazy: {settings.db_path}")
 
 
+@app.command("serwer")
+def server(
+    host: str = typer.Option("127.0.0.1", "--host", help="Adres nasłuchu."),
+    port: int = typer.Option(8000, "--port", "-p"),
+    watcher_on: bool = typer.Option(
+        False, "--watcher", help="Uruchom też obserwatora powiadomień w tym procesie."
+    ),
+    proxy_headers: bool = typer.Option(
+        True,
+        "--proxy-headers/--bez-proxy-headers",
+        help="Ufaj X-Forwarded-* (adresy z FORWARDED_ALLOW_IPS, domyślnie 127.0.0.1).",
+    ),
+) -> None:
+    """Uruchom panel web (http://localhost:8000)."""
+    import uvicorn
+
+    from termin.web.app import create_app
+
+    settings = get_settings()
+    uvicorn.run(
+        create_app(settings, start_watcher=watcher_on),
+        host=host,
+        port=port,
+        proxy_headers=proxy_headers,
+        log_level=settings.log_level.lower(),
+        access_log=False,  # logi dostępowe zawierają IP i parametry zapytań (PRIVACY.md)
+    )
+
+
 def main() -> None:
     app()

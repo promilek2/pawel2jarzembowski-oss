@@ -52,7 +52,7 @@ Decyzje architektoniczne są w `docs/adr/`.
 | 2 | Ranking (najszybciej / najbliżej / kompromis), many-places, ostrzeżenia, „dlaczego tu”, CLI | ✅ |
 | 3 | SQLite, snapshoty, trend placówki, percentyle, mapa cieplna powiatów, eksport CSV/JSON | ✅ |
 | 4 | Subskrypcje, ntfy, Telegram (bot), e-mail, notify-send, scheduler, deduplikacja, PRIVACY.md | ✅ |
-| 5 | Web mobile-first, PWA, WCAG 2.1 AA, duży tekst, skrypt rozmowy, .ics, i18n pl/en/uk | ⏳ |
+| 5 | Web mobile-first, PWA, WCAG 2.1 AA, duży tekst, skrypt rozmowy, .ics, i18n pl/en/uk | ✅ |
 | 6 | Docker, compose + Caddy, /healthz, /metrics, rate limiting, e2e Playwright + axe, PyPI | ⏳ |
 | 7 | README pl/en, CONTRIBUTING, CoC, MIT, szablony issue/PR, 5 × good first issue | ⏳ |
 

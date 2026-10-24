@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Termin">
+  <rect width="64" height="64" rx="14" fill="#0b4f8a"/>
+  <rect x="14" y="17" width="36" height="33" rx="5" fill="#ffffff"/>
+  <rect x="14" y="17" width="36" height="9" rx="4" fill="#cfe3f7"/>
+  <rect x="21" y="11" width="5" height="11" rx="2" fill="#ffffff"/>
+  <rect x="38" y="11" width="5" height="11" rx="2" fill="#ffffff"/>
+  <path d="M23 38l6 6 12-13" fill="none" stroke="#0a6b45" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

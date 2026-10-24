@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="app.title">Termin: najszybszy termin u specjalisty na NFZ</title>
+  <meta name="description" content="Najszybsze terminy u specjalistów na NFZ: gdzie, jak daleko i pod jaki numer zadzwonić. Projekt open-source, nie jest oficjalną aplikacją NFZ.">
+  <meta name="theme-color" content="#0b4f8a">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="module" src="/static/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#co" data-i18n="app.skip">Przejdź do wyszukiwarki</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <div class="brand">
+        <img src="/static/icons/icon.svg" alt="" width="40" height="40">
+        <div>
+          <p class="brand-name">Termin</p>
+          <p class="tagline" data-i18n="app.tagline">Najszybsze terminy u specjalistów na NFZ: gdzie, jak daleko i pod jaki numer zadzwonić.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button type="button" id="large-text" class="btn btn-ghost" aria-pressed="false">
+          <span aria-hidden="true">A+</span> <span data-i18n="settings.large_text">Duży tekst</span>
+        </button>
+        <label class="lang">
+          <span class="visually-hidden" data-i18n="settings.language">Język</span>
+          <select id="lang">
+            <option value="pl">Polski</option>
+            <option value="en">English</option>
+            <option value="uk">Українська</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <h1 class="visually-hidden" data-i18n="app.title">Termin: najszybszy termin u specjalisty na NFZ</h1>
+
+    <form id="search-form" class="search card" novalidate>
+      <div class="field combo">
+        <label for="co" data-i18n="form.what">Czego szukasz?</label>
+        <input id="co" name="q" type="text" required autocomplete="off" spellcheck="false"
+               role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="co-list"
+               aria-describedby="co-hint">
+        <p id="co-hint" class="hint" data-i18n="form.what_hint">Np. okulista, kardiolog, rezonans, USG, zaćma</p>
+        <ul id="co-list" class="suggestions" role="listbox" hidden></ul>
+      </div>
+
+      <div class="field">
+        <label for="gdzie" data-i18n="form.where">Gdzie jesteś?</label>
+        <p id="gdzie-hint" class="hint" data-i18n="form.where_hint">Miasto, kod pocztowy albo adres</p>
+        <div class="input-row">
+          <input id="gdzie" name="where" type="text" autocomplete="postal-code" aria-describedby="gdzie-hint gps-status">
+          <button type="button" id="gps" class="btn btn-secondary">
+            <span aria-hidden="true">⌖</span> <span data-i18n="form.gps">Użyj mojej lokalizacji</span>
+          </button>
+        </div>
+        <p id="gps-status" class="hint" role="status"></p>
+      </div>
+
+      <div id="choices" class="choices" hidden>
+        <p id="choices-label" class="choices-label"></p>
+        <div id="choices-list" class="chips" role="group" aria-labelledby="choices-label"></div>
+      </div>
+
+      <details class="more">
+        <summary data-i18n="form.more">Więcej opcji</summary>
+        <div class="field">
+          <label for="promien" data-i18n="form.radius">Jak daleko możesz dojechać?</label>
+          <select id="promien" name="radius">
+            <option value="10">10 km</option>
+            <option value="25">25 km</option>
+            <option value="50" selected>50 km</option>
+            <option value="100">100 km</option>
+            <option value="200">200 km</option>
+          </select>
+        </div>
+        <fieldset class="field">
+          <legend data-i18n="form.mode">Co jest najważniejsze?</legend>
+          <div class="radios">
+            <label><input type="radio" name="mode" value="kompromis" checked>
+              <span><strong data-i18n="form.mode_kompromis">Kompromis</strong> <small data-i18n="form.mode_kompromis_hint">szybko i niedaleko</small></span></label>
+            <label><input type="radio" name="mode" value="najszybciej">
+              <span><strong data-i18n="form.mode_najszybciej">Najszybciej</strong> <small data-i18n="form.mode_najszybciej_hint">najwcześniejszy termin</small></span></label>
+            <label><input type="radio" name="mode" value="najblizej">
+              <span><strong data-i18n="form.mode_najblizej">Najbliżej</strong> <small data-i18n="form.mode_najblizej_hint">najkrótszy dojazd</small></span></label>
+          </div>
+        </fieldset>
+        <div class="field" id="kmday-field">
+          <label for="kmday" data-i18n="form.km_per_day">Za każdy dzień szybciej mogę pojechać dalej o:</label>
+          <div class="input-row">
+            <input id="kmday" name="km_per_day" type="range" min="0.5" max="10" step="0.5" value="2" aria-describedby="kmday-hint">
+            <output id="kmday-out" for="kmday">2 km</output>
+          </div>
+          <p id="kmday-hint" class="hint" data-i18n="form.km_per_day_hint">Przykład: przy 2 km termin o 2 tygodnie wcześniej jest wart 28 km dalszej drogi.</p>
+        </div>
+        <fieldset class="field">
+          <legend data-i18n="form.case">Rodzaj skierowania</legend>
+          <div class="radios">
+            <label><input type="radio" name="case" value="1" checked> <span data-i18n="form.case_1">Zwykłe (przypadek stabilny)</span></label>
+            <label><input type="radio" name="case" value="2"> <span data-i18n="form.case_2">Pilne (przypadek pilny)</span></label>
+          </div>
+        </fieldset>
+      </details>
+
+      <p id="form-error" class="error" role="alert" hidden></p>
+      <button type="submit" class="btn btn-primary btn-big" data-i18n="form.submit">Szukaj terminu</button>
+    </form>
+
+    <section id="results" aria-labelledby="results-heading" hidden>
+      <div class="results-head">
+        <h2 id="results-heading"></h2>
+        <button type="button" id="toggle-map" class="btn btn-secondary" aria-expanded="false" aria-controls="map" data-i18n="results.show_map">Pokaż mapę</button>
+        <button type="button" id="show-stats" class="btn btn-secondary" aria-expanded="false" aria-controls="stats" data-i18n="stats.button">Statystyki województwa</button>
+      </div>
+      <p id="results-meta" class="meta"></p>
+      <div id="map" class="map" role="region" hidden></div>
+      <section id="stats" class="card stats" hidden aria-live="polite"></section>
+      <ol id="result-list" class="result-list"></ol>
+    </section>
+
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+  </main>
+
+  <dialog id="watch-dialog" aria-labelledby="watch-title">
+    <form id="watch-form" method="dialog">
+      <h2 id="watch-title"></h2>
+      <p data-i18n="watch.intro">Dostaniesz powiadomienie, gdy w tym obszarze pojawi się wcześniejszy termin. Nie potrzebujesz konta.</p>
+      <fieldset class="field">
+        <legend data-i18n="watch.channel">Jak powiadomić?</legend>
+        <div class="radios" id="watch-channels"></div>
+      </fieldset>
+      <div class="field">
+        <label for="watch-target" id="watch-target-label" data-i18n="watch.target_ntfy">Nazwa tematu w ntfy</label>
+        <input id="watch-target" name="target" type="text" required aria-describedby="watch-target-hint">
+        <p id="watch-target-hint" class="hint"></p>
+      </div>
+      <div class="field">
+        <label for="watch-before" data-i18n="watch.before">Tylko terminy przed (opcjonalnie)</label>
+        <input id="watch-before" name="before" type="date">
+      </div>
+      <p class="hint" data-i18n="watch.privacy">Zapisujemy tylko to, co tu podajesz. Lokalizację zaokrąglamy do ok. 1 km.</p>
+      <p id="watch-result" role="status"></p>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="btn btn-ghost" formnovalidate data-i18n="watch.cancel">Anuluj</button>
+        <button type="button" id="watch-submit" class="btn btn-primary" data-i18n="watch.submit">Zacznij obserwować</button>
+      </div>
+    </form>
+  </dialog>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p data-i18n="footer.disclaimer">Termin nie jest oficjalną aplikacją NFZ i nie udziela porad medycznych. Pokazujemy dane z publicznego API NFZ „Terminy leczenia”, które placówki aktualizują mniej więcej raz w tygodniu. Zawsze potwierdź termin telefonicznie.</p>
+      <ul class="footer-links">
+        <li><a href="https://terminyleczenia.nfz.gov.pl" rel="noopener" data-i18n="footer.official">Oficjalna wyszukiwarka NFZ</a></li>
+        <li><a href="https://github.com/promilek2/pawel2jarzembowski-oss/blob/main/PRIVACY.md" rel="noopener" data-i18n="footer.privacy">Prywatność</a></li>
+        <li><a href="https://github.com/promilek2/pawel2jarzembowski-oss" rel="noopener" data-i18n="footer.source">Kod źródłowy</a></li>
+      </ul>
+      <p class="small" data-i18n="footer.data">Dane: NFZ. Mapa: © współtwórcy OpenStreetMap.</p>
+    </div>
+  </footer>
+  <noscript><p class="wrap">Wyszukiwarka wymaga JavaScriptu. Możesz też skorzystać z <a href="https://terminyleczenia.nfz.gov.pl">oficjalnej wyszukiwarki NFZ</a>.</p></noscript>
+</body>
+</html>

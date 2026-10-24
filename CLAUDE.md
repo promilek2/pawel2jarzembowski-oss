@@ -10,7 +10,7 @@ jest oficjalną aplikacją NFZ: bez logo NFZ, bez porad medycznych, bez tracking
 uv venv && uv pip install -e ".[dev]"     # środowisko
 pytest                                     # testy (bez sieci; live i e2e pomijane)
 pytest -m live                             # kontrakt na prawdziwym API NFZ
-pytest -m e2e                              # Playwright + axe (wymaga .[e2e])
+pytest -m e2e                              # Playwright + axe (wymaga .[e2e]; TERMIN_CHROMIUM=ścieżka)
 ruff check . && ruff format --check .      # lint i format
 mypy --strict termin                       # typy
 python tests/fixtures/_generate.py         # regeneracja syntetycznych fixtures
@@ -35,6 +35,14 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   `Transports` pozwala wstrzyknąć `httpx.MockTransport` w testach.
 - `termin/cli/commands.py`: Typer (`make_runtime` to punkt wstrzyknięcia dla testów).
   `termin/web/`: FastAPI + statyczny frontend.
+- `termin/web/app.py`: `create_app()` (FastAPI, lifespan tworzy `Runtime`, opcjonalnie watcher).
+  API: `/api/search|suggest|config|history|stats|export.{csv,json}|ics|subscriptions`,
+  strony `/stop/{token}` (GET pokazuje formularz, POST usuwa). Nagłówki bezpieczeństwa i CSP
+  (`script-src 'self'`, bez inline JS/CSS, więc w testach Playwright nie używaj `wait_for_function`).
+- Frontend `termin/web/static/`: `index.html`, `app.js` (moduł ES, DOM przez textContent),
+  `style.css`, `i18n/{pl,en,uk}.json` (klucze muszą być zgodne, pilnuje tego test),
+  `sw.js`, `manifest.webmanifest`, Leaflet w `vendor/` (ładowany leniwie). Budżet własnego
+  kodu 150 KB (test). Serwer z atrapą NFZ do pracy nad UI: `python -m tests.e2e.server`.
 - `termin/notify/`: `channels.py` (ntfy JSON, Telegram, SMTP, notify-send), `message.py`
   (treść), `subscribe.py` (tworzenie subskrypcji, wspólne dla CLI/web/bota),
   `watcher.py` (grupowanie po zapytaniu, deduplikacja „tylko lepszy termin”, cooldown),

@@ -16,6 +16,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from types import TracebackType
 from typing import Any, Self
+from urllib.parse import quote
 
 import httpx
 
@@ -50,6 +51,10 @@ class NfzUnavailableError(NfzError):
 
 class NfzBadRequestError(NfzError):
     """API NFZ odrzuciło parametry zapytania (4xx)."""
+
+
+class NfzNotFoundError(NfzBadRequestError):
+    """Zasób nie istnieje (404), np. nieaktualny identyfikator kolejki."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,8 +163,10 @@ class NfzClient:
                         raise NfzError("NFZ zwróciło odpowiedź, która nie jest JSON-em") from exc
                 NFZ_REQUESTS.labels(endpoint, str(status)).inc()
                 if status not in RETRY_STATUSES:
-                    NFZ_ERRORS.labels(endpoint, "bad_request").inc()
                     reason = _safe_error(response) or f"HTTP {status}"
+                    if status == 404:
+                        raise NfzNotFoundError(f"NFZ nie zna tego zasobu: {reason}")
+                    NFZ_ERRORS.labels(endpoint, "bad_request").inc()
                     raise NfzBadRequestError(f"NFZ odrzuciło zapytanie: {reason}")
                 last_error = f"HTTP {status}"
                 delay = _retry_after(response)
@@ -214,13 +221,23 @@ class NfzClient:
         return entries
 
     async def queue(self, queue_id: str) -> QueueEntry | None:
-        payload = await self.get_json(f"/queues/{queue_id}", {}, self._settings.cache_ttl_queues_s)
+        try:
+            payload = await self.get_json(
+                f"/queues/{quote(queue_id, safe='')}", {}, self._settings.cache_ttl_queues_s
+            )
+        except NfzNotFoundError:
+            return None
         return parse_queue(payload)
 
     async def many_places(self, queue_id: str) -> tuple[Location, ...]:
-        payload = await self.get_json(
-            f"/many-places/{queue_id}", {}, self._settings.cache_ttl_dictionary_s
-        )
+        try:
+            payload = await self.get_json(
+                f"/many-places/{quote(queue_id, safe='')}",
+                {},
+                self._settings.cache_ttl_dictionary_s,
+            )
+        except NfzNotFoundError:
+            return ()
         return parse_many_places(payload)
 
     async def _dictionary(self, path: str, params: dict[str, str], max_pages: int) -> list[str]:
