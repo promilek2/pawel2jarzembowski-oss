@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "context": "https://api.nfz.gov.pl/app-itl-api/#/",
+    "title": "Słownik świadczeń",
+    "provider": "Narodowy Fundusz Zdrowia",
+    "date-published": "2019-05-31T00:00:00+02:00",
+    "date-modified": "2026-10-23T03:00:00+02:00",
+    "language": "PL",
+    "content-type": "application/json; charset=utf-8",
+    "message": null,
+    "count": 3,
+    "page": 1,
+    "limit": 25
+  },
+  "links": {
+    "first": null,
+    "prev": null,
+    "self": null,
+    "next": null,
+    "last": null
+  },
+  "data": [
+    "PORADNIA OKULISTYCZNA",
+    "PORADNIA OKULISTYCZNA DLA DZIECI",
+    "ŚWIADCZENIA Z ZAKRESU OKULISTYKI DLA DZIECI"
+  ]
+}

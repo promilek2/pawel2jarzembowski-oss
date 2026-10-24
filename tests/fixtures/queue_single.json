@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "context": "https://api.nfz.gov.pl/app-itl-api/#/",
+    "title": "Kolejki",
+    "provider": "Narodowy Fundusz Zdrowia",
+    "date-published": "2019-05-31T00:00:00+02:00",
+    "date-modified": "2026-10-23T03:00:00+02:00",
+    "language": "PL",
+    "content-type": "application/json; charset=utf-8",
+    "message": null,
+    "url": "/app-itl-api/queues/00000001-0000-4000-8000-000000000001"
+  },
+  "data": {
+    "type": "queues",
+    "id": "00000001-0000-4000-8000-000000000001",
+    "attributes": {
+      "case": 1,
+      "benefit": "PORADNIA OKULISTYCZNA",
+      "many-places": "N",
+      "provider": "PRZYCHODNIA PRZYKŁADOWA NR 1 SP. Z O.O.",
+      "provider-code": "1100000001",
+      "regon-provider": "000000001",
+      "nip-provider": "0000000001",
+      "teryt-provider": "2262011",
+      "place": "PORADNIA OKULISTYCZNA",
+      "address": "UL. TESTOWA 1",
+      "locality": "GDYNIA",
+      "phone": "58 000 00 01",
+      "teryt-place": "2262011",
+      "registry-number": "000000000001",
+      "id-resort-part-VII": "001",
+      "id-resort-part-VIII": "1610",
+      "benefits-for-children": "N",
+      "covid-19": "N",
+      "toilet": "Y",
+      "ramp": "Y",
+      "car-park": "Y",
+      "elevator": "Y",
+      "latitude": 54.5199,
+      "longitude": 18.5315,
+      "statistics": {
+        "provider-data": {
+          "awaiting": 137,
+          "removed": 21,
+          "average-period": 35,
+          "update": "2026-09"
+        },
+        "computed-data": null
+      },
+      "dates": {
+        "applicable": true,
+        "date": "2026-11-03",
+        "date-situation-as-at": "2026-10-21"
+      },
+      "benefits-provided": null,
+      "age-range": null
+    }
+  }
+}

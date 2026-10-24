@@ -1,0 +1,258 @@
+{
+  "meta": {
+    "context": "https://api.nfz.gov.pl/app-itl-api/#/",
+    "title": "Kolejki",
+    "provider": "Narodowy Fundusz Zdrowia",
+    "date-published": "2019-05-31T00:00:00+02:00",
+    "date-modified": "2026-10-23T03:00:00+02:00",
+    "language": "PL",
+    "content-type": "application/json; charset=utf-8",
+    "message": null,
+    "count": 30,
+    "page": 2,
+    "limit": 25,
+    "url": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3"
+  },
+  "links": {
+    "first": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=1",
+    "prev": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=1",
+    "self": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=2",
+    "next": null,
+    "last": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=2"
+  },
+  "data": [
+    {
+      "type": "queues",
+      "id": "00000026-0000-4000-8000-000000000026",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 26 SP. Z O.O.",
+        "provider-code": "1100000026",
+        "regon-provider": "000000026",
+        "nip-provider": "0000000026",
+        "teryt-provider": "2206011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 26",
+        "locality": "KOŚCIERZYNA",
+        "phone": "58 000 00 26",
+        "teryt-place": "2206011",
+        "registry-number": "000000000026",
+        "id-resort-part-VII": "026",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.1482,
+        "longitude": 18.0077,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 1062,
+            "removed": 46,
+            "average-period": 160,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-01-15",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000027-0000-4000-8000-000000000027",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 27 SP. Z O.O.",
+        "provider-code": "1100000027",
+        "regon-provider": "000000027",
+        "nip-provider": "0000000027",
+        "teryt-provider": "2208011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 27",
+        "locality": "LĘBORK",
+        "phone": "58 000 00 27",
+        "teryt-place": "2208011",
+        "registry-number": "000000000027",
+        "id-resort-part-VII": "027",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.5664,
+        "longitude": 17.7758,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 1099,
+            "removed": 47,
+            "average-period": 165,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-02-22",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000028-0000-4000-8000-000000000028",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 28 SP. Z O.O.",
+        "provider-code": "1100000028",
+        "regon-provider": "000000028",
+        "nip-provider": "0000000028",
+        "teryt-provider": "2263011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 28",
+        "locality": "SŁUPSK",
+        "phone": "58 000 00 28",
+        "teryt-place": "2263011",
+        "registry-number": "000000000028",
+        "id-resort-part-VII": "028",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "N",
+        "elevator": "Y",
+        "latitude": 54.4921,
+        "longitude": 17.0567,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 1136,
+            "removed": 48,
+            "average-period": 170,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-03-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000029-0000-4000-8000-000000000029",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 29 SP. Z O.O.",
+        "provider-code": "1100000029",
+        "regon-provider": "000000029",
+        "nip-provider": "0000000029",
+        "teryt-provider": "2209011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 29",
+        "locality": "MALBORK",
+        "phone": "58 000 00 29",
+        "teryt-place": "2209011",
+        "registry-number": "000000000029",
+        "id-resort-part-VII": "029",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.065000000000005,
+        "longitude": 19.0669,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 1173,
+            "removed": 49,
+            "average-period": 175,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-04-08",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000030-0000-4000-8000-000000000030",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 30 SP. Z O.O.",
+        "provider-code": "1100000030",
+        "regon-provider": "000000030",
+        "nip-provider": "0000000030",
+        "teryt-provider": "2262011",
+        "place": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "address": "UL. TESTOWA 30",
+        "locality": "GDYNIA",
+        "phone": "58 000 00 30",
+        "teryt-place": "2262011",
+        "registry-number": "000000000030",
+        "id-resort-part-VII": "030",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "Y",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "N",
+        "latitude": 54.5489,
+        "longitude": 18.5605,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 1210,
+            "removed": 50,
+            "average-period": 180,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-15",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": {
+          "from": 0,
+          "to": 18
+        }
+      }
+    }
+  ]
+}

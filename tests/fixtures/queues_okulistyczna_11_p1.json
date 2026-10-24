@@ -1,0 +1,1167 @@
+{
+  "meta": {
+    "context": "https://api.nfz.gov.pl/app-itl-api/#/",
+    "title": "Kolejki",
+    "provider": "Narodowy Fundusz Zdrowia",
+    "date-published": "2019-05-31T00:00:00+02:00",
+    "date-modified": "2026-10-23T03:00:00+02:00",
+    "language": "PL",
+    "content-type": "application/json; charset=utf-8",
+    "message": null,
+    "count": 30,
+    "page": 1,
+    "limit": 25,
+    "url": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3"
+  },
+  "links": {
+    "first": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=1",
+    "prev": null,
+    "self": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=1",
+    "next": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=2",
+    "last": "/app-itl-api/queues?benefit=PORADNIA+OKULISTYCZNA&province=11&case=1&limit=25&format=json&api-version=1.3&page=2"
+  },
+  "data": [
+    {
+      "type": "queues",
+      "id": "00000001-0000-4000-8000-000000000001",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 1 SP. Z O.O.",
+        "provider-code": "1100000001",
+        "regon-provider": "000000001",
+        "nip-provider": "0000000001",
+        "teryt-provider": "2262011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 1",
+        "locality": "GDYNIA",
+        "phone": "58 000 00 01",
+        "teryt-place": "2262011",
+        "registry-number": "000000000001",
+        "id-resort-part-VII": "001",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.5199,
+        "longitude": 18.5315,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 137,
+            "removed": 21,
+            "average-period": 35,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-03",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000002-0000-4000-8000-000000000002",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 2 SP. Z O.O.",
+        "provider-code": "1100000002",
+        "regon-provider": "000000002",
+        "nip-provider": "0000000002",
+        "teryt-provider": "2262011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 2",
+        "locality": "GDYNIA",
+        "phone": "58 000 00 02",
+        "teryt-place": "2262011",
+        "registry-number": "000000000002",
+        "id-resort-part-VII": "002",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.520900000000005,
+        "longitude": 18.5325,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 174,
+            "removed": 22,
+            "average-period": 40,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": null,
+          "date-situation-as-at": "2026-10-20"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000003-0000-4000-8000-000000000003",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 3 SP. Z O.O.",
+        "provider-code": "1100000003",
+        "regon-provider": "000000003",
+        "nip-provider": "0000000003",
+        "teryt-provider": "2261011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 3",
+        "locality": "GDAŃSK",
+        "phone": "58 000 00 03",
+        "teryt-place": "2261011",
+        "registry-number": "000000000003",
+        "id-resort-part-VII": "003",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 0,
+        "longitude": 0,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 211,
+            "removed": 23,
+            "average-period": 45,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-12-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000004-0000-4000-8000-000000000004",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 4 SP. Z O.O.",
+        "provider-code": "1100000004",
+        "regon-provider": "000000004",
+        "nip-provider": "0000000004",
+        "teryt-provider": "2264011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 4",
+        "locality": "SOPOT",
+        "phone": "58 000 00 04",
+        "teryt-place": "2264011",
+        "registry-number": "000000000004",
+        "id-resort-part-VII": "004",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "N",
+        "elevator": "Y",
+        "latitude": null,
+        "longitude": null,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 248,
+            "removed": 24,
+            "average-period": 50,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-10",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000005-0000-4000-8000-000000000005",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 5 SP. Z O.O.",
+        "provider-code": "1100000005",
+        "regon-provider": "000000005",
+        "nip-provider": "0000000005",
+        "teryt-provider": "2215061",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 5",
+        "locality": "RUMIA",
+        "phone": "",
+        "teryt-place": "2215061",
+        "registry-number": "000000000005",
+        "id-resort-part-VII": "005",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "N",
+        "latitude": 54.575900000000004,
+        "longitude": 18.393,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 285,
+            "removed": 25,
+            "average-period": 55,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-12-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000006-0000-4000-8000-000000000006",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 6 SP. Z O.O.",
+        "provider-code": "1100000006",
+        "regon-provider": "000000006",
+        "nip-provider": "0000000006",
+        "teryt-provider": "2215011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 6",
+        "locality": "WEJHEROWO",
+        "phone": "58 000 00 06",
+        "teryt-place": "2215011",
+        "registry-number": "000000000006",
+        "id-resort-part-VII": "006",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.6119,
+        "longitude": 18.241600000000002,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 322,
+            "removed": 26,
+            "average-period": 60,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-10-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000007-0000-4000-8000-000000000007",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 7 SP. Z O.O.",
+        "provider-code": "1100000007",
+        "regon-provider": "000000007",
+        "nip-provider": "0000000007",
+        "teryt-provider": "2215051",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 7",
+        "locality": "REDA",
+        "phone": "58 000 00 07",
+        "teryt-place": "2215051",
+        "registry-number": "000000000007",
+        "id-resort-part-VII": "007",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.611999999999995,
+        "longitude": 18.355800000000002,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 359,
+            "removed": 27,
+            "average-period": 65,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-05",
+          "date-situation-as-at": "2026-09-15"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000008-0000-4000-8000-000000000008",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 8 SP. Z O.O.",
+        "provider-code": "1100000008",
+        "regon-provider": "000000008",
+        "nip-provider": "0000000008",
+        "teryt-provider": "2261011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 8",
+        "locality": "GDAŃSK",
+        "phone": "58 000 00 08",
+        "teryt-place": "2261011",
+        "registry-number": "000000000008",
+        "id-resort-part-VII": "008",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "N",
+        "elevator": "Y",
+        "latitude": 54.36,
+        "longitude": 18.6546,
+        "statistics": null,
+        "dates": {
+          "applicable": true,
+          "date": "2026-12-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000009-0000-4000-8000-000000000009",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 9 SP. Z O.O.",
+        "provider-code": "1100000009",
+        "regon-provider": "000000009",
+        "nip-provider": "0000000009",
+        "teryt-provider": "2261011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 9",
+        "locality": "GDAŃSK",
+        "phone": "58 000 00 09",
+        "teryt-place": "2261011",
+        "registry-number": "000000000009",
+        "id-resort-part-VII": "009",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.361,
+        "longitude": 18.6556,
+        "statistics": {
+          "provider-data": null,
+          "computed-data": {
+            "average-period": 41,
+            "update": "2026-10"
+          }
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-20",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000010-0000-4000-8000-000000000010",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "Y",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 10 SP. Z O.O.",
+        "provider-code": "1100000010",
+        "regon-provider": "000000010",
+        "nip-provider": "0000000010",
+        "teryt-provider": "2263011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 10",
+        "locality": "SŁUPSK",
+        "phone": "58 000 00 10",
+        "teryt-place": "2263011",
+        "registry-number": "000000000010",
+        "id-resort-part-VII": "010",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "N",
+        "latitude": 54.4741,
+        "longitude": 17.038700000000002,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 470,
+            "removed": 30,
+            "average-period": 80,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-04",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000011-0000-4000-8000-000000000011",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 11 SP. Z O.O.",
+        "provider-code": "1100000011",
+        "regon-provider": "000000011",
+        "nip-provider": "0000000011",
+        "teryt-provider": "2262011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 11",
+        "locality": "GDYNIA",
+        "phone": "58 000 00 11",
+        "teryt-place": "2262011",
+        "registry-number": "000000000011",
+        "id-resort-part-VII": "011",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.529900000000005,
+        "longitude": 18.5415,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 507,
+            "removed": 31,
+            "average-period": 85,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": null,
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000012-0000-4000-8000-000000000012",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 12 SP. Z O.O.",
+        "provider-code": "1100000012",
+        "regon-provider": "000000012",
+        "nip-provider": "0000000012",
+        "teryt-provider": "2262011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 12",
+        "locality": "GDYNIA",
+        "phone": "58 000 00 12",
+        "teryt-place": "2262011",
+        "registry-number": "000000000012",
+        "id-resort-part-VII": "012",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "N",
+        "car-park": "N",
+        "elevator": "Y",
+        "latitude": "54,5200",
+        "longitude": "18,5400",
+        "statistics": {
+          "provider-data": {
+            "awaiting": 544,
+            "removed": 32,
+            "average-period": 90,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-25",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000013-0000-4000-8000-000000000013",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 13 SP. Z O.O.",
+        "provider-code": "1100000013",
+        "regon-provider": "000000013",
+        "nip-provider": "0000000013",
+        "teryt-provider": "2211011",
+        "place": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "address": "UL. TESTOWA 13",
+        "locality": "PUCK",
+        "phone": "58 000 00 13",
+        "teryt-place": "2211011",
+        "registry-number": "000000000013",
+        "id-resort-part-VII": "013",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "Y",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.730799999999995,
+        "longitude": 18.423000000000002,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 581,
+            "removed": 33,
+            "average-period": 95,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-06",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": "0-18"
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000014-0000-4000-8000-000000000014",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 14 SP. Z O.O.",
+        "provider-code": "1100000014",
+        "regon-provider": "000000014",
+        "nip-provider": "0000000014",
+        "teryt-provider": "2264011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 14",
+        "locality": "SOPOT",
+        "phone": "58 000 00 14",
+        "teryt-place": "2264011",
+        "registry-number": "000000000014",
+        "id-resort-part-VII": "014",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 45.0,
+        "longitude": 2.0,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 618,
+            "removed": 34,
+            "average-period": 100,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-12-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000015-0000-4000-8000-000000000015",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 15 SP. Z O.O.",
+        "provider-code": "1100000015",
+        "regon-provider": "000000015",
+        "nip-provider": "0000000015",
+        "teryt-provider": "2262011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 15",
+        "locality": "GDYNIA",
+        "phone": "58 000 00 15",
+        "teryt-place": "2262011",
+        "registry-number": "000000000015",
+        "id-resort-part-VII": "015",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "N",
+        "latitude": 54.5339,
+        "longitude": 18.5455,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 655,
+            "removed": 35,
+            "average-period": 105,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-02-22",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000016-0000-4000-8000-000000000016",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 16 SP. Z O.O.",
+        "provider-code": "1100000016",
+        "regon-provider": "000000016",
+        "nip-provider": "0000000016",
+        "teryt-provider": "2261011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 16",
+        "locality": "GDAŃSK",
+        "phone": "58 000 00 16",
+        "teryt-place": "2261011",
+        "registry-number": "000000000016",
+        "id-resort-part-VII": "016",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "N",
+        "elevator": "Y",
+        "latitude": 54.367999999999995,
+        "longitude": 18.662599999999998,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 692,
+            "removed": 36,
+            "average-period": 110,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-03-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000017-0000-4000-8000-000000000017",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 17 SP. Z O.O.",
+        "provider-code": "1100000017",
+        "regon-provider": "000000017",
+        "nip-provider": "0000000017",
+        "teryt-provider": "2264011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 17",
+        "locality": "SOPOT",
+        "phone": "58 000 00 17",
+        "teryt-place": "2264011",
+        "registry-number": "000000000017",
+        "id-resort-part-VII": "017",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.458600000000004,
+        "longitude": 18.577099999999998,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 729,
+            "removed": 37,
+            "average-period": 115,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-04-08",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000018-0000-4000-8000-000000000018",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 18 SP. Z O.O.",
+        "provider-code": "1100000018",
+        "regon-provider": "000000018",
+        "nip-provider": "0000000018",
+        "teryt-provider": "2215061",
+        "place": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "address": "UL. TESTOWA 18",
+        "locality": "RUMIA",
+        "phone": "58 000 00 18",
+        "teryt-place": "2215061",
+        "registry-number": "000000000018",
+        "id-resort-part-VII": "018",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "Y",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.5889,
+        "longitude": 18.406000000000002,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 766,
+            "removed": 38,
+            "average-period": 120,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-15",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": {
+          "from": 0,
+          "to": 18
+        }
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000019-0000-4000-8000-000000000019",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 19 SP. Z O.O.",
+        "provider-code": "1100000019",
+        "regon-provider": "000000019",
+        "nip-provider": "0000000019",
+        "teryt-provider": "2215011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 19",
+        "locality": "WEJHEROWO",
+        "phone": "58 000 00 19",
+        "teryt-place": "2215011",
+        "registry-number": "000000000019",
+        "id-resort-part-VII": "019",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.6249,
+        "longitude": 18.2546,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 803,
+            "removed": 39,
+            "average-period": 125,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-12-22",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000020-0000-4000-8000-000000000020",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 20 SP. Z O.O.",
+        "provider-code": "1100000020",
+        "regon-provider": "000000020",
+        "nip-provider": "0000000020",
+        "teryt-provider": "2215051",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 20",
+        "locality": "REDA",
+        "phone": "58 000 00 20",
+        "teryt-place": "2215051",
+        "registry-number": "000000000020",
+        "id-resort-part-VII": "020",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "N",
+        "elevator": "N",
+        "latitude": 54.625,
+        "longitude": 18.3688,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 840,
+            "removed": 40,
+            "average-period": 130,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-01-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000021-0000-4000-8000-000000000021",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 21 SP. Z O.O.",
+        "provider-code": "1100000021",
+        "regon-provider": "000000021",
+        "nip-provider": "0000000021",
+        "teryt-provider": "2211011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 21",
+        "locality": "PUCK",
+        "phone": "58 000 00 21",
+        "teryt-place": "2211011",
+        "registry-number": "000000000021",
+        "id-resort-part-VII": "021",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "N",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.7388,
+        "longitude": 18.431,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 877,
+            "removed": 41,
+            "average-period": 135,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-02-08",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000022-0000-4000-8000-000000000022",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 22 SP. Z O.O.",
+        "provider-code": "1100000022",
+        "regon-provider": "000000022",
+        "nip-provider": "0000000022",
+        "teryt-provider": "2205024",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 22",
+        "locality": "KARTUZY",
+        "phone": "58 000 00 22",
+        "teryt-place": "2205024",
+        "registry-number": "000000000022",
+        "id-resort-part-VII": "022",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.3557,
+        "longitude": 18.219199999999997,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 914,
+            "removed": 42,
+            "average-period": 140,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-03-15",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000023-0000-4000-8000-000000000023",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 23 SP. Z O.O.",
+        "provider-code": "1100000023",
+        "regon-provider": "000000023",
+        "nip-provider": "0000000023",
+        "teryt-provider": "2204021",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 23",
+        "locality": "PRUSZCZ GDAŃSKI",
+        "phone": "58 000 00 23",
+        "teryt-place": "2204021",
+        "registry-number": "000000000023",
+        "id-resort-part-VII": "023",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "Y",
+        "latitude": 54.2851,
+        "longitude": 18.659299999999998,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 951,
+            "removed": 43,
+            "average-period": 145,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2027-04-22",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000024-0000-4000-8000-000000000024",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 24 SP. Z O.O.",
+        "provider-code": "1100000024",
+        "regon-provider": "000000024",
+        "nip-provider": "0000000024",
+        "teryt-provider": "2214011",
+        "place": "PORADNIA OKULISTYCZNA DLA DZIECI",
+        "address": "UL. TESTOWA 24",
+        "locality": "TCZEW",
+        "phone": "58 000 00 24",
+        "teryt-place": "2214011",
+        "registry-number": "000000000024",
+        "id-resort-part-VII": "024",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "Y",
+        "covid-19": "N",
+        "toilet": "N",
+        "ramp": "N",
+        "car-park": "N",
+        "elevator": "Y",
+        "latitude": 54.1164,
+        "longitude": 18.8019,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 988,
+            "removed": 44,
+            "average-period": 150,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-11-01",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": {
+          "from": 0,
+          "to": 18
+        }
+      }
+    },
+    {
+      "type": "queues",
+      "id": "00000025-0000-4000-8000-000000000025",
+      "attributes": {
+        "case": 1,
+        "benefit": "PORADNIA OKULISTYCZNA",
+        "many-places": "N",
+        "provider": "PRZYCHODNIA PRZYKŁADOWA NR 25 SP. Z O.O.",
+        "provider-code": "1100000025",
+        "regon-provider": "000000025",
+        "nip-provider": "0000000025",
+        "teryt-provider": "2213011",
+        "place": "PORADNIA OKULISTYCZNA",
+        "address": "UL. TESTOWA 25",
+        "locality": "STAROGARD GDAŃSKI",
+        "phone": "58 000 00 25",
+        "teryt-place": "2213011",
+        "registry-number": "000000000025",
+        "id-resort-part-VII": "025",
+        "id-resort-part-VIII": "1610",
+        "benefits-for-children": "N",
+        "covid-19": "N",
+        "toilet": "Y",
+        "ramp": "Y",
+        "car-park": "Y",
+        "elevator": "N",
+        "latitude": 53.990899999999996,
+        "longitude": 18.5554,
+        "statistics": {
+          "provider-data": {
+            "awaiting": 1025,
+            "removed": 45,
+            "average-period": 155,
+            "update": "2026-09"
+          },
+          "computed-data": null
+        },
+        "dates": {
+          "applicable": true,
+          "date": "2026-12-08",
+          "date-situation-as-at": "2026-10-21"
+        },
+        "benefits-provided": null,
+        "age-range": null
+      }
+    }
+  ]
+}

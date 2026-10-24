@@ -1,0 +1,8 @@
+{
+  "errors": [
+    {
+      "error-code": "400",
+      "error-reason": "Nieprawidłowa wartość parametru province"
+    }
+  ]
+}

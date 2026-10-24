@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "context": "https://api.nfz.gov.pl/app-itl-api/#/",
+    "title": "Wiele miejsc",
+    "provider": "Narodowy Fundusz Zdrowia",
+    "date-published": "2019-05-31T00:00:00+02:00",
+    "date-modified": "2026-10-23T03:00:00+02:00",
+    "language": "PL",
+    "content-type": "application/json; charset=utf-8",
+    "message": null,
+    "url": "/app-itl-api/many-places/00000010-0000-4000-8000-000000000010"
+  },
+  "data": [
+    {
+      "type": "many-places",
+      "id": "00000010-0000-4000-8000-000000000010-1",
+      "attributes": {
+        "place": "PORADNIA OKULISTYCZNA - FILIA",
+        "address": "UL. PRZYKŁADOWA 1",
+        "locality": "GDYNIA",
+        "phone": "58 000 11 11",
+        "latitude": 54.51,
+        "longitude": 18.52
+      }
+    },
+    {
+      "type": "many-places",
+      "id": "00000010-0000-4000-8000-000000000010-2",
+      "attributes": {
+        "place": "PORADNIA OKULISTYCZNA - FILIA 2",
+        "address": "UL. PRZYKŁADOWA 2",
+        "locality": "LĘBORK",
+        "phone": null,
+        "latitude": 0,
+        "longitude": 0
+      }
+    }
+  ]
+}
