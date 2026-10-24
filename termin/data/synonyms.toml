@@ -1,0 +1,336 @@
+# Słownik synonimów świadczeń NFZ.
+#
+# Jak dodać wpis: skopiuj blok [[benefit]], zmień pola, uruchom `pytest tests/test_benefits.py`
+# i otwórz PR. Szczegóły w CONTRIBUTING.md.
+#
+# Pola:
+#   id              krótki, stały identyfikator (a-z, 0-9, -)
+#   label           nazwa dla ludzi (pokazywana w podpowiedziach)
+#   query           FRAGMENT nazwy świadczenia przekazywany do NFZ (wyszukiwanie pełnotekstowe)
+#   aliases         jak ludzie nazywają TO świadczenie: potocznie, skrótami. Bez objawów
+#                   i chorób („migrena”, „cukrzyca”): nie dajemy porad medycznych, a dobór
+#                   specjalisty należy do lekarza kierującego. Literówek nie trzeba
+#                   dopisywać, bo łapie je fuzzy matching.
+#   children_query  (opcjonalnie) fragment dla wariantu dziecięcego; jeśli jest, zapytanie
+#                   bez wskazania „dla dzieci/dorosłych” jest dwuznaczne
+#   exclude         (opcjonalnie) fragmenty nazw do odrzucenia w wariancie dla dorosłych
+#   kind            "poradnia" | "badanie" | "zabieg" | "szpital"
+#
+# Uwaga: `query` to fragment, a nie dokładna nazwa (ADR-0008). Nazwy NFZ sprawdzisz komendą
+# `termin swiadczenia <fragment>`.
+
+[[benefit]]
+id = "kardiolog"
+label = "Kardiolog (poradnia kardiologiczna)"
+query = "PORADNIA KARDIOLOGICZNA"
+children_query = "PORADNIA KARDIOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["kardiolog", "kardiologia", "lekarz od serca", "kardiologiczna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "okulista"
+label = "Okulista (poradnia okulistyczna)"
+query = "PORADNIA OKULISTYCZNA"
+children_query = "PORADNIA OKULISTYCZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["okulista", "okulistka", "okulistyka", "oftalmolog", "lekarz od oczu"]
+kind = "poradnia"
+
+[[benefit]]
+id = "ortopeda"
+label = "Ortopeda (poradnia chirurgii urazowo-ortopedycznej)"
+query = "PORADNIA CHIRURGII URAZOWO-ORTOPEDYCZNEJ"
+children_query = "PORADNIA CHIRURGII URAZOWO-ORTOPEDYCZNEJ DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["ortopeda", "ortopedia", "ortopedyczna", "chirurg urazowy", "chirurgia urazowo-ortopedyczna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "endokrynolog"
+label = "Endokrynolog (poradnia endokrynologiczna)"
+query = "PORADNIA ENDOKRYNOLOGICZNA"
+children_query = "PORADNIA ENDOKRYNOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["endokrynolog", "endokrynologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "neurolog"
+label = "Neurolog (poradnia neurologiczna)"
+query = "PORADNIA NEUROLOGICZNA"
+children_query = "PORADNIA NEUROLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["neurolog", "neurologia", "neurologiczna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "dermatolog"
+label = "Dermatolog (poradnia dermatologiczna)"
+query = "PORADNIA DERMATOLOGICZNA"
+children_query = "PORADNIA DERMATOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["dermatolog", "dermatologia", "lekarz od skóry", "dermatologiczna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "alergolog"
+label = "Alergolog (poradnia alergologiczna)"
+query = "PORADNIA ALERGOLOGICZNA"
+children_query = "PORADNIA ALERGOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["alergolog", "alergologia", "odczulanie"]
+kind = "poradnia"
+
+[[benefit]]
+id = "reumatolog"
+label = "Reumatolog (poradnia reumatologiczna)"
+query = "PORADNIA REUMATOLOGICZNA"
+children_query = "PORADNIA REUMATOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["reumatolog", "reumatologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "urolog"
+label = "Urolog (poradnia urologiczna)"
+query = "PORADNIA UROLOGICZNA"
+children_query = "PORADNIA UROLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["urolog", "urologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "gastroenterolog"
+label = "Gastroenterolog (poradnia gastroenterologiczna)"
+query = "PORADNIA GASTROENTEROLOGICZNA"
+children_query = "PORADNIA GASTROENTEROLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["gastroenterolog", "gastrolog", "gastroenterologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "laryngolog"
+label = "Laryngolog (poradnia otorynolaryngologiczna)"
+query = "LARYNGOLOG"
+children_query = "LARYNGOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["laryngolog", "otolaryngolog", "otorynolaryngolog", "laryngologia", "laryngologiczna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "pulmonolog"
+label = "Pulmonolog (poradnia chorób płuc)"
+query = "PŁUC"
+children_query = "PŁUC DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["pulmonolog", "pulmonologia", "lekarz od płuc", "poradnia chorób płuc"]
+kind = "poradnia"
+
+[[benefit]]
+id = "diabetolog"
+label = "Diabetolog (poradnia diabetologiczna)"
+query = "PORADNIA DIABETOLOGICZNA"
+children_query = "PORADNIA DIABETOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["diabetolog", "diabetologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "nefrolog"
+label = "Nefrolog (poradnia nefrologiczna)"
+query = "PORADNIA NEFROLOGICZNA"
+children_query = "PORADNIA NEFROLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["nefrolog", "nefrologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "hematolog"
+label = "Hematolog (poradnia hematologiczna)"
+query = "PORADNIA HEMATOLOGICZNA"
+children_query = "PORADNIA HEMATOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["hematolog", "hematologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "onkolog"
+label = "Onkolog (poradnia onkologiczna)"
+query = "PORADNIA ONKOLOGICZNA"
+children_query = "ONKOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["onkolog", "onkologia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "ginekolog"
+label = "Ginekolog (poradnia ginekologiczno-położnicza)"
+query = "PORADNIA GINEKOLOGICZNO-POŁOŻNICZA"
+aliases = ["ginekolog", "ginekologia", "położnik", "ginekologiczna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "psychiatra"
+label = "Psychiatra (poradnia zdrowia psychicznego)"
+query = "PORADNIA ZDROWIA PSYCHICZNEGO"
+children_query = "PORADNIA ZDROWIA PSYCHICZNEGO DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["psychiatra", "psychiatria", "zdrowie psychiczne"]
+kind = "poradnia"
+
+[[benefit]]
+id = "psycholog"
+label = "Psycholog (poradnia psychologiczna)"
+query = "PORADNIA PSYCHOLOGICZNA"
+children_query = "PORADNIA PSYCHOLOGICZNA DLA DZIECI"
+exclude = ["DLA DZIECI"]
+aliases = ["psycholog", "psychoterapia", "terapeuta"]
+kind = "poradnia"
+
+[[benefit]]
+id = "chirurg"
+label = "Chirurg ogólny (poradnia chirurgii ogólnej)"
+query = "PORADNIA CHIRURGII OGÓLNEJ"
+aliases = ["chirurg", "chirurgia", "chirurgia ogólna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "chirurg-naczyniowy"
+label = "Chirurg naczyniowy (poradnia chirurgii naczyniowej)"
+query = "PORADNIA CHIRURGII NACZYNIOWEJ"
+aliases = ["chirurg naczyniowy", "chirurgia naczyniowa", "angiolog"]
+kind = "poradnia"
+
+[[benefit]]
+id = "neurochirurg"
+label = "Neurochirurg (poradnia neurochirurgiczna)"
+query = "PORADNIA NEUROCHIRURGICZNA"
+aliases = ["neurochirurg", "neurochirurgia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "rehabilitacja"
+label = "Rehabilitacja (poradnia rehabilitacyjna)"
+query = "PORADNIA REHABILITACYJNA"
+aliases = ["rehabilitacja", "rehabilitant", "fizjoterapia", "rehabilitacyjna"]
+kind = "poradnia"
+
+[[benefit]]
+id = "geriatra"
+label = "Geriatra (poradnia geriatryczna)"
+query = "PORADNIA GERIATRYCZNA"
+aliases = ["geriatra", "geriatria"]
+kind = "poradnia"
+
+[[benefit]]
+id = "logopeda"
+label = "Logopeda (poradnia logopedyczna)"
+query = "PORADNIA LOGOPEDYCZNA"
+aliases = ["logopeda", "logopedia"]
+kind = "poradnia"
+
+[[benefit]]
+id = "audiolog"
+label = "Audiolog (poradnia audiologiczna)"
+query = "PORADNIA AUDIOLOGICZNA"
+aliases = ["audiolog", "audiologia", "badanie słuchu"]
+kind = "poradnia"
+
+[[benefit]]
+id = "leczenie-bolu"
+label = "Leczenie bólu (poradnia leczenia bólu)"
+query = "PORADNIA LECZENIA BÓLU"
+aliases = ["leczenie bólu", "poradnia bólu"]
+kind = "poradnia"
+
+[[benefit]]
+id = "rezonans"
+label = "Rezonans magnetyczny (MRI)"
+query = "REZONANS"
+aliases = ["rezonans", "mri", "rm", "rezonans magnetyczny", "mr"]
+kind = "badanie"
+
+[[benefit]]
+id = "tomograf"
+label = "Tomografia komputerowa (TK)"
+query = "TOMOGRAF"
+aliases = ["tomograf", "tomografia", "tk", "ct", "tomografia komputerowa"]
+kind = "badanie"
+
+[[benefit]]
+id = "usg"
+label = "USG (badanie ultrasonograficzne)"
+query = "ULTRASONOGRAF"
+aliases = ["usg", "ultrasonografia", "ultrasonograf", "ultrasonografia jamy brzusznej"]
+kind = "badanie"
+
+[[benefit]]
+id = "echo-serca"
+label = "Echo serca (echokardiografia)"
+query = "ECHOKARDIOGRAF"
+aliases = ["echo serca", "echokardiografia", "echo"]
+kind = "badanie"
+
+[[benefit]]
+id = "gastroskopia"
+label = "Gastroskopia"
+query = "GASTROSKOP"
+aliases = ["gastroskopia", "gastroskop", "gastro"]
+kind = "badanie"
+
+[[benefit]]
+id = "kolonoskopia"
+label = "Kolonoskopia"
+query = "KOLONOSKOP"
+aliases = ["kolonoskopia", "kolonoskop", "kolono"]
+kind = "badanie"
+
+[[benefit]]
+id = "mammografia"
+label = "Mammografia"
+query = "MAMMOGRAF"
+aliases = ["mammografia", "mammograf"]
+kind = "badanie"
+
+[[benefit]]
+id = "densytometria"
+label = "Densytometria (badanie gęstości kości)"
+query = "DENSYTOMETR"
+aliases = ["densytometria", "badanie gęstości kości", "dxa"]
+kind = "badanie"
+
+[[benefit]]
+id = "holter"
+label = "Holter EKG"
+query = "HOLTER"
+aliases = ["holter", "holter ekg", "holter ciśnieniowy"]
+kind = "badanie"
+
+[[benefit]]
+id = "endoproteza-biodra"
+label = "Endoproteza stawu biodrowego"
+query = "ENDOPROTEZOPLASTYKA STAWU BIODROWEGO"
+aliases = ["endoproteza biodra", "proteza biodra", "wymiana biodra", "endoprotezoplastyka biodra"]
+kind = "zabieg"
+
+[[benefit]]
+id = "endoproteza-kolana"
+label = "Endoproteza stawu kolanowego"
+query = "ENDOPROTEZOPLASTYKA STAWU KOLANOWEGO"
+aliases = ["endoproteza kolana", "proteza kolana", "wymiana kolana", "endoprotezoplastyka kolana"]
+kind = "zabieg"
+
+[[benefit]]
+id = "zacma"
+label = "Operacja zaćmy"
+query = "ZAĆM"
+aliases = ["zaćma", "operacja zaćmy", "katarakta", "leczenie zaćmy"]
+kind = "zabieg"
+
+[[benefit]]
+id = "sanatorium"
+label = "Leczenie uzdrowiskowe (sanatorium)"
+query = "UZDROWISK"
+aliases = ["sanatorium", "uzdrowisko", "leczenie uzdrowiskowe"]
+kind = "szpital"
