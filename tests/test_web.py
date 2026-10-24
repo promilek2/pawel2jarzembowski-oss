@@ -233,3 +233,44 @@ def test_bundle_size_budget() -> None:
     ]
     total = sum(p.stat().st_size for p in own)
     assert total < 150_000, f"pakiet własny {total} B przekracza budżet 150 KB"
+
+
+def test_healthz_and_metrics(client: TestClient) -> None:
+    health = client.get("/healthz")
+    assert health.status_code == 200
+    assert health.json()["status"] == "ok"
+    client.get("/api/search", params={"q": "okulista dorośli", "where": "Gdynia"})
+    client.get("/api/history/abc")
+    metrics = client.get("/metrics")
+    assert metrics.status_code == 200
+    text = metrics.text
+    for name in (
+        "termin_http_requests_total",
+        "termin_nfz_requests_total",
+        "termin_cache_lookups_total",
+        "termin_nfz_request_seconds",
+        "termin_http_request_seconds",
+    ):
+        assert name in text, name
+    assert 'route="/api/history/{queue_id}"' in text  # szablon, nie konkretne ID
+    assert "abc" not in text
+
+
+def test_healthz_reports_db_failure(client: TestClient) -> None:
+    client.app.state.runtime.conn.close()  # type: ignore[attr-defined]
+    assert client.get("/healthz").status_code == 503
+
+
+def test_rate_limit(tmp_path: Path, fake: FakeNfz) -> None:
+    settings = Settings(data_dir=tmp_path, geocoder="offline", rate_limit="3/minute")
+    app = create_app(settings, transports=Transports(nfz=fake.transport()), today=lambda: TODAY)
+    with TestClient(app) as c:
+        params = {"q": "okulista dorośli", "where": "Gdynia"}
+        codes = [c.get("/api/search", params=params).status_code for _ in range(5)]
+        assert codes[:3] == [200, 200, 200]
+        assert codes[3:] == [429, 429]
+        r = c.get("/api/search", params=params)
+        assert r.json()["code"] == "rate"
+        assert r.headers["Retry-After"] == "60"
+        assert c.get("/api/suggest", params={"q": "okul"}).status_code == 200  # osobny limit
+        assert "termin_rate_limited_total" in c.get("/metrics").text

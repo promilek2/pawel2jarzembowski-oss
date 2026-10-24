@@ -44,6 +44,18 @@ jobs:
       - name: Pokrycie termin/core >= 85%
         run: coverage report --include="termin/core/*" --fail-under=85
 
+  e2e:
+    name: E2E (Playwright + axe)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - run: uv pip install -e ".[dev,e2e]"
+      - run: playwright install --with-deps chromium
+      - run: pytest -m e2e tests/e2e
+
   docker:
     name: Obraz Docker
     runs-on: ubuntu-latest
@@ -55,5 +67,11 @@ jobs:
           context: .
           push: false
           tags: termin:ci
+          load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Healthcheck kontenera
+        run: |
+          docker run -d --name termin -p 8000:8000 termin:ci
+          for i in $(seq 1 30); do curl -fs localhost:8000/healthz && exit 0; sleep 1; done
+          docker logs termin; exit 1

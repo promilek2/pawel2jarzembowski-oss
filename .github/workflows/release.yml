@@ -1,0 +1,44 @@
+name: Wydanie na PyPI
+
+# Publikacja przez Trusted Publishing (OIDC), bez tokenów w sekretach.
+# Konfiguracja po stronie PyPI: projekt termin-nfz → Publishing → GitHub,
+# repozytorium promilek2/pawel2jarzembowski-oss, workflow release.yml, środowisko pypi.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+      - name: Wersja z tagu zgodna z pakietem
+        run: |
+          version=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('termin/__init__.py').read())[1])")
+          test "v$version" = "${GITHUB_REF_NAME}"
+      - run: uv pip install -e ".[dev]"
+      - run: pytest
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

@@ -29,3 +29,13 @@ SEARCHES = Counter("termin_searches_total", "Wyszukiwania", ["channel"])
 NOTIFICATIONS = Counter(
     "termin_notifications_total", "Wysłane powiadomienia", ["channel", "outcome"]
 )
+HTTP_REQUESTS = Counter(
+    "termin_http_requests_total", "Żądania HTTP do panelu", ["method", "route", "status"]
+)
+HTTP_LATENCY = Histogram(
+    "termin_http_request_seconds",
+    "Czas obsługi żądań HTTP panelu",
+    ["route"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10),
+)
+RATE_LIMITED = Counter("termin_rate_limited_total", "Żądania odrzucone przez limit", ["route"])

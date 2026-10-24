@@ -1,0 +1,56 @@
+# Termin: aplikacja + wolumen SQLite, opcjonalnie Caddy z automatycznym HTTPS.
+#
+#   docker compose up -d                       # tylko aplikacja na http://localhost:8000
+#   DOMAIN=termin.example.org docker compose --profile https up -d   # z Caddy i HTTPS
+#
+# Konfiguracja: plik .env obok (zob. docs/DEPLOY.md), np. TERMIN_PUBLIC_URL, TERMIN_TELEGRAM_TOKEN.
+services:
+  termin:
+    build: .
+    image: termin:latest
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TERMIN_DATA_DIR: /data
+      TERMIN_LOG_JSON: "true"
+      # zaufaj nagłówkom X-Forwarded-* od Caddy (sieć compose)
+      FORWARDED_ALLOW_IPS: "*"
+    ports:
+      - "${TERMIN_PORT:-8000}:8000"
+    volumes:
+      - termin-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on:
+      termin:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  termin-data:
+  caddy-data:
+  caddy-config:

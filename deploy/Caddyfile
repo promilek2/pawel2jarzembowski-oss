@@ -1,0 +1,14 @@
+{$DOMAIN} {
+	encode zstd gzip
+	# Bez logów dostępowych: zawierałyby IP i parametry wyszukiwań (PRIVACY.md).
+	log {
+		output discard
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	@metrics path /metrics
+	respond @metrics 404
+	reverse_proxy termin:8000
+}

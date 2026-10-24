@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import html
+import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 from importlib import resources
@@ -13,7 +14,11 @@ from typing import Annotated, Any, Literal
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from termin import REPO_URL, __version__
 from termin.config import Settings, get_settings
@@ -25,7 +30,7 @@ from termin.core.provinces import PROVINCES
 from termin.core.search import SearchError, SearchRequest
 from termin.core.serialize import response_to_dict
 from termin.logs import configure_logging, get_logger
-from termin.metrics import SEARCHES
+from termin.metrics import HTTP_LATENCY, HTTP_REQUESTS, RATE_LIMITED, SEARCHES
 from termin.notify.channels import build_notifiers
 from termin.notify.message import unsubscribe_url
 from termin.notify.subscribe import SubscribeError, SubscribeRequest, create_subscription
@@ -95,6 +100,25 @@ def create_app(
         openapi_url="/api/openapi.json",
     )
 
+    # Limit zapytań: chroni API NFZ przed użyciem nas jako darmowego scrapera. Adres IP
+    # jest trzymany tylko w pamięci procesu (PRIVACY.md).
+    limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
+    app.state.limiter = limiter
+    heavy = limiter.limit(settings.rate_limit)
+    light = limiter.limit(settings.rate_limit_light)
+
+    @app.exception_handler(RateLimitExceeded)
+    async def _rate_limited(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+        RATE_LIMITED.labels(_route(request)).inc()
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Za dużo zapytań. Odczekaj chwilę i spróbuj ponownie.",
+                "code": "rate",
+            },
+            headers={"Retry-After": "60"},
+        )
+
     def rt(request: Request) -> Runtime:
         runtime: Runtime = request.app.state.runtime
         return runtime
@@ -137,6 +161,7 @@ def create_app(
         }
 
     @app.get("/api/suggest")
+    @light
     async def suggest(
         request: Request, q: Annotated[str, Query(max_length=100)] = ""
     ) -> list[dict[str, Any]]:
@@ -152,6 +177,7 @@ def create_app(
         ]
 
     @app.get("/api/search")
+    @heavy
     async def search(
         request: Request,
         q: Annotated[str, Query(max_length=200)] = "",
@@ -193,12 +219,14 @@ def create_app(
         return response_to_dict(response)
 
     @app.get("/api/history/{queue_id}")
+    @light
     async def history(
         request: Request, queue_id: str, days: Annotated[int, Query(ge=7, le=730)] = 180
     ) -> dict[str, Any]:
         return rt(request).snapshots.trend(queue_id, days).to_dict()
 
     @app.get("/api/stats")
+    @heavy
     async def stats(
         request: Request,
         q: Annotated[str, Query(min_length=1, max_length=200)],
@@ -222,6 +250,7 @@ def create_app(
         return data
 
     @app.get("/api/export.{fmt}")
+    @heavy
     async def export(
         request: Request,
         fmt: Literal["csv", "json"],
@@ -244,6 +273,7 @@ def create_app(
         return Response(to_json(rows), media_type="application/json")
 
     @app.get("/api/ics/{queue_id}")
+    @light
     async def ics(request: Request, queue_id: str, day: dt.date | None = None) -> Response:
         runtime = rt(request)
         entry = await runtime.client.queue(queue_id)
@@ -258,6 +288,7 @@ def create_app(
         )
 
     @app.post("/api/subscriptions", status_code=201)
+    @heavy
     async def subscribe(request: Request, payload: SubscriptionIn) -> dict[str, Any]:
         runtime = rt(request)
         point = None
@@ -300,6 +331,19 @@ def create_app(
         if not SubscriptionStore(rt(request).conn).delete(token):
             raise HTTPException(404, "Nie ma takiej obserwacji.")
         return Response(status_code=204)
+
+    @app.get("/healthz", include_in_schema=False)
+    async def healthz(request: Request) -> JSONResponse:
+        try:
+            rt(request).conn.execute("SELECT 1").fetchone()
+        except Exception as exc:  # baza niedostępna = instancja niezdrowa
+            log.error("healthz.db_error", reason=type(exc).__name__)
+            return JSONResponse({"status": "error", "db": "unavailable"}, status_code=503)
+        return JSONResponse({"status": "ok", "version": __version__})
+
+    @app.get("/metrics", include_in_schema=False)
+    async def metrics() -> Response:
+        return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     # ------------------------------------------------------------------ strony
 
@@ -358,7 +402,11 @@ def create_app(
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Any) -> Response:
+        started = time.perf_counter()
         response: Response = await call_next(request)
+        route = _route(request)
+        HTTP_REQUESTS.labels(request.method, route, str(response.status_code)).inc()
+        HTTP_LATENCY.labels(route).observe(time.perf_counter() - started)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
         response.headers.setdefault("Permissions-Policy", "geolocation=(self)")
@@ -372,6 +420,15 @@ def create_app(
         return response
 
     return app
+
+
+def _route(request: Request) -> str:
+    """Szablon ścieżki (np. /api/history/{queue_id}), żeby metryki nie puchły od ID."""
+    route = request.scope.get("route")
+    path = getattr(route, "path", None)
+    if isinstance(path, str):
+        return path
+    return "/static" if request.url.path.startswith("/static/") else "other"
 
 
 def _origin(url: str) -> str:

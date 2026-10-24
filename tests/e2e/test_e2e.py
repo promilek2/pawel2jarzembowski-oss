@@ -194,3 +194,11 @@ def test_axe_dark_mode(browser, base_url) -> None:  # type: ignore[no-untyped-de
     pg.wait_for_selector("#result-list li")
     assert _axe_violations(pg) == []
     context.close()
+
+
+def test_pwa_installable(page) -> None:  # type: ignore[no-untyped-def]
+    """Chromium: brak błędów instalowalności (manifest, ikony, service worker)."""
+    page.evaluate("navigator.serviceWorker.ready.then(r => Boolean(r.active))")
+    cdp = page.context.new_cdp_session(page)
+    result = cdp.send("Page.getInstallabilityErrors")
+    assert result["installabilityErrors"] == [], result

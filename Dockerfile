@@ -5,7 +5,10 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE ./
 COPY termin ./termin
-RUN pip wheel --wheel-dir /wheels .
+# Za proxy z własnym CA: docker build --secret id=ca,src=/ścieżka/ca.crt .
+RUN --mount=type=secret,id=ca,required=false \
+    if [ -f /run/secrets/ca ]; then export PIP_CERT=/run/secrets/ca; fi; \
+    pip wheel --wheel-dir /wheels .
 
 # --- etap 2: obraz uruchomieniowy ---
 FROM python:3.13-slim AS runtime
@@ -19,7 +22,9 @@ RUN groupadd --system --gid 10001 termin \
  && useradd --system --uid 10001 --gid termin --home-dir /data --shell /usr/sbin/nologin termin \
  && mkdir -p /data && chown termin:termin /data
 COPY --from=build /wheels /wheels
-RUN pip install /wheels/*.whl && rm -rf /wheels
+RUN --mount=type=secret,id=ca,required=false \
+    if [ -f /run/secrets/ca ]; then export PIP_CERT=/run/secrets/ca; fi; \
+    pip install /wheels/*.whl && rm -rf /wheels
 USER termin
 WORKDIR /data
 VOLUME ["/data"]

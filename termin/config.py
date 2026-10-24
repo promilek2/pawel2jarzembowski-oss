@@ -93,6 +93,9 @@ class Settings(BaseSettings):
 
     # --- Web ---
     rate_limit: str = "30/minute"
+    """Limit „ciężkich” zapytań (wyszukiwanie, statystyki, subskrypcje) na adres IP."""
+    rate_limit_light: str = "120/minute"
+    """Limit lekkich zapytań (podpowiedzi, historia, .ics) na adres IP."""
     tile_url: str = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
     tile_attribution: str = "© OpenStreetMap contributors"
 
