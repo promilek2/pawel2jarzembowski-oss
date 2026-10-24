@@ -27,6 +27,7 @@ from termin.logs import get_logger
 log = get_logger(__name__)
 
 MAX_MANY_PLACES_LOOKUPS = 30
+FALLBACK_MAX_PAGES = 4
 
 FetchedHook = Callable[[str, str, int, list[QueueEntry]], None]
 """(fragment świadczenia, województwo, przypadek, pozycje) → None."""
@@ -144,10 +145,14 @@ class SearchService:
         provinces = self.choose_provinces(req, point)
         response.point, response.provinces = point, provinces
 
+        # Dowolny tekst spoza słownika (fallback) może celowo trafiać w puste zapytania:
+        # ograniczamy liczbę stron, żeby nie dało się nas użyć do zalewania API NFZ.
+        max_pages = FALLBACK_MAX_PAGES if resolution.status == "fallback" else None
         pages = await asyncio.gather(
             *(
                 self.client.queues(
-                    QueueQuery(benefit=resolution.query, province=code, case=int(req.case))
+                    QueueQuery(benefit=resolution.query, province=code, case=int(req.case)),
+                    max_pages=max_pages,
                 )
                 for code in provinces
             )

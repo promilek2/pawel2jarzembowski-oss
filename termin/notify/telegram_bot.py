@@ -32,6 +32,7 @@ from termin.notify.subscribe import (
 )
 from termin.runtime import Runtime
 from termin.store.subscriptions import SubscriptionStore
+from termin.web.protection import IpRateLimiter
 
 log = get_logger(__name__)
 
@@ -104,6 +105,7 @@ class TelegramBot:
         self.transport = transport
         self.store = SubscriptionStore(runtime.conn)
         self.offset = 0
+        self.limiter = IpRateLimiter(runtime.settings.telegram_commands_per_minute, 50_000)
         self._http = httpx.AsyncClient(
             base_url=f"https://api.telegram.org/bot{token}", transport=transport, timeout=40
         )
@@ -144,7 +146,9 @@ class TelegramBot:
             await self.poll_once()
 
     async def handle(self, chat_id: str, text: str) -> None:
-        command, _, args = text.strip().partition(" ")
+        if not self.limiter.allow(chat_id):
+            return  # zalew komend z jednego czatu: ignorujemy do końca minuty
+        command, _, args = text.strip()[:500].partition(" ")
         command = command.split("@", 1)[0].lower()
         handlers = {
             "/start": self._help,

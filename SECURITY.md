@@ -26,7 +26,8 @@ Poprawki bezpieczeństwa trafiają do najnowszej wersji z gałęzi `main` i najn
 | Logowanie | stały czas odpowiedzi (także dla nieistniejących kont), blokada konta po 10 nieudanych próbach na 15 min, limit 10 prób/min na IP |
 | Linki z e-maili | jednorazowe, ważne 1 h (reset) lub 3 dni (weryfikacja), w bazie tylko skrót; reset nie zdradza, czy konto istnieje |
 | Nagłówki | CSP bez `unsafe-inline`/`unsafe-eval`, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, HSTS (przy HTTPS), `X-Content-Type-Options`, `Referrer-Policy: no-referrer`, COOP/CORP, `Permissions-Policy`, `Cache-Control: no-store` dla API |
-| Wejście | walidacja Pydantic, limit rozmiaru zapytania (64 KB), limity zapytań (slowapi), DOM budowany przez `textContent` (brak XSS z danych NFZ) |
+| Wejście | walidacja Pydantic, limit rozmiaru zapytania (64 KB, także przy przesyłaniu porcjami), zapytania SQL parametryzowane, DOM budowany przez `textContent` (brak XSS z danych NFZ) |
+| DoS | globalny limit zapytań na IP, limity slowapi, ograniczona liczba równoczesnych wyszukiwań (503 zamiast kolejki bez końca) i limit czasu (504), hashowanie haseł w osobnej puli wątków, limity subskrypcji i maili na adres, timeouty Caddy przeciw slowloris; szczegóły i wyniki testów w [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) |
 | Dane | minimalizacja (współrzędne zaokrąglone, adresy w cache jako skrót), brak danych osobowych w logach, kontener bez uprawnień roota z systemem plików tylko do odczytu |
 | Łańcuch dostaw | biblioteki frontendu hostowane lokalnie (bez CDN), `pip-audit` w CI, Dependabot dla Pythona i GitHub Actions |
 
@@ -34,6 +35,11 @@ Poprawki bezpieczeństwa trafiają do najnowszej wersji z gałęzi `main` i najn
 
 - Uruchamiaj wyłącznie za HTTPS (np. profil `https` w `docker-compose.yml` z Caddy) i ustaw
   `TERMIN_PUBLIC_URL=https://…`, żeby włączyć `Secure`, `__Host-` i HSTS.
+- **Nie wystawiaj portu 8000 do internetu**: uvicorn nie ma limitu czasu na nagłówki
+  (slowloris). Ruch z zewnątrz tylko przez Caddy/nginx; compose domyślnie wiąże port z `127.0.0.1`.
+- Ustaw `TERMIN_ALLOWED_HOSTS=["twoja.domena"]`.
+- Przed atakami wolumetrycznymi (DDoS L3/L4) chroni tylko infrastruktura: ochrona DDoS
+  dostawcy serwera albo CDN/WAF przed domeną.
 - Nie wystawiaj `/metrics` publicznie (Caddyfile to blokuje).
 - Ustaw `TERMIN_SECURITY_CONTACT` (trafia do `security.txt`).
 - Rób kopie zapasowe bazy (`docs/DEPLOY.md`) i trzymaj je zaszyfrowane: zawierają adresy e-mail.

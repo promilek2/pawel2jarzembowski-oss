@@ -577,6 +577,12 @@ def server(
         "--proxy-headers/--bez-proxy-headers",
         help="Ufaj X-Forwarded-* (adresy z FORWARDED_ALLOW_IPS, domyślnie 127.0.0.1).",
     ),
+    max_connections: int = typer.Option(
+        512, "--max-polaczen", help="Maks. równoczesnych połączeń; powyżej odpowiedź 503."
+    ),
+    keep_alive: int = typer.Option(
+        5, "--keep-alive", help="Sekundy bezczynności połączenia keep-alive (slowloris)."
+    ),
 ) -> None:
     """Uruchom panel web (http://localhost:8000)."""
     import uvicorn
@@ -591,6 +597,13 @@ def server(
         proxy_headers=proxy_headers,
         log_level=settings.log_level.lower(),
         access_log=False,  # logi dostępowe zawierają IP i parametry zapytań (PRIVACY.md)
+        # Ochrona przed wyczerpaniem zasobów (docs/SECURITY_REVIEW.md):
+        limit_concurrency=max_connections,
+        timeout_keep_alive=keep_alive,
+        backlog=1024,
+        h11_max_incomplete_event_size=16 * 1024,  # maks. rozmiar nagłówków
+        server_header=False,
+        timeout_graceful_shutdown=10,
     )
 
 

@@ -200,6 +200,9 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
         mailer: Mailer | None = request.app.state.mailer
         if mailer is None:
             return False
+        if not request.app.state.mail_throttle.allow(to):
+            log.warning("auth.mail_throttled")
+            return False
         try:
             await mailer(to, subject, body)
         except NotifyError as exc:
@@ -243,7 +246,7 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
         if problem:
             raise HTTPException(400, problem)
         try:
-            user = accounts(request).create(email, payload.password)
+            user = await accounts(request).create_async(email, payload.password)
         except AccountError as exc:
             raise HTTPException(409, str(exc)) from exc
         if settings.mail_enabled:
@@ -257,7 +260,7 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
         enabled()
         email = normalize_email(payload.email) or payload.email.strip().lower()
         try:
-            user = accounts(request).authenticate(email, payload.password)
+            user = await accounts(request).authenticate_async(email, payload.password)
         except LockedError as exc:
             raise HTTPException(429, str(exc)) from exc
         except AccountError as exc:
@@ -337,7 +340,7 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
         if problem:
             raise HTTPException(400, problem)
         store.use_email_token(payload.token, "reset")
-        store.set_password(user_id, payload.password)
+        await store.set_password_async(user_id, payload.password)
         store.mark_verified(user_id)  # link z e-maila potwierdza adres
         return login_response(request, user)
 
@@ -346,12 +349,12 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
     async def change_password(request: Request, payload: PasswordChangeIn) -> JSONResponse:
         user = require_user(request)
         store = accounts(request)
-        if not store.check_password(user.id, payload.current):
+        if not await store.check_password_async(user.id, payload.current):
             raise HTTPException(400, "Obecne hasło jest nieprawidłowe.")
         problem = password_problem(payload.new, user.email)
         if problem:
             raise HTTPException(400, problem)
-        store.set_password(user.id, payload.new)  # wylogowuje wszystkie urządzenia
+        await store.set_password_async(user.id, payload.new)  # wylogowuje wszystkie urządzenia
         return login_response(request, user)
 
     @router.get("/account/export")
@@ -369,7 +372,7 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
     async def delete_account(request: Request, payload: PasswordIn) -> JSONResponse:
         user = require_user(request)
         store = accounts(request)
-        if not store.check_password(user.id, payload.password):
+        if not await store.check_password_async(user.id, payload.password):
             raise HTTPException(400, "Hasło jest nieprawidłowe.")
         store.delete(user.id)
         log.info("auth.account_deleted")

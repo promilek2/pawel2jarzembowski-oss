@@ -106,6 +106,11 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   Szczegóły: `docs/DEPLOY.md`.
 - `/metrics` (Prometheus, `termin/metrics.py`), rate limiting slowapi (`TERMIN_RATE_LIMIT`,
   `TERMIN_RATE_LIMIT_LIGHT`).
+- Ochrona przed DoS: `termin/web/protection.py` (globalny limiter IP, `MailThrottle`,
+  `BodyLimitMiddleware`), semafor wyszukiwań w `app.py` (503/504), pula hashowania w
+  `security.py` (`BusyError` → 503). Model zagrożeń i wyniki `scripts/load_test.py`:
+  `docs/SECURITY_REVIEW.md`. Port 8000 nigdy publicznie (uvicorn nie ma timeoutu nagłówków),
+  zawsze przez Caddy.
 - CI: `.github/workflows/ci.yml` (lint, mypy, testy 3.11–3.13, pokrycie core ≥ 85%, e2e,
   Docker). Wydanie: `release.yml` (tag `vX.Y.Z` → PyPI przez Trusted Publishing).
 - Skrypty: `scripts/capture_fixtures.py` (prawdziwe odpowiedzi NFZ), `build_postal_centroids.py`

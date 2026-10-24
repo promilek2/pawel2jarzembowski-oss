@@ -169,6 +169,19 @@ class SubscriptionStore:
         ).fetchall()
         return [self._from_row(r) for r in rows]
 
+    def count(
+        self, *, channel: str | None = None, target: str | None = None, user_id: int | None = None
+    ) -> int:
+        sql = "SELECT count(*) FROM subscriptions WHERE active = 1"
+        params: list[str | int] = []
+        if channel is not None and target is not None:
+            sql += " AND channel = ? AND target = ?"
+            params += [channel, target]
+        if user_id is not None:
+            sql += " AND user_id = ?"
+            params.append(user_id)
+        return int(self.conn.execute(sql, params).fetchone()[0])
+
     def mark_checked(self, token: str, when: dt.datetime) -> None:
         with self.conn:
             self.conn.execute(

@@ -35,7 +35,7 @@ dependencies = [
   "rich>=13.7",
   "rapidfuzz>=3.9",
   "fastapi>=0.111",
-  "uvicorn>=0.30",
+  "uvicorn>=0.32",
   "slowapi>=0.1.9",
   "prometheus-client>=0.20",
 ]

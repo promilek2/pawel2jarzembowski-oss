@@ -109,4 +109,21 @@ async def create_subscription(runtime: Runtime, req: SubscribeRequest) -> Subscr
         user_id=req.user_id,
         consent_at=dt.datetime.now(dt.UTC),
     )
-    return SubscriptionStore(runtime.conn).add(sub)
+    store = SubscriptionStore(runtime.conn)
+    limits = runtime.settings
+    if store.count() >= limits.max_subscriptions_total:
+        raise SubscribeError("Ta instancja osiągnęła limit obserwacji. Spróbuj później.")
+    if sub.channel != "desktop" and (
+        store.count(channel=sub.channel, target=sub.target) >= limits.max_subscriptions_per_target
+    ):
+        raise SubscribeError(
+            f"Ten adres powiadomień ma już {limits.max_subscriptions_per_target} obserwacji. "
+            "Usuń którąś, żeby dodać nową."
+        )
+    if req.user_id is not None and (
+        store.count(user_id=req.user_id) >= limits.max_subscriptions_per_user
+    ):
+        raise SubscribeError(
+            f"Możesz mieć najwyżej {limits.max_subscriptions_per_user} obserwacji."
+        )
+    return store.add(sub)

@@ -15,9 +15,11 @@ from typing import Any, Literal
 from termin.security import (
     DUMMY_HASH,
     hash_password,
+    hash_password_async,
     new_token,
     token_hash,
     verify_password,
+    verify_password_async,
 )
 
 TERMS_VERSION = "2026-10-25"
@@ -114,6 +116,15 @@ class AccountStore:
         return self._user(row)
 
     def create(self, email: str, password: str, *, verified: bool = False) -> User:
+        return self._insert(email, hash_password(password), verified=verified)
+
+    async def create_async(self, email: str, password: str) -> User:
+        """Jak `create`, ale scrypt liczony w puli wątków (nie blokuje serwera)."""
+        if self.by_email(email) is not None:
+            raise AccountError("Konto z tym adresem e-mail już istnieje.")
+        return self._insert(email, await hash_password_async(password), verified=False)
+
+    def _insert(self, email: str, password_hash: str, *, verified: bool) -> User:
         now = self._now()
         try:
             with self.conn:
@@ -122,7 +133,7 @@ class AccountStore:
                     " terms_accepted_at, terms_version) VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         email,
-                        hash_password(password),
+                        password_hash,
                         now.isoformat(),
                         now.isoformat() if verified else None,
                         now.isoformat(),
@@ -137,17 +148,32 @@ class AccountStore:
 
     def authenticate(self, email: str, password: str) -> User:
         """Sprawdza hasło z blokadą po wielu nieudanych próbach. Czas odpowiedzi stały."""
-        row = self.conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        row = self._login_row(email)
+        ok = verify_password(password, row["password_hash"] if row else DUMMY_HASH)
+        return self._finish_login(row, ok)
+
+    async def authenticate_async(self, email: str, password: str) -> User:
+        row = self._login_row(email)
+        ok = await verify_password_async(password, row["password_hash"] if row else DUMMY_HASH)
+        return self._finish_login(row, ok)
+
+    def _login_row(self, email: str) -> sqlite3.Row | None:
+        row: sqlite3.Row | None = self.conn.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+        if row is not None:
+            locked_until = _dt(row["locked_until"])
+            if locked_until and locked_until > self._now():
+                raise LockedError(
+                    "Za dużo nieudanych prób logowania. Spróbuj ponownie za kilkanaście minut."
+                )
+        return row
+
+    def _finish_login(self, row: sqlite3.Row | None, ok: bool) -> User:
         if row is None:
-            verify_password(password, DUMMY_HASH)
             raise AccountError("Nieprawidłowy e-mail lub hasło.")
         now = self._now()
-        locked_until = _dt(row["locked_until"])
-        if locked_until and locked_until > now:
-            raise LockedError(
-                "Za dużo nieudanych prób logowania. Spróbuj ponownie za kilkanaście minut."
-            )
-        if not verify_password(password, row["password_hash"]):
+        if not ok:
             failed = row["failed_logins"] + 1
             lock = now + self.lockout if failed >= self.max_failed_logins else None
             with self.conn:
@@ -167,11 +193,17 @@ class AccountStore:
         return user
 
     def set_password(self, user_id: int, password: str) -> None:
+        self._store_password(user_id, hash_password(password))
+
+    async def set_password_async(self, user_id: int, password: str) -> None:
+        self._store_password(user_id, await hash_password_async(password))
+
+    def _store_password(self, user_id: int, password_hash: str) -> None:
         with self.conn:
             self.conn.execute(
                 "UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL"
                 " WHERE id = ?",
-                (hash_password(password), user_id),
+                (password_hash, user_id),
             )
             # zmiana hasła wylogowuje wszystkie urządzenia
             self.conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
@@ -181,6 +213,12 @@ class AccountStore:
             "SELECT password_hash FROM users WHERE id = ?", (user_id,)
         ).fetchone()
         return bool(row) and verify_password(password, row[0])
+
+    async def check_password_async(self, user_id: int, password: str) -> bool:
+        row = self.conn.execute(
+            "SELECT password_hash FROM users WHERE id = ?", (user_id,)
+        ).fetchone()
+        return bool(row) and await verify_password_async(password, row[0])
 
     def mark_verified(self, user_id: int) -> None:
         with self.conn:

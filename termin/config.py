@@ -112,6 +112,25 @@ class Settings(BaseSettings):
     """Po tylu dniach usuwamy konta z niepotwierdzonym adresem e-mail (gdy działa poczta)."""
     max_body_kb: int = Field(default=64, ge=4)
 
+    # --- Ochrona przed przeciążeniem i nadużyciami (docs/SECURITY_REVIEW.md) ---
+    global_requests_per_minute: int = Field(default=300, ge=10)
+    """Łączny limit zapytań HTTP z jednego adresu IP (wszystkie ścieżki poza /healthz)."""
+    max_tracked_ips: int = Field(default=100_000, ge=1000)
+    max_concurrent_searches: int = Field(default=8, ge=1)
+    """Ile wyszukiwań (zapytań do NFZ) obsługujemy naraz; reszta czeka albo dostaje 503."""
+    search_queue_timeout_s: float = Field(default=3.0, gt=0)
+    search_timeout_s: float = Field(default=25.0, gt=0)
+    subscribe_rate_limit: str = "20/hour"
+    max_subscriptions_per_target: int = Field(default=10, ge=1)
+    max_subscriptions_per_user: int = Field(default=25, ge=1)
+    max_subscriptions_total: int = Field(default=50_000, ge=1)
+    mails_per_address_per_hour: int = Field(default=3, ge=1)
+    nominatim_max_wait_s: float = Field(default=3.0, gt=0)
+    """Maks. czas oczekiwania w kolejce do Nominatim; dłużej → geokoder offline."""
+    allowed_hosts: list[str] = Field(default_factory=list)
+    """Dozwolone nagłówki Host (ochrona przed DNS rebinding). Pusta lista = bez sprawdzania."""
+    telegram_commands_per_minute: int = Field(default=20, ge=1)
+
     # --- Dane operatora (do regulaminu, polityki prywatności, security.txt) ---
     operator_name: str | None = None
     """Nazwa administratora danych / usługodawcy, np. „Jan Kowalski” albo nazwa firmy."""

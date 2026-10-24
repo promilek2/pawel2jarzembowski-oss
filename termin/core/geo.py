@@ -237,6 +237,9 @@ class Geocoder:
         with cls._slot_lock:
             now = self._clock()
             slot = max(now, cls._next_slot)
+            if slot - now > self._settings.nominatim_max_wait_s:
+                # zalew zapytań: nie ustawiamy się w długiej kolejce, tylko używamy trybu offline
+                raise GeocodingError("kolejka do Nominatim jest za długa")
             cls._next_slot = slot + NOMINATIM_MIN_INTERVAL_S
         if slot > now:
             await self._sleep(slot - now)

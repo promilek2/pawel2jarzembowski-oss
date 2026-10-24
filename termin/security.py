@@ -6,11 +6,16 @@ Bez zewnętrznych zależności: `hashlib.scrypt` jest w bibliotece standardowej,
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import hmac
 import re
 import secrets
+import threading
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from typing import TypeVar
 
 SCRYPT_N = 2**15
 SCRYPT_R = 8
@@ -100,3 +105,43 @@ def new_token(nbytes: int = 32) -> str:
 def token_hash(token: str) -> str:
     """Tokeny trzymamy w bazie tylko jako skrót: wyciek bazy nie daje dostępu do sesji."""
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+# ---------------------------------------------------------------------- haszowanie poza pętlą
+
+T = TypeVar("T")
+
+HASH_WORKERS = 4
+"""Ile haszy scrypt liczymy naraz (każdy zajmuje ~32 MB RAM i kilkadziesiąt ms CPU)."""
+HASH_QUEUE_MAX = 64
+"""Ile operacji może czekać w kolejce; powyżej odmawiamy (ochrona przed zalewem logowań)."""
+
+_hash_pool = ThreadPoolExecutor(max_workers=HASH_WORKERS, thread_name_prefix="termin-hash")
+_pending = 0
+_pending_lock = threading.Lock()
+
+
+class BusyError(RuntimeError):
+    """Serwer jest przeciążony (za dużo operacji w kolejce)."""
+
+
+async def run_hashing(fn: Callable[[], T]) -> T:
+    """Liczy hasz w osobnej, ograniczonej puli wątków: nie blokuje pętli zdarzeń i limituje RAM."""
+    global _pending
+    with _pending_lock:
+        if _pending >= HASH_QUEUE_MAX:
+            raise BusyError("Za dużo prób logowania naraz. Spróbuj za chwilę.")
+        _pending += 1
+    try:
+        return await asyncio.get_running_loop().run_in_executor(_hash_pool, fn)
+    finally:
+        with _pending_lock:
+            _pending -= 1
+
+
+async def hash_password_async(password: str) -> str:
+    return await run_hashing(lambda: hash_password(password))
+
+
+async def verify_password_async(password: str, stored: str) -> bool:
+    return await run_hashing(lambda: verify_password(password, stored))

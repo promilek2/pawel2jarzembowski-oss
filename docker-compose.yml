@@ -1,7 +1,11 @@
 # Termin: aplikacja + wolumen SQLite, opcjonalnie Caddy z automatycznym HTTPS.
 #
-#   docker compose up -d                       # tylko aplikacja na http://localhost:8000
-#   DOMAIN=termin.example.org docker compose --profile https up -d   # z Caddy i HTTPS
+#   docker compose up -d                       # aplikacja na http://localhost:8000 (tylko lokalnie)
+#   DOMAIN=termin.example.org docker compose --profile https up -d   # publicznie: Caddy + HTTPS
+#
+# BEZPIECZEŃSTWO: nie wystawiaj portu 8000 do internetu. Serwer aplikacji (uvicorn) nie ma
+# limitu czasu na nagłówki, więc atak slowloris może go zablokować. Caddy przed aplikacją
+# ucina powolne połączenia (docs/SECURITY_REVIEW.md).
 #
 # Konfiguracja: plik .env obok (zob. docs/DEPLOY.md), np. TERMIN_PUBLIC_URL, TERMIN_TELEGRAM_TOKEN.
 services:
@@ -15,10 +19,19 @@ services:
     environment:
       TERMIN_DATA_DIR: /data
       TERMIN_LOG_JSON: "true"
-      # zaufaj nagłówkom X-Forwarded-* od Caddy (sieć compose)
-      FORWARDED_ALLOW_IPS: "*"
+      # X-Forwarded-For tylko od proxy w sieciach prywatnych (Caddy w sieci compose).
+      # Klient z internetu nie podrobi więc adresu IP, żeby obejść limity zapytań.
+      FORWARDED_ALLOW_IPS: "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     ports:
-      - "${TERMIN_PORT:-8000}:8000"
+      # Domyślnie tylko localhost; z internetu ruch idzie przez Caddy (profil https).
+      - "${TERMIN_BIND:-127.0.0.1}:${TERMIN_PORT:-8000}:8000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    ulimits:
+      nofile: 8192
     volumes:
       - termin-data:/data
     healthcheck:

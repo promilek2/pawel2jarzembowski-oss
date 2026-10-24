@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from termin import REPO_URL, __version__
 from termin.config import Settings, get_settings
@@ -36,16 +37,26 @@ from termin.notify.message import unsubscribe_url
 from termin.notify.subscribe import SubscribeError, SubscribeRequest, create_subscription
 from termin.notify.watcher import Watcher
 from termin.runtime import Runtime, Transports
+from termin.security import BusyError
 from termin.store.snapshots import to_csv, to_json
 from termin.store.subscriptions import SubscriptionStore
 from termin.web.auth import Mailer, build_auth_router, csrf_guard, current_user, default_mailer
 from termin.web.ics import call_reminder
 from termin.web.legal import LEGAL_PAGES, missing_operator_fields, render_legal, security_txt
+from termin.web.protection import BodyLimitMiddleware, IpRateLimiter, MailThrottle, client_ip
 
 log = get_logger(__name__)
 
 STATIC_DIR = resources.files("termin.web").joinpath("static")
 NFZ_OFFICIAL = "https://terminyleczenia.nfz.gov.pl"
+# Znak Termin (jak icon.svg): bilet z wcięciami, „T” i pomarańczowa kropka.
+BRAND_MARK = (
+    '<svg class="brand-mark" width="36" height="36" viewBox="0 0 64 64" aria-hidden="true">'
+    '<path class="logo-tile" d="M12 10H52A8 8 0 0 1 60 18V26A6 6 0 0 0 60 38V46A8 8 0 0 1 52 54'
+    'H12A8 8 0 0 1 4 46V38A6 6 0 0 0 4 26V18A8 8 0 0 1 12 10Z"/>'
+    '<path class="logo-t" d="M20 20H44V26H35V44H29V26H20Z"/>'
+    '<circle class="logo-dot" cx="45" cy="42" r="4.5"/></svg>'
+)
 
 
 class SubscriptionIn(BaseModel):
@@ -80,6 +91,7 @@ def create_app(
         configure_logging(settings.log_level, json=settings.log_json)
         runtime = Runtime(settings, transports=transports, today=today)
         app.state.runtime = runtime
+        app.state.search_slots = asyncio.Semaphore(settings.max_concurrent_searches)
         missing = missing_operator_fields(settings)
         if missing:
             log.warning("legal.operator_missing", fields=",".join(missing))
@@ -128,6 +140,32 @@ def create_app(
         )
 
     app.state.mailer = mailer if mailer is not None else default_mailer(settings)
+    app.state.mail_throttle = MailThrottle(settings.mails_per_address_per_hour)
+    ip_limiter = IpRateLimiter(settings.global_requests_per_minute, settings.max_tracked_ips)
+    subscribe_limit = limiter.limit(settings.subscribe_rate_limit)
+
+    @asynccontextmanager
+    async def search_slot(request: Request) -> AsyncIterator[None]:
+        """Ogranicza liczbę równoczesnych wyszukiwań (każde to zapytania do NFZ)."""
+        slots: asyncio.Semaphore = request.app.state.search_slots
+        try:
+            await asyncio.wait_for(slots.acquire(), timeout=settings.search_queue_timeout_s)
+        except TimeoutError as exc:
+            raise HTTPException(
+                503, "Serwer jest teraz mocno obciążony. Spróbuj za chwilę.",
+                headers={"Retry-After": "10"},
+            ) from exc  # fmt: skip
+        try:
+            yield
+        finally:
+            slots.release()
+
+    async def with_timeout(coro: Any) -> Any:
+        try:
+            return await asyncio.wait_for(coro, timeout=settings.search_timeout_s)
+        except TimeoutError as exc:
+            raise HTTPException(504, "Wyszukiwanie trwało za długo. Spróbuj ponownie.") from exc
+
     app.include_router(build_auth_router(settings, limiter))
 
     def rt(request: Request) -> Runtime:
@@ -141,6 +179,14 @@ def create_app(
     @app.exception_handler(SearchError)
     async def _search_error(_request: Request, exc: SearchError) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": str(exc), "code": "search"})
+
+    @app.exception_handler(BusyError)
+    async def _busy(_request: Request, exc: BusyError) -> JSONResponse:
+        return JSONResponse(
+            status_code=503,
+            content={"detail": str(exc), "code": "busy"},
+            headers={"Retry-After": "10"},
+        )
 
     @app.exception_handler(GeocodingError)
     async def _geo_error(_request: Request, exc: GeocodingError) -> JSONResponse:
@@ -229,7 +275,8 @@ def create_app(
             benefit_query=benefit,
         )
         SEARCHES.labels("web").inc()
-        response = await runtime.search.search(req)
+        async with search_slot(request):
+            response = await with_timeout(runtime.search.search(req))
         return response_to_dict(response)
 
     @app.get("/api/history/{queue_id}")
@@ -255,7 +302,8 @@ def create_app(
         query = resolution.query
         latest = runtime.snapshots.latest_snapshot_id(query, province, case)
         if latest is None or latest[1] < runtime.today():
-            await runtime.take_snapshot(query, province, case, source="search")
+            async with search_slot(request):
+                await with_timeout(runtime.take_snapshot(query, province, case, source="search"))
         children = {Variant.CHILD: True, Variant.ADULT: False}.get(variant) if variant else None
         result = runtime.snapshots.wait_stats(query, province, case, for_children=children)
         data = result.to_dict()
@@ -302,7 +350,7 @@ def create_app(
         )
 
     @app.post("/api/subscriptions", status_code=201)
-    @heavy
+    @subscribe_limit
     async def subscribe(request: Request, payload: SubscriptionIn) -> dict[str, Any]:
         runtime = rt(request)
         point = None
@@ -336,6 +384,7 @@ def create_app(
         return {**sub.public_dict(), "unsubscribe_url": unsubscribe_url(settings, sub.token)}
 
     @app.get("/api/subscriptions/{token}")
+    @light
     async def get_subscription(request: Request, token: str) -> dict[str, Any]:
         sub = SubscriptionStore(rt(request).conn).get(token)
         if sub is None:
@@ -343,6 +392,7 @@ def create_app(
         return sub.public_dict()
 
     @app.delete("/api/subscriptions/{token}", status_code=204)
+    @light
     async def delete_subscription(request: Request, token: str) -> Response:
         if not SubscriptionStore(rt(request).conn).delete(token):
             raise HTTPException(404, "Nie ma takiej obserwacji.")
@@ -437,9 +487,14 @@ def create_app(
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Any) -> Response:
         started = time.perf_counter()
-        length = request.headers.get("content-length")
-        if length and length.isdigit() and int(length) > max_body:
-            response: Response = JSONResponse({"detail": "Za duże zapytanie."}, 413)
+        response: Response
+        if request.url.path != "/healthz" and not ip_limiter.allow(client_ip(request)):
+            RATE_LIMITED.labels("global").inc()
+            response = JSONResponse(
+                {"detail": "Za dużo zapytań. Odczekaj chwilę.", "code": "rate"},
+                429,
+                headers={"Retry-After": "60"},
+            )
         elif (blocked := await csrf_guard(request)) is not None:
             response = blocked
         else:
@@ -471,6 +526,10 @@ def create_app(
         )
         return response
 
+    # Kolejność: ostatnio dodany działa pierwszy (najbardziej zewnętrzny).
+    app.add_middleware(BodyLimitMiddleware, max_bytes=max_body)
+    if settings.allowed_hosts:
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
     return app
 
 
@@ -505,7 +564,7 @@ def _page(title: str, body: str, *, legal: bool = False) -> str:
 <script type="module" src="/static/page.js"></script></head>
 <body>
 <header class="site-header wrap">
-<a class="brand" href="/"><span class="brand-name">Termin</span></a>
+<a class="brand" href="/">{BRAND_MARK}<span class="brand-name">Termin</span></a>
 <a class="pill" href="/">Wróć do wyszukiwarki</a></header>
 <main id="main" class="wrap page legal">{heading}{body}</main>
 <footer class="site-footer"><div class="wrap footer-grid">

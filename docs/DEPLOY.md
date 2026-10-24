@@ -28,6 +28,12 @@ Wszystkie opcje to zmienne środowiskowe z prefiksem `TERMIN_` (pełna lista w
 | `TERMIN_SECURITY_CONTACT` | `operator_email` | Kontakt w `/.well-known/security.txt`. |
 | `TERMIN_ACCOUNTS_ENABLED` | `true` | Konta użytkowników (opcjonalne dla użytkownika). |
 | `TERMIN_SESSION_DAYS`, `TERMIN_MAX_FAILED_LOGINS`, `TERMIN_LOCKOUT_MINUTES` | 30, 10, 15 | Sesje i blokada logowania. |
+| `TERMIN_ALLOWED_HOSTS` | `[]` | Dozwolone nagłówki `Host`, np. `["termin.example.org"]` (ochrona przed DNS rebinding). |
+| `TERMIN_GLOBAL_REQUESTS_PER_MINUTE` | `300` | Łączny limit zapytań z jednego IP (poza `/healthz`). |
+| `TERMIN_MAX_CONCURRENT_SEARCHES` | `8` | Równoczesne wyszukiwania; nadmiar dostaje 503 „spróbuj za chwilę”. |
+| `TERMIN_SUBSCRIBE_RATE_LIMIT`, `TERMIN_MAX_SUBSCRIPTIONS_PER_TARGET` | `20/hour`, `10` | Limity tworzenia obserwacji. |
+| `TERMIN_MAILS_PER_ADDRESS_PER_HOUR` | `3` | Maile (reset, weryfikacja) na jeden adres na godzinę. |
+| `TERMIN_BIND` (tylko compose) | `127.0.0.1` | Adres, na którym compose wystawia port 8000. Zostaw localhost. |
 
 Szablon: `.env.example`.
 
@@ -66,8 +72,12 @@ Play, możesz opakować PWA w Trusted Web Activity (np. narzędziem Bubblewrap) 
 ```bash
 git clone https://github.com/promilek2/pawel2jarzembowski-oss.git termin && cd termin
 cp .env.example .env            # uzupełnij TERMIN_PUBLIC_URL itd.
-docker compose up -d            # http://SERWER:8000, start < 1 min
+docker compose up -d            # http://127.0.0.1:8000 na serwerze, start < 1 min
 ```
+
+Port 8000 jest wystawiony tylko na `127.0.0.1`. **Nie zmieniaj tego na serwerze publicznym**:
+uvicorn nie ma limitu czasu na nagłówki i padnie od ataku slowloris. Do internetu wystawiaj
+aplikację przez Caddy (poniżej) albo nginx. Do testów w sieci lokalnej: `TERMIN_BIND=0.0.0.0`.
 
 Z automatycznym HTTPS (Caddy + Let's Encrypt). Domena musi wskazywać na serwer, a porty 80 i 443
 muszą być otwarte:
@@ -76,7 +86,21 @@ muszą być otwarte:
 DOMAIN=termin.example.org docker compose --profile https up -d
 ```
 
-Caddy nie zapisuje logów dostępowych i nie wystawia `/metrics` na zewnątrz.
+Caddy nie zapisuje logów dostępowych i nie wystawia `/metrics` na zewnątrz. Ma też timeouty
+na nagłówki i ciało zapytania (ochrona przed slowloris) oraz limit rozmiaru zapytania.
+
+## Ochrona przed DDoS
+
+Aplikacja broni się przed zalewem zapytań z jednego adresu i przed przeciążeniem (limity,
+503 zamiast kolejki bez końca, timeouty proxy). Ataku wolumetrycznego z tysięcy adresów nie
+zatrzyma żaden program na jednym serwerze, więc:
+
+1. Włącz ochronę DDoS u dostawcy serwera (zwykle jest w cenie) albo postaw domenę za CDN/WAF
+   (np. Cloudflare). Za CDN ustaw w Caddy `trusted_proxies` na jego zakresy adresów.
+2. Firewall: otwarte tylko 80, 443 i SSH (najlepiej z ograniczeniem adresów).
+3. Ustaw `TERMIN_ALLOWED_HOSTS` na swoją domenę.
+4. Sprawdź odporność swojej instancji: `python scripts/load_test.py https://twoja.domena`
+   (tylko na własnym serwerze). Model zagrożeń: [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
 
 Kontener działa jako użytkownik bez uprawnień (UID 10001) z systemem plików tylko do odczytu.
 Ma healthcheck na `/healthz`. Dane leżą w wolumenie `termin-data`.
@@ -120,7 +144,8 @@ ReadWritePaths=/var/lib/termin
 WantedBy=multi-user.target
 ```
 
-Przed aplikacją postaw nginx albo Caddy (`reverse_proxy 127.0.0.1:8000`).
+Przed aplikacją postaw Caddy (skopiuj `deploy/Caddyfile`) albo nginx z timeoutami
+(`client_header_timeout 10s; client_body_timeout 15s; client_max_body_size 64k;`).
 Bot Telegram działa jako osobna usługa: `ExecStart=/usr/local/bin/termin telegram`.
 
 ## Fly.io

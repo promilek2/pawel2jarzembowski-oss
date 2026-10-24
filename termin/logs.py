@@ -57,6 +57,9 @@ def configure_logging(level: str = "INFO", json: bool = False) -> None:
     # httpx loguje pełne URL-e z parametrami (np. adres w Nominatim): wyciszamy.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
+    # slowapi loguje każde odrzucone zapytanie: przy ataku to zalew logów (I/O, dysk).
+    # Odrzucenia liczymy w metryce termin_rate_limited_total.
+    logging.getLogger("slowapi").setLevel(logging.ERROR)
 
     renderer: structlog.typing.Processor = (
         structlog.processors.JSONRenderer()
