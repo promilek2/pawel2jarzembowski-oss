@@ -1,0 +1,31 @@
+name: Błąd
+description: Coś nie działa tak, jak powinno
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dziękujemy za zgłoszenie! Nie wpisuj tu danych osobowych (PESEL, adres, numer telefonu).
+        Uwaga: dane o terminach pochodzą z NFZ. Jeśli placówka ma błędny telefon albo termin,
+        możemy najwyżej poprawić sposób wyświetlania.
+  - type: textarea
+    id: what
+    attributes:
+      label: Co się stało?
+      placeholder: Szukałem „okulista” w Gdyni i…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Czego się spodziewałeś/spodziewałaś?
+  - type: input
+    id: where
+    attributes:
+      label: Gdzie?
+      description: Panel web (jaka przeglądarka/telefon?), CLI (jaka komenda?), bot Telegram, powiadomienia
+  - type: input
+    id: version
+    attributes:
+      label: Wersja
+      description: "`termin wersja` albo stopka panelu"

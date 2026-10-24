@@ -54,7 +54,7 @@ Decyzje architektoniczne są w `docs/adr/`.
 | 4 | Subskrypcje, ntfy, Telegram (bot), e-mail, notify-send, scheduler, deduplikacja, PRIVACY.md | ✅ |
 | 5 | Web mobile-first, PWA, WCAG 2.1 AA, duży tekst, skrypt rozmowy, .ics, i18n pl/en/uk | ✅ |
 | 6 | Docker, compose + Caddy, /healthz, /metrics, rate limiting, e2e Playwright + axe, PyPI | ✅ |
-| 7 | README pl/en, CONTRIBUTING, CoC, MIT, szablony issue/PR, 5 × good first issue | ⏳ |
+| 7 | README pl/en, CONTRIBUTING, CoC, MIT, szablony issue/PR, 5 × good first issue | ✅ |
 
 Każda faza kończy się zielonymi `pytest`, `ruff check`, `ruff format --check`
 i `mypy --strict termin` oraz commitem w stylu Conventional Commits.
@@ -73,9 +73,25 @@ i `mypy --strict termin` oraz commitem w stylu Conventional Commits.
 
 ## Odłożone / poza zakresem v1.0
 
-Aktualizowane po każdej fazie. Szczegóły w podsumowaniach commitów.
+- **Weryfikacja na prawdziwym API NFZ** (ADR-0007): `python scripts/capture_fixtures.py`
+  i `pytest -m live` z sieci z dostępem do `api.nfz.gov.pl`. To **obowiązkowy krok przed
+  publikacją na PyPI**. Szczególnie niepewne są kształt `/many-places/{id}`, format `/benefits`
+  i część fragmentów nazw w `synonyms.toml` (np. USG, gastroskopia, endoprotezy, zaćma).
+- Wielokąty powiatów (PRG GUGiK) dla prawdziwej mapy choropletowej. Teraz mapa cieplna to
+  kółka w centroidach placówek + tabela.
+- Pełna tabela centroidów kodów pocztowych z GeoNames. Skrypt jest
+  (`scripts/build_postal_centroids.py`), danych w repo nie ma, bo źródło było niedostępne
+  z sieci budowy (offline działa po nazwie miejscowości, ~160 miast).
+- Teksty CLI i powiadomień tylko po polsku (panel ma pl/en/uk), patrz `docs/issues/04`.
+- GIF w README: są zrzuty ekranu (`scripts/screenshots.py`), animacji brak.
+- Lighthouse 12 nie ma już kategorii PWA. Instalowalność sprawdzamy w e2e przez CDP
+  (`Page.getInstallabilityErrors`).
 
-- Wielokąty powiatów (PRG GUGiK) dla prawdziwej mapy choropletowej.
-- Pełna tabela centroidów kodów pocztowych z GeoNames (skrypt jest, danych w repo
-  nie ma, bo źródło było niedostępne z sieci budowy).
-- Weryfikacja fixtures na prawdziwym API (patrz ADR-0007).
+## Wyniki weryfikacji (stan na koniec v1.0)
+
+- `pytest`: ~200 testów, bez sieci; pokrycie `termin/core` ≈ 97% (próg CI 85%).
+- `pytest -m e2e`: 12 testów Playwright + axe-core (WCAG 2.1 A/AA) na 360 px, w tym
+  duży tekst, ciemny motyw, klawiatura, okno obserwowania, instalowalność PWA.
+- Lighthouse (mobile, lokalnie na danych testowych): dostępność 100, best practices 100,
+  SEO 100, wydajność 89.
+- `docker compose up`: kontener „healthy” po ~7 s.

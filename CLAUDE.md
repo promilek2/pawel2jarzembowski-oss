@@ -82,3 +82,21 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   dla dzieci rozpoznajemy po nazwie świadczenia i polu `benefits-for-children`.
 - Środowisko, w którym powstało v1.0, nie miało dostępu do `api.nfz.gov.pl`, Nominatim ani OSRM.
   Fixtures są zrekonstruowane (`tests/fixtures/README.md`).
+
+## Wdrożenie i narzędzia
+
+- `Dockerfile` (non-root UID 10001, healthcheck `/healthz`, opcjonalny sekret `ca` dla proxy
+  z własnym CA), `docker-compose.yml` (+ profil `https` z Caddy, `deploy/Caddyfile`).
+  Szczegóły: `docs/DEPLOY.md`.
+- `/metrics` (Prometheus, `termin/metrics.py`), rate limiting slowapi (`TERMIN_RATE_LIMIT`,
+  `TERMIN_RATE_LIMIT_LIGHT`).
+- CI: `.github/workflows/ci.yml` (lint, mypy, testy 3.11–3.13, pokrycie core ≥ 85%, e2e,
+  Docker). Wydanie: `release.yml` (tag `vX.Y.Z` → PyPI przez Trusted Publishing).
+- Skrypty: `scripts/capture_fixtures.py` (prawdziwe odpowiedzi NFZ), `build_postal_centroids.py`
+  (GeoNames), `make_icons.py` (ikony PWA), `screenshots.py` (zrzuty do README).
+- Zadania dla nowych osób: `docs/issues/`. Dokumenty: `README.md`, `README.en.md`,
+  `CONTRIBUTING.md`, `PRIVACY.md`, `docs/DATA_SOURCES.md`.
+
+## Do zrobienia w pierwszej kolejności
+
+Zweryfikować fixtures i synonimy na prawdziwym API NFZ (ADR-0007, `docs/PLAN.md` → „Odłożone”).

@@ -196,6 +196,8 @@ async function runSearch(params) {
     state.last = data;
     if (data.status === "ok") STORE.set("last", { params: params.toString(), data, savedAt: new Date().toISOString() });
     renderResponse(data);
+    // Fokus na wynikach: czytnik ekranu przeczyta nagłówek, a telefon przewinie do listy.
+    if (data.status === "ok" && !location.hash.includes("wynik=")) $("#results-heading").focus();
   } catch {
     const saved = STORE.get("last");
     if (saved && saved.params === params.toString()) {

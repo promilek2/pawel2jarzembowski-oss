@@ -1,0 +1,19 @@
+name: Brakujący synonim świadczenia
+description: Szukałem czegoś zwykłymi słowami i Termin tego nie zrozumiał
+labels: ["synonimy", "good first issue"]
+body:
+  - type: input
+    id: query
+    attributes:
+      label: Co wpisałeś/wpisałaś?
+      placeholder: np. „proktolog”
+    validations:
+      required: true
+  - type: input
+    id: nfz
+    attributes:
+      label: Jak to się nazywa w NFZ (jeśli wiesz)?
+      placeholder: np. PORADNIA PROKTOLOGICZNA
+  - type: markdown
+    attributes:
+      value: Możesz od razu dodać synonim sam(a). Instrukcja jest w CONTRIBUTING.md („Dodaj synonim świadczenia”).

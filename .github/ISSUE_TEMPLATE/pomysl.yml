@@ -1,0 +1,23 @@
+name: Pomysł
+description: Propozycja nowej funkcji albo zmiany
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Jaki problem to rozwiązuje? Dla kogo?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Jak to mogłoby działać?
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Zasady projektu
+      options:
+        - label: Pomysł nie wymaga porad medycznych ani oceniania placówek
+          required: true
+        - label: Pomysł nie wymaga trackingu ani kont użytkowników
+          required: true

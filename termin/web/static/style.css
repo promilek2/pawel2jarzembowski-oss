@@ -168,7 +168,9 @@ details.more > .field + .field { margin-top: 1rem; }
 
 /* --- wyniki --- */
 .results-head { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: space-between; margin-top: 1.5rem; }
-.results-head h2 { margin: 0; flex: 1 1 100%; font-size: 1.375rem; }
+.results-head h2 { margin: 0; flex: 1 1 100%; font-size: 1.375rem; scroll-margin-top: 1rem; }
+.results-head h2:focus { outline: none; }
+.results-head h2:focus-visible { outline: 3px solid var(--focus); }
 .meta { color: var(--muted); margin: 0.5rem 0; }
 .result-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.875rem; }
 .result { display: grid; gap: 0.5rem; }
