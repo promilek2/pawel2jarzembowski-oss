@@ -72,7 +72,9 @@ def configure_logging(level: str = "INFO", json: bool = False) -> None:
             renderer,
         ],
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
+        # sys.stderr odczytywany przy każdym logu (nie przy konfiguracji): odporne na
+        # podmianę strumienia (testy CLI, uvicorn).
+        logger_factory=lambda *_: structlog.PrintLogger(file=sys.stderr),
         cache_logger_on_first_use=False,
     )
 

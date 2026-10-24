@@ -9,6 +9,8 @@ import pytest
 from termin.config import Settings
 from termin.core.cache import MemoryCache
 from termin.core.client import NfzClient
+from termin.runtime import Runtime, Transports
+from termin.store.db import connect
 from tests.fake_nfz import FakeNfz
 
 TODAY = dt.date(2026, 10, 24)
@@ -50,3 +52,16 @@ async def client(settings: Settings, fake_nfz: FakeNfz) -> AsyncIterator[NfzClie
         settings, cache=MemoryCache(), transport=fake_nfz.transport(), sleep=_no_sleep
     ) as c:
         yield c
+
+
+@pytest.fixture
+async def runtime(settings: Settings, fake_nfz: FakeNfz) -> AsyncIterator[Runtime]:
+    rt = Runtime(
+        settings,
+        transports=Transports(nfz=fake_nfz.transport()),
+        conn=connect(":memory:"),
+        today=lambda: TODAY,
+    )
+    yield rt
+    await rt.aclose()
+    rt.conn.close()

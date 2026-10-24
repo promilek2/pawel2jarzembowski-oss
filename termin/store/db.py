@@ -38,7 +38,7 @@ def migrate(conn: sqlite3.Connection) -> int:
             conn.execute(
                 "INSERT INTO schema_migrations (version, name) VALUES (?, ?)", (number, name)
             )
-        log.info("db.migrated", version=number, name=name)
+        log.debug("db.migrated", version=number, name=name)
         version = number
     return version
 

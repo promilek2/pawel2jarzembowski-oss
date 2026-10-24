@@ -27,7 +27,14 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   retry, cache), `parser.py` + `models.py` (Pydantic v2, tolerancyjne), `provinces.py`,
   `text.py` (fold bez polskich znaków, odmiana), `geo_math.py` (haversine).
 - `termin/store/`: SQLite przez `sqlite3`, migracje w `store/migrations/NNN_*.sql`.
-- `termin/cli/`: Typer. `termin/web/`: FastAPI + statyczny frontend. `termin/notify/`: kanały powiadomień.
+- `termin/core/benefits.py`: synonimy (`termin/data/synonyms.toml`) + rapidfuzz, warianty
+  dzieci/dorośli. `geo.py`: Nominatim + offline (`termin/data/places.csv`). `routing.py`: OSRM.
+  `ranking.py`: tryby, ostrzeżenia (`Alert`), wyjaśnienia (`Reason`). `search.py`:
+  `SearchService` (orkiestracja). `i18n.py`: teksty backendu z `termin/locales/pl.toml`.
+- `termin/runtime.py`: `Runtime` składa zależności (klient, geokoder, wyszukiwarka, baza).
+  `Transports` pozwala wstrzyknąć `httpx.MockTransport` w testach.
+- `termin/cli/commands.py`: Typer (`make_runtime` to punkt wstrzyknięcia dla testów).
+  `termin/web/`: FastAPI + statyczny frontend. `termin/notify/`: kanały powiadomień.
 - `termin/config.py`: `Settings` (env `TERMIN_*`, plik `~/.config/termin/config.toml`,
   nadpisywany przez `TERMIN_CONFIG`).
 - `termin/logs.py`: structlog z procesorem `redact_pii`. **Nigdy nie loguj lokalizacji

@@ -1,0 +1,31 @@
+# Teksty backendu po polsku. Klucze odpowiadają kodom z termin/core/ranking.py.
+# Odmiana: parametr {days} automatycznie dostaje {days_word} według [plurals.days].
+
+[plurals]
+days = ["dzień", "dni", "dni"]
+people = ["osoba", "osoby", "osób"]
+
+[reasons]
+earliest = "najwcześniejszy termin w wynikach"
+nearest = "najbliżej Ciebie"
+best_balance = "najlepszy kompromis między terminem a odległością"
+faster_than_median = "{days} {days_word} szybciej niż przeciętnie w województwie"
+slower_than_median = "{days} {days_word} później niż przeciętnie w województwie"
+typical_wait = "termin typowy dla województwa"
+distance = "{km} km od Ciebie"
+travel_time = "ok. {min} min autem"
+nearest_branch = "najbliższa z kilku lokalizacji placówki"
+
+[alerts]
+no_date = "placówka nie podała terminu, zadzwoń i zapytaj"
+past_date = "podany termin ({date}) już minął, więc dane są nieaktualne"
+stale = "dane sprzed {days} {days_word} (stan na {as_at})"
+no_as_at = "brak daty aktualizacji danych"
+no_phone = "brak numeru telefonu w danych NFZ"
+no_location = "brak współrzędnych, więc odległość jest nieznana"
+
+[when]
+today = "dziś"
+tomorrow = "jutro"
+in_days = "za {days} {days_word}"
+days_ago = "{days} {days_word} temu"
