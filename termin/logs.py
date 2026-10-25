@@ -40,6 +40,10 @@ SENSITIVE_KEYS = frozenset(
         "challenge",
         "secret",
         "totp_secret",
+        "vapid_private_key",
+        "endpoint",
+        "p256dh",
+        "note",
     }
 )
 

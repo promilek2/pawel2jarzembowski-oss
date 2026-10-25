@@ -50,6 +50,8 @@ def parse_date(value: str) -> dt.date:
 async def create_subscription(runtime: Runtime, req: SubscribeRequest) -> Subscription:
     if req.channel not in CHANNELS:
         raise SubscribeError(f"Nieznany kanał „{req.channel}”. Dostępne: {', '.join(CHANNELS)}.")
+    if req.channel == "push" and (req.user_id is None or req.target != str(req.user_id)):
+        raise SubscribeError("Powiadomienia w aplikacji wymagają zalogowania.")
     if req.channel != "desktop" and not req.target.strip():
         raise SubscribeError("Podaj, dokąd wysyłać powiadomienia (temat ntfy, czat, e-mail).")
     if not req.consent:

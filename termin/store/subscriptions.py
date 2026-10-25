@@ -11,7 +11,7 @@ from typing import Any
 
 from termin.core.benefits import Variant
 
-CHANNELS = ("ntfy", "telegram", "email", "desktop")
+CHANNELS = ("ntfy", "telegram", "email", "desktop", "push")
 COORD_DECIMALS = 2
 """Zaokrąglenie współrzędnych (~1 km): dokładniejsza lokalizacja nie jest potrzebna."""
 
@@ -223,7 +223,11 @@ def wipe_user_data(conn: sqlite3.Connection, *, include_history: bool = False) -
     `include_history=True` usuwa też snapshoty (publiczne dane NFZ) i cache odpowiedzi NFZ.
     """
     counts: dict[str, int] = {}
-    tables = ["subscriptions", "geocode_cache", "email_tokens", "sessions", "users"]
+    tables = [
+        "subscriptions", "geocode_cache", "email_tokens", "sessions", "recovery_codes",
+        "login_challenges", "phone_reports", "cases", "facility_notes", "push_subscriptions",
+        "users",
+    ]  # fmt: skip
     if include_history:
         tables += ["snapshots", "http_cache"]
     with conn:

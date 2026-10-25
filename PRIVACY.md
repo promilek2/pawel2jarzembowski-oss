@@ -29,6 +29,17 @@ Kody odzyskiwania trzymamy tylko jako skrót SHA-256. Jeśli włączysz weryfika
 zapisujemy sekret do generowania kodów (bez niego serwer nie sprawdzi kodu). Konto usuniesz sam (razem z obserwacjami), a dane
 pobierzesz jako JSON („Pobierz moje dane”). Konta z niepotwierdzonym e-mailem usuwamy po 7 dniach.
 
+## Funkcje dla zalogowanych
+
+„Moje sprawy”, prywatne notatki przy poradniach i zgłoszenia „Sprawdziłem telefonicznie”
+zapisujemy tylko po zalogowaniu i za wyraźną zgodą (art. 9 RODO), bo mówią, do jakiego
+specjalisty się zapisujesz. Widzisz je tylko Ty. Ze zgłoszeń inni widzą wyłącznie zbiorcze
+liczby z 14 dni. Wycofanie zgody (w „Moich sprawach”) usuwa te dane.
+
+Powiadomienia w telefonie (Web Push) wysyłamy przez usługę push Twojej przeglądarki (Google,
+Mozilla, Apple albo Microsoft). Treść jest zaszyfrowana kluczem urządzenia, więc dostawca jej
+nie odczyta; zna adres IP urządzenia i fakt doręczenia. Wyłączysz je w koncie.
+
 ## Obserwowanie (powiadomienia)
 
 Informacja, jakiego świadczenia szukasz, może dotyczyć zdrowia, dlatego obserwacja wymaga

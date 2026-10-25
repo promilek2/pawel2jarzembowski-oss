@@ -234,6 +234,9 @@ def test_bundle_size_budget() -> None:
     ]
     total = sum(p.stat().st_size for p in own)
     assert total < 150_000, f"pakiet własny {total} B przekracza budżet 150 KB"
+    # konto i funkcje dla zalogowanych ładują się leniwie (import() w app.js)
+    lazy = (STATIC / "account.js").stat().st_size
+    assert lazy < 40_000, f"account.js {lazy} B przekracza budżet 40 KB"
 
 
 def test_healthz_and_metrics(client: TestClient) -> None:

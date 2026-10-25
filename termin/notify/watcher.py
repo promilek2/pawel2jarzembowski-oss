@@ -7,6 +7,9 @@ Jeden przebieg (`run_once`):
 3. dla każdej subskrypcji wybiera najwcześniejszy termin w jej obszarze i przed jej datą,
 4. powiadamia tylko o terminie **wcześniejszym** niż ostatnio zgłoszony i nie częściej niż
    co `notify_cooldown_h`.
+
+Przy okazji wysyła przypomnienia push o jutrzejszych wizytach z „Moich spraw” (ADR-0012),
+tylko w ciągu dnia (8–21 czasu polskiego).
 """
 
 from __future__ import annotations
@@ -25,10 +28,11 @@ from termin.core.provinces import province_from_teryt, provinces_within
 from termin.core.ranking import Candidate, RankingOptions, nearest_location, rank
 from termin.logs import get_logger
 from termin.metrics import NOTIFICATIONS
-from termin.notify.base import Notifier, NotifyError
+from termin.notify.base import Notification, Notifier, NotifyError
 from termin.notify.message import build_notification
 from termin.runtime import Runtime
 from termin.store.accounts import AccountStore
+from termin.store.personal import CaseStore
 from termin.store.subscriptions import Subscription, SubscriptionStore
 
 log = get_logger(__name__)
@@ -45,7 +49,33 @@ class WatchReport:
     not_better: int = 0
     cooldown: int = 0
     no_match: int = 0
+    reminders: int = 0
     errors: list[str] = field(default_factory=list)
+
+
+REMINDER_HOURS = range(8, 21)
+
+
+def polish_hour(now: dt.datetime) -> int:
+    try:
+        from zoneinfo import ZoneInfo
+
+        return now.astimezone(ZoneInfo("Europe/Warsaw")).hour
+    except Exception:  # brak bazy stref czasowych: przybliżenie (czas zimowy)
+        return (now + dt.timedelta(hours=1)).hour
+
+
+def visit_notification(case: dict[str, object], public_url: str) -> Notification:
+    lines = [str(case["provider"] or ""), str(case["address"] or "")]
+    if case.get("phone"):
+        lines.append(f"Tel.: {case['phone']}")
+    lines.append("Zabierz skierowanie, dowód osobisty i dokumentację.")
+    return Notification(
+        title=f"Jutro wizyta: {case['label']}",
+        body="\n".join(x for x in lines if x),
+        click_url=f"{public_url}/?konto=sprawy",
+        tags=("calendar",),
+    )
 
 
 def subscription_provinces(sub: Subscription, runtime: Runtime) -> list[str]:
@@ -111,6 +141,7 @@ class Watcher:
         subs = self.store.active()
         report.subscriptions = len(subs)
         self._housekeeping()
+        await self._visit_reminders(report)
         if not subs:
             return report
 
@@ -191,6 +222,24 @@ class Watcher:
             dt.timedelta(days=settings.unverified_account_days) if settings.mail_enabled else None
         )
         AccountStore(self.runtime.conn, now=self._now).purge(unverified_after=unverified)
+
+    async def _visit_reminders(self, report: WatchReport) -> None:
+        notifier = self.notifiers.get("push")
+        if notifier is None or polish_hour(self._now()) not in REMINDER_HOURS:
+            return
+        tomorrow = self.runtime.today() + dt.timedelta(days=1)
+        cases = CaseStore(self.runtime.conn)
+        for user_id, case in cases.due_reminders(tomorrow):
+            try:
+                await notifier.send(
+                    str(user_id), visit_notification(case, self.runtime.settings.public_url)
+                )
+            except NotifyError as exc:
+                log.info("watcher.reminder_skipped", reason=str(exc))
+            else:
+                report.reminders += 1
+                NOTIFICATIONS.labels("push", "reminder").inc()
+            cases.mark_reminded(int(str(case["id"])), tomorrow)  # bez urządzeń też nie ponawiamy
 
     async def _notify(
         self, sub: Subscription, best: RankedResult, report: WatchReport, now: dt.datetime

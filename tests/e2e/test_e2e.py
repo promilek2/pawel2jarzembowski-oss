@@ -340,6 +340,55 @@ def test_two_factor_setup_and_login(page) -> None:  # type: ignore[no-untyped-de
     page.wait_for_selector("#account-label:has-text('Konto')")
 
 
+def test_personal_features_need_login(page) -> None:  # type: ignore[no-untyped-def]
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    page.locator("#result-list article").first.get_by_role(
+        "button", name="Sprawdziłem telefonicznie"
+    ).click()
+    page.wait_for_selector("#auth-dialog[open]")
+    assert "po zalogowaniu" in page.locator("#auth-status").inner_text()
+
+
+def test_phone_report_cases_and_notes(page) -> None:  # type: ignore[no-untyped-def]
+    _register(page, "corka@example.com")
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    card = page.locator("#result-list article").first
+    # „Sprawdziłem telefonicznie” → zgoda na dane o zdrowiu → zgłoszenie
+    card.get_by_role("button", name="Sprawdziłem telefonicznie").click()
+    page.wait_for_selector("#report-dialog[open]")
+    page.locator("#report-dialog label", has_text="Tak").first.click()
+    page.locator("#report-dialog label", has_text="Inny termin").click()
+    page.fill("#report-date", "2026-12-01")
+    page.check("#report-case")
+    assert _axe_violations(page) == []
+    page.click("#report-form button[type=submit]")
+    page.wait_for_selector("#health-dialog[open]")
+    assert _axe_violations(page) == []
+    page.check("#health-check")
+    page.click("#health-accept")
+    page.wait_for_selector(".community:not([hidden])")
+    assert "Sprawdzone telefonicznie" in card.locator(".community").inner_text()
+    # prywatna notatka
+    card.get_by_role("button", name="Notatka").click()
+    card.locator("textarea").fill("dzwonić po 7:30")
+    card.get_by_role("button", name="Zapisz notatkę").click()
+    page.wait_for_selector(".my-note:has-text('dzwonić po 7:30')")
+    # „Moje sprawy”: wizyta z formularza zgłoszenia
+    page.click("#account-btn")
+    page.click("#account-cases")
+    page.wait_for_selector("#cases-dialog[open] .case")
+    assert page.locator("#cases-list select").first.input_value() == "booked"
+    assert page.locator("#cases-list input[type=date]").first.input_value() == "2026-12-01"
+    assert _axe_violations(page) == []
+    page.fill("#case-new-label", "Kardiolog, skierowanie od dr. Nowaka")
+    page.click("#case-new button[type=submit]")
+    page.wait_for_selector(".case:has-text('Kardiolog')")
+    page.locator(".case", has_text="Kardiolog").locator("select").select_option("waiting")
+    page.wait_for_selector(".case--waiting")
+
+
 def test_install_dialog_and_legal_pages(page, base_url) -> None:  # type: ignore[no-untyped-def]
     page.evaluate("document.querySelector('#install-dialog').showModal()")
     assert "Do ekranu początkowego" in page.locator("#install-dialog").inner_text()

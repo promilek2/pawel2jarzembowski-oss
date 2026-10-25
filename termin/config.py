@@ -134,6 +134,13 @@ class Settings(BaseSettings):
     """Dozwolone nagłówki Host (ochrona przed DNS rebinding). Pusta lista = bez sprawdzania."""
     telegram_commands_per_minute: int = Field(default=20, ge=1)
 
+    # --- Powiadomienia Web Push (ADR-0012) ---
+    push_enabled: bool = True
+    vapid_private_key: str | None = None
+    """Klucz prywatny VAPID (base64url albo PEM). Brak = generujemy i zapisujemy w bazie."""
+    vapid_subject: str | None = None
+    """Kontakt dla usług push (`mailto:` albo https). Domyślnie TERMIN_SECURITY_CONTACT."""
+
     # --- Dane operatora (do regulaminu, polityki prywatności, security.txt) ---
     operator_name: str | None = None
     """Nazwa administratora danych / usługodawcy, np. „Jan Kowalski” albo nazwa firmy."""

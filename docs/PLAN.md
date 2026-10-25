@@ -58,6 +58,7 @@ Decyzje architektoniczne są w `docs/adr/`.
 | 8 | Wygląd „Numerek” (Claude Design, ADR-0009) | ✅ |
 | 9 | Opcjonalne konta, zgody RODO, dokumenty prawne, bezpieczeństwo, instalacja PWA (ADR-0010) | ✅ |
 | 10 | Kody odzyskiwania, weryfikacja dwuetapowa, lista urządzeń, zmiana e-maila (ADR-0011) | ✅ |
+| 11 | „Sprawdziłem telefonicznie”, „Moje sprawy” z notatkami, powiadomienia Web Push (ADR-0012) | ✅ |
 
 Każda faza kończy się zielonymi `pytest`, `ruff check`, `ruff format --check`
 i `mypy --strict termin` oraz commitem w stylu Conventional Commits.

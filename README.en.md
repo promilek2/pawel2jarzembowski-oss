@@ -35,6 +35,9 @@ Open source. **Not an official NFZ application.**
 - Notifications about earlier slots via ntfy (no account), Telegram, e-mail or desktop.
 - Optional account: recovery codes (password reset works even without e-mail), two-step
   verification with an authenticator app, list of signed-in devices, data export and deletion.
+- Signed-in extras: “I checked by phone” reports (aggregated: does the NFZ date match what the
+  clinic says?), “My cases” with referrals, visit dates and private notes, and Web Push
+  notifications on your phone with a reminder the day before a visit.
 - Trends: whether a facility's queue is getting shorter, provincial medians, a district heat map.
 - Mobile-first PWA that works offline, WCAG 2.1 AA, in Polish, English and Ukrainian.
 

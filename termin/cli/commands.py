@@ -501,7 +501,12 @@ def watcher(
 
     async def run() -> WatchReport | None:
         async with make_runtime(settings) as rt:
-            w = Watcher(rt, make_notifiers(settings))
+            notifiers = make_notifiers(settings)
+            if settings.push_enabled and "push" not in notifiers:
+                from termin.notify.webpush import PushNotifier
+
+                notifiers["push"] = PushNotifier(rt.conn, settings)
+            w = Watcher(rt, notifiers)
             if once:
                 return await w.run_once()
             await w.run_forever()

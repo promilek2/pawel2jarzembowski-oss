@@ -1,5 +1,6 @@
-// Service worker: pliki aplikacji offline (stale-while-revalidate), bez danych z API.
-const VERSION = "termin-v4";
+// Service worker: pliki aplikacji offline (stale-while-revalidate), bez danych z API,
+// oraz powiadomienia Web Push (treść szyfrowana, odszyfrowuje ją przeglądarka).
+const VERSION = "termin-v5";
 const SHELL = [
   "/",
   "/static/style.css",
@@ -47,6 +48,31 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => hit);
       return hit || network;
+    }),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data?.text() }; }
+  const title = data.title || "Termin";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "",
+    icon: "/static/icons/icon-192.png",
+    badge: "/static/icons/icon-192.png",
+    tag: data.tag || "termin",
+    data: { url: data.url || "/" },
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || "/", self.location.origin);
+  if (target.origin !== self.location.origin) return; // tylko własne strony
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) if (new URL(w.url).origin === target.origin && "focus" in w) { w.navigate(target.href); return w.focus(); }
+      return self.clients.openWindow(target.href);
     }),
   );
 });

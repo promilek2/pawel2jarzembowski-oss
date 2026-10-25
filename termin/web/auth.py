@@ -28,6 +28,7 @@ from termin.notify.channels import EmailNotifier
 from termin.runtime import Runtime
 from termin.security import device_label, normalize_email, password_problem, totp_uri
 from termin.store.accounts import AccountError, AccountStore, LockedError, Session, User
+from termin.store.personal import export_personal
 from termin.store.subscriptions import SubscriptionStore
 
 log = get_logger(__name__)
@@ -590,6 +591,8 @@ def build_auth_router(settings: Settings, limiter: Limiter) -> APIRouter:
     async def export(request: Request) -> Response:
         user = require_user(request)
         data = accounts(request).export(user.id)
+        runtime: Runtime = request.app.state.runtime
+        data["personal"] = export_personal(runtime.conn, user.id)
         return Response(
             json.dumps(data, ensure_ascii=False, indent=2),
             media_type="application/json",

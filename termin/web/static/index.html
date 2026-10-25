@@ -172,7 +172,7 @@
         <legend data-i18n="watch.channel">Jak powiadomić?</legend>
         <div class="segmented segmented-stack" id="watch-channels"></div>
       </fieldset>
-      <div class="field">
+      <div class="field" id="watch-target-field">
         <label for="watch-target" id="watch-target-label" data-i18n="watch.target_ntfy">Nazwa tematu w ntfy</label>
         <input id="watch-target" name="target" type="text" required aria-describedby="watch-target-hint">
         <p id="watch-target-hint" class="hint"></p>
@@ -254,6 +254,16 @@
       </div>
       <p id="account-email" class="account-email"></p>
       <p id="account-verify" class="hint"></p>
+      <button type="button" id="account-cases" class="btn btn-signal btn-big" data-i18n="cases.open">Moje sprawy</button>
+      <section aria-labelledby="push-title">
+        <h3 id="push-title" data-i18n="push.title">Powiadomienia w telefonie</h3>
+        <p id="push-status" class="hint"></p>
+        <div class="account-actions">
+          <button type="button" id="push-enable" class="btn btn-ink" data-i18n="push.enable">Włącz na tym urządzeniu</button>
+          <button type="button" id="push-disable" class="btn btn-outline" data-i18n="push.disable" hidden>Wyłącz na tym urządzeniu</button>
+          <button type="button" id="push-test" class="btn btn-outline" data-i18n="push.test" hidden>Wyślij próbne</button>
+        </div>
+      </section>
       <section aria-labelledby="account-subs-title">
         <h3 id="account-subs-title" data-i18n="account.subscriptions">Moje obserwacje</h3>
         <ul id="account-subs" class="account-subs"></ul>
@@ -372,6 +382,90 @@
       <p class="hint" data-i18n="codes.where">Dobre miejsca: menedżer haseł, wydruk w domu, notatka poza tym telefonem.</p>
       <p id="codes-status" class="watch-result" role="status"></p>
       <button type="button" class="btn btn-signal btn-big" data-close data-i18n="codes.done">Zapisałem/zapisałam kody</button>
+    </div>
+  </dialog>
+
+  <dialog id="report-dialog" aria-labelledby="report-title">
+    <form id="report-form" class="dialog-body stack" novalidate>
+      <div class="dialog-head">
+        <h2 id="report-title" data-i18n="report.title">Jak poszedł telefon?</h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p id="report-provider" class="hint"></p>
+      <fieldset class="choice">
+        <legend data-i18n="report.reached_q">Czy udało się dodzwonić?</legend>
+        <label><input type="radio" name="reached" value="yes" required> <span data-i18n="report.reached_yes">Tak</span></label>
+        <label><input type="radio" name="reached" value="no"> <span data-i18n="report.reached_no">Nie, nikt nie odebrał albo było zajęte</span></label>
+      </fieldset>
+      <fieldset class="choice" id="report-outcome" hidden>
+        <legend data-i18n="report.outcome_q">Jaki termin zaproponowano?</legend>
+        <label><input type="radio" name="outcome" value="same"> <span id="report-same"></span></label>
+        <label><input type="radio" name="outcome" value="other"> <span data-i18n="report.outcome_other">Inny termin</span></label>
+        <div class="field" id="report-date-field" hidden>
+          <label for="report-date" data-i18n="report.offered_date">Zaproponowana data</label>
+          <input id="report-date" type="date">
+        </div>
+        <label><input type="radio" name="outcome" value="none"> <span data-i18n="report.outcome_none">Nie zaproponowano terminu (brak miejsc, zamknięta lista)</span></label>
+      </fieldset>
+      <label class="check" id="report-case-field" hidden>
+        <input type="checkbox" id="report-case">
+        <span data-i18n="report.add_case">Zapisałem/zapisałam się: dodaj wizytę do Moich spraw</span>
+      </label>
+      <p class="hint" data-i18n="report.privacy">Inni zobaczą tylko zbiorczą liczbę zgłoszeń, bez Twoich danych.</p>
+      <p id="report-error" class="error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-outline" data-close data-i18n="watch.cancel">Anuluj</button>
+        <button type="submit" class="btn btn-signal" data-i18n="report.submit">Zapisz</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="health-dialog" aria-labelledby="health-title">
+    <div class="dialog-body stack">
+      <div class="dialog-head">
+        <h2 id="health-title" data-i18n="health.title">Zgoda na zapis Twoich spraw</h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p data-i18n="health.text">Sprawy, notatki i zgłoszenia z telefonu mówią, do jakiego specjalisty się zapisujesz. To może być informacja o zdrowiu, więc zapiszemy je tylko za Twoją wyraźną zgodą. Widzisz je tylko Ty (ze zgłoszeń inni widzą wyłącznie zbiorczą liczbę). Zgodę wycofasz w ustawieniach konta: wtedy usuniemy te dane.</p>
+      <label class="check">
+        <input type="checkbox" id="health-check">
+        <span data-i18n="health.check">Zgadzam się na przechowywanie informacji o moich sprawach zdrowotnych w celu korzystania z tych funkcji (art. 9 ust. 2 lit. a RODO).</span>
+      </label>
+      <p id="health-error" class="error" role="alert" hidden></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-outline" data-close data-i18n="watch.cancel">Anuluj</button>
+        <button type="button" id="health-accept" class="btn btn-signal" data-i18n="health.accept">Zgadzam się</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="cases-dialog" aria-labelledby="cases-title" class="wide">
+    <div class="dialog-body stack">
+      <div class="dialog-head">
+        <h2 id="cases-title" data-i18n="cases.title">Moje sprawy</h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="hint" data-i18n="cases.intro">Skierowania i wizyty w jednym miejscu. Przypomnimy dzień przed wizytą, jeśli włączysz powiadomienia w telefonie.</p>
+      <form id="case-new" class="input-row" novalidate>
+        <label for="case-new-label" class="visually-hidden" data-i18n="cases.new_label">Nowa sprawa</label>
+        <input id="case-new-label" type="text" maxlength="200" data-i18n-placeholder="cases.new_placeholder" placeholder="np. kardiolog, skierowanie od dr. Nowaka">
+        <button type="submit" class="btn btn-ink" data-i18n="cases.add">Dodaj</button>
+      </form>
+      <ul id="cases-list" class="cases"></ul>
+      <p id="cases-status" class="watch-result" role="status"></p>
+      <details class="more-light danger">
+        <summary data-i18n="health.withdraw_title">Wycofaj zgodę i usuń sprawy</summary>
+        <div class="stack">
+          <p data-i18n="health.withdraw_text">Usuniemy wszystkie sprawy, notatki i Twoje zgłoszenia z telefonu. Obserwacje zostaną (mają osobną zgodę).</p>
+          <button type="button" id="health-withdraw" class="btn btn-danger" data-i18n="health.withdraw">Wycofaj zgodę i usuń</button>
+        </div>
+      </details>
     </div>
   </dialog>
 

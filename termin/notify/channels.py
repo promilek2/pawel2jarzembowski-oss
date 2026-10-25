@@ -6,6 +6,7 @@ import asyncio
 import html
 import shutil
 import smtplib
+import sqlite3
 from email.message import EmailMessage
 
 import httpx
@@ -139,9 +140,11 @@ class DesktopNotifier:
 
 
 def build_notifiers(
-    settings: Settings, transport: httpx.AsyncBaseTransport | None = None
+    settings: Settings,
+    transport: httpx.AsyncBaseTransport | None = None,
+    conn: sqlite3.Connection | None = None,
 ) -> dict[str, Notifier]:
-    """Dostępne kanały według konfiguracji."""
+    """Dostępne kanały według konfiguracji (`push` wymaga bazy z urządzeniami)."""
     out: dict[str, Notifier] = {
         "ntfy": NtfyNotifier(settings.ntfy_server, transport),
         "desktop": DesktopNotifier(),
@@ -150,4 +153,8 @@ def build_notifiers(
         out["telegram"] = TelegramNotifier(settings.telegram_token, transport)
     if settings.smtp_host and settings.smtp_from:
         out["email"] = EmailNotifier(settings)
+    if conn is not None and settings.push_enabled:
+        from termin.notify.webpush import PushNotifier
+
+        out["push"] = PushNotifier(conn, settings, transport)
     return out

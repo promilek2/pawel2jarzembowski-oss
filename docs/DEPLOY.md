@@ -33,6 +33,7 @@ Wszystkie opcje to zmienne środowiskowe z prefiksem `TERMIN_` (pełna lista w
 | `TERMIN_MAX_CONCURRENT_SEARCHES` | `8` | Równoczesne wyszukiwania; nadmiar dostaje 503 „spróbuj za chwilę”. |
 | `TERMIN_SUBSCRIBE_RATE_LIMIT`, `TERMIN_MAX_SUBSCRIPTIONS_PER_TARGET` | `20/hour`, `10` | Limity tworzenia obserwacji. |
 | `TERMIN_MAILS_PER_ADDRESS_PER_HOUR` | `3` | Maile (reset, weryfikacja) na jeden adres na godzinę. |
+| `TERMIN_PUSH_ENABLED`, `TERMIN_VAPID_PRIVATE_KEY`, `TERMIN_VAPID_SUBJECT` | `true`, generowany, kontakt bezpieczeństwa | Powiadomienia Web Push. Bez klucza aplikacja generuje go i zapisuje w bazie (przy nowej bazie urządzenia trzeba włączyć ponownie; frontend robi to sam). |
 | `TERMIN_BIND` (tylko compose) | `127.0.0.1` | Adres, na którym compose wystawia port 8000. Zostaw localhost. |
 
 Szablon: `.env.example`.

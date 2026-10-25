@@ -2,6 +2,8 @@
 // treść z zewnątrz), teksty pochodzą z /static/i18n/<język>.json.
 
 const $ = (sel) => document.querySelector(sel);
+// Konto, 2FA, „Moje sprawy” i powiadomienia ładujemy dopiero, gdy są potrzebne (budżet 150 KB).
+const account = () => import("./account.js");
 const LANGS = ["pl", "en", "uk"];
 const STORE = {
   get(key, fallback = null) {
@@ -27,6 +29,8 @@ const state = {
   suggestTimer: null,
   activeSuggestion: -1,
   watchFor: null,
+  features: null,       // stan funkcji dla zalogowanych (/api/me/features)
+  reportFor: null,
 };
 
 // ------------------------------------------------------------------ i18n
@@ -77,6 +81,10 @@ async function loadLang(lang) {
   state.lang = lang;
   document.documentElement.lang = lang;
   $("#lang").value = lang;
+  for (const el of document.querySelectorAll("[data-i18n-placeholder]")) {
+    const text = lookup(el.dataset.i18nPlaceholder);
+    if (typeof text === "string") el.setAttribute("placeholder", text);
+  }
   for (const el of document.querySelectorAll("[data-i18n-label]")) {
     const text = lookup(el.dataset.i18nLabel);
     if (typeof text === "string") el.setAttribute("aria-label", text);
@@ -290,6 +298,7 @@ function renderResults(data) {
   announce(data.results.length ? t("results.found", { n: data.total_found }) : t("results.none"));
   const target = location.hash.match(/wynik=([\w-]+)/);
   if (target) document.getElementById(`r-${target[1]}`)?.scrollIntoView();
+  if (state.auth?.user) account().then((m) => m.loadPersonal(data));
 }
 
 function telHref(phone) {
@@ -316,6 +325,9 @@ const ICONS = {
   bell: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0",
   share: "M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13",
   calendar: "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM16 2v4M8 2v4M3 10h18",
+  check: "M20 6L9 17l-5-5",
+  folder: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v6M9 14h6",
+  note: "M4 4h16v12l-4 4H4zM16 20v-4h4M8 9h8M8 13h5",
 };
 
 function icon(name) {
@@ -379,6 +391,14 @@ function renderCard(r, index, data) {
     h("a", { class: "btn btn-outline", href: `/api/ics/${encodeURIComponent(r.id)}`, download: "zadzwon.ics" }, icon("calendar"), t("card.reminder")),
   );
 
+  const personal = h("div", { class: "personal" },
+    h("p", { class: "community", id: `cm-${r.id}`, hidden: true }),
+    h("p", { class: "my-note", id: `note-${r.id}`, hidden: true }),
+    h("div", { class: "actions actions-personal" },
+      h("button", { type: "button", class: "btn btn-outline", onclick: () => needLogin() || account().then((m) => m.openReport(r)) }, icon("check"), t("report.button")),
+      h("button", { type: "button", class: "btn btn-outline", onclick: () => needLogin() || account().then((m) => m.addCaseFrom(r)) }, icon("folder"), t("cases.add_from")),
+      h("button", { type: "button", class: "btn btn-outline", onclick: () => needLogin() || account().then((m) => m.editNote(r)) }, icon("note"), t("notes.button"))));
+
   const history = h("details", { class: "history", ontoggle: (e) => e.target.open && loadHistory(r.id, e.target) },
     h("summary", {}, t("card.history")), h("div", {}));
   const script = h("details", { class: "script" }, h("summary", {}, t("card.script")), renderScript(r, data));
@@ -394,7 +414,7 @@ function renderCard(r, index, data) {
         r.as_at ? h("p", { class: "asat" }, t("card.as_at", { date: r.as_at })) : null,
         why, alerts,
         tags.length ? h("ul", { class: "tags" }, tags.map((x) => h("li", {}, x))) : null,
-        call, actions, script, history)));
+        call, actions, personal, script, history)));
 }
 
 function capitalize(text) { return text ? text[0].toUpperCase() + text.slice(1) : text; }
@@ -583,6 +603,8 @@ function drawHeat(districts, min, max) {
 
 function updateWatchTarget() {
   const channel = new FormData($("#watch-form")).get("channel") || "ntfy";
+  $("#watch-target-field").hidden = channel === "push";
+  if (channel === "push") return;
   $("#watch-target-label").textContent = t(`watch.target_${channel}`);
   const input = $("#watch-target");
   input.type = channel === "email" ? "email" : "text";
@@ -596,7 +618,8 @@ function openWatch(r, data) {
   $("#watch-result").textContent = "";
   $("#watch-consent").checked = false;
   $("#watch-target").value = "";
-  $("#watch-channels").replaceChildren(...state.config.channels.map((c, i) =>
+  const channels = state.auth?.user && state.features?.push?.enabled ? [...state.config.channels, "push"] : state.config.channels;
+  $("#watch-channels").replaceChildren(...channels.map((c, i) =>
     h("label", {}, h("input", { type: "radio", name: "channel", value: c, checked: i === 0, onchange: updateWatchTarget }), " ", t(`watch.channel_${c}`))));
   updateWatchTarget();
   $("#watch-dialog").showModal();
@@ -612,13 +635,14 @@ async function submitWatch() {
     $("#watch-consent").focus();
     return;
   }
+  if (form.get("channel") === "push" && !(await (await account()).enablePush())) { out.textContent = $("#push-status").textContent || t("push.unsupported"); return; }
   const payload = {
     q: p.get("q"),
     variant: data.variant === "wszystkie" ? null : data.variant,
     radius: Number(p.get("radius")) || null,
     case: Number(p.get("case")) || 1,
     channel: form.get("channel"),
-    target: (form.get("target") || "").trim(),
+    target: form.get("channel") === "push" ? "push" : (form.get("target") || "").trim(),
     before: form.get("before") || null,
     consent: true,
   };
@@ -626,7 +650,7 @@ async function submitWatch() {
   else payload.where = p.get("where");
   try {
     const { ok, body } = await api("/api/subscriptions", { method: "POST", json: payload });
-    out.textContent = ok ? t("watch.ok", { label: body.label, url: body.unsubscribe_url }) : errorText(body);
+    out.textContent = ok ? t(body.channel === "push" ? "watch.ok_push" : "watch.ok", { label: body.label, url: body.unsubscribe_url }) : errorText(body);
   } catch {
     out.textContent = t("results.error");
   }
@@ -676,6 +700,18 @@ async function loadMe() {
     state.auth = { user: null, csrf: null };
   }
   updateAccountButton();
+  await onAuthChange();
+}
+
+// Po zalogowaniu i wylogowaniu: stan funkcji osobistych i odświeżenie kart wyników.
+async function onAuthChange() {
+  state.features = null;
+  if (state.auth?.user) {
+    const r = await api("/api/me/features");
+    if (r.ok) state.features = r.body;
+    account().then((m) => m.syncPush());
+  }
+  if (state.last?.status === "ok") renderResults(state.last);
 }
 
 function closeOnButtons(dialog) {
@@ -777,37 +813,10 @@ async function submitAuth(event) {
   state.challenge = null;
   updateAccountButton();
   $("#auth-dialog").close();
-  if (view === "register") { announce(t(state.config?.mail_enabled ? "auth.registered" : "auth.registered_nomail")); showCodes(res.body.recovery_codes); return; }
+  onAuthChange();
+  if (view === "register") { announce(t(state.config?.mail_enabled ? "auth.registered" : "auth.registered_nomail")); account().then((m) => m.showCodes(res.body.recovery_codes)); return; }
   const left = res.body.recovery_codes_left;
   announce(typeof left === "number" && left <= 3 ? t("auth.codes_low", { n: left }) : t(view === "recover" || view === "reset" ? "auth.password_reset_done" : "auth.logged_in"));
-}
-
-// ------------------------------------------------------------------ kody odzyskiwania
-
-function showCodes(codes) {
-  if (!codes?.length) return;
-  state.codes = codes;
-  $("#codes-list").replaceChildren(...codes.map((c) => h("li", {}, h("code", {}, c))));
-  $("#codes-status").textContent = "";
-  $("#codes-dialog").showModal();
-}
-
-function codesText() {
-  return [t("codes.file_header", { email: state.auth?.user?.email || "" }), "", ...state.codes, "", t("codes.file_footer")].join("\n");
-}
-
-async function copyCodes() {
-  try { await navigator.clipboard.writeText(codesText()); $("#codes-status").textContent = t("codes.copied"); }
-  catch { $("#codes-status").textContent = t("codes.copy_failed"); }
-}
-
-function downloadCodes() {
-  const url = URL.createObjectURL(new Blob([codesText()], { type: "text/plain;charset=utf-8" }));
-  const a = h("a", { href: url, download: "termin-kody-odzyskiwania.txt" });
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ------------------------------------------------------------------ hasła: Caps Lock i siła
@@ -848,147 +857,12 @@ function setupPasswordHelpers() {
   }
 }
 
-// ------------------------------------------------------------------ ustawienia konta
-
-async function openAccount() {
-  if (!state.auth?.user) { openAuth("login"); return; }
-  const user = state.auth.user;
-  $("#account-email").textContent = user.email;
-  const verify = $("#account-verify");
-  verify.replaceChildren();
-  if (!user.verified && state.config?.mail_enabled) {
-    verify.append(t("account.unverified"), " ",
-      h("button", { type: "button", class: "link-btn", onclick: async () => {
-        const r = await api("/api/auth/resend-verification", { method: "POST" });
-        $("#account-status").textContent = r.ok ? t("account.verification_sent") : errorText(r.body);
-      } }, t("account.resend")));
-  }
-  $("#account-status").textContent = "";
-  await Promise.all([renderAccountSubs(), renderSecurity(), renderSessions()]);
-  $("#account-dialog").showModal();
-}
-
-async function renderSecurity() {
-  const { ok, body } = await api("/api/account/security");
-  if (!ok) return;
-  const on = body.two_factor;
-  $("#security-2fa").textContent = on ? t("account.twofa_status_on") : t("account.twofa_status_off");
-  $("#security-2fa").dataset.on = String(on);
-  const left = body.recovery_codes_left;
-  $("#security-codes").textContent = t("account.codes_left", { n: left });
-  $("#security-codes").dataset.on = String(left > 3);
-  $("#twofa-off").hidden = on;
-  $("#twofa-disable").hidden = !on;
-  $("#twofa-setup").hidden = true;
-  $("#twofa-start").hidden = false;
-}
-
-async function renderSessions() {
-  const list = $("#account-sessions");
-  const { ok, body } = await api("/api/account/sessions");
-  if (!ok) { list.replaceChildren(h("li", {}, errorText(body))); return; }
-  const when = (iso) => new Date(iso).toLocaleString(state.lang, { dateStyle: "medium", timeStyle: "short" });
-  list.replaceChildren(...body.map((s) => h("li", {},
-    h("span", {}, s.device || t("account.unknown_device"),
-      h("small", {}, s.current ? t("account.this_device") : t("account.last_seen", { when: when(s.last_seen_at) }))),
-    s.current ? null : h("button", { type: "button", class: "btn btn-outline", onclick: async () => {
-      const r = await api(`/api/account/sessions/${encodeURIComponent(s.id)}`, { method: "DELETE" });
-      $("#account-status").textContent = r.ok ? t("account.session_ended") : errorText(r.body);
-      renderSessions();
-    } }, t("account.logout")))));
-}
-
-function drawQr(canvas, rows) {
-  const ctx = canvas.getContext("2d");
-  const n = rows.length + 8; // 4 moduły marginesu z każdej strony
-  const scale = Math.floor(canvas.width / n);
-  const offset = Math.floor((canvas.width - scale * rows.length) / 2);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#000000";
-  rows.forEach((row, y) => { for (let x = 0; x < row.length; x++) if (row[x] === "1") ctx.fillRect(offset + x * scale, offset + y * scale, scale, scale); });
-}
-
-async function startTwoFactor(e) {
-  e.preventDefault();
-  const r = await api("/api/account/2fa/setup", { method: "POST", json: { password: $("#twofa-password").value } });
-  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
-  e.target.reset();
-  $("#twofa-start").hidden = true;
-  $("#twofa-setup").hidden = false;
-  drawQr($("#twofa-qr"), r.body.qr);
-  $("#twofa-link").href = r.body.uri;
-  $("#twofa-secret").textContent = r.body.secret;
-  $("#twofa-code").focus();
-}
-
-async function confirmTwoFactor(e) {
-  e.preventDefault();
-  const r = await api("/api/account/2fa/enable", { method: "POST", json: { code: $("#twofa-code").value.trim() } });
-  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
-  e.target.reset();
-  state.auth.user.two_factor = true;
-  $("#account-status").textContent = t("account.twofa_enabled");
-  await renderSecurity();
-  showCodes(r.body.recovery_codes);
-}
-
-async function disableTwoFactor(e) {
-  e.preventDefault();
-  const r = await api("/api/account/2fa/disable", { method: "POST", json: { password: $("#twofa-off-password").value, code: $("#twofa-off-code").value.trim() } });
-  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
-  e.target.reset();
-  state.auth.user.two_factor = false;
-  $("#account-status").textContent = t("account.twofa_disabled");
-  renderSecurity();
-}
-
-async function regenerateCodes(e) {
-  e.preventDefault();
-  const r = await api("/api/account/recovery-codes", { method: "POST", json: { password: $("#codes-password").value } });
-  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
-  e.target.reset();
-  renderSecurity();
-  showCodes(r.body.recovery_codes);
-}
-
-async function changeEmail(e) {
-  e.preventDefault();
-  const r = await api("/api/account/email", { method: "POST", json: { email: $("#email-new").value.trim(), password: $("#email-password").value } });
-  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
-  e.target.reset();
-  state.auth = { ...state.auth, user: r.body.user };
-  $("#account-email").textContent = r.body.user.email;
-  $("#account-status").textContent = r.body.verification_sent ? t("account.email_changed_verify") : t("account.email_changed");
-}
-
-async function renderAccountSubs() {
-  const list = $("#account-subs");
-  const { ok, body } = await api("/api/account/subscriptions");
-  if (!ok) { list.replaceChildren(h("li", {}, errorText(body))); return; }
-  if (!body.length) { list.replaceChildren(h("li", {}, t("account.no_subscriptions"))); return; }
-  list.replaceChildren(...body.map((sub) => h("li", {},
-    h("span", {}, sub.label, h("small", {}, sub.area_label || "")),
-    h("button", { type: "button", class: "btn btn-outline", onclick: async () => {
-      const r = await api(`/api/account/subscriptions/${encodeURIComponent(sub.token)}`, { method: "DELETE" });
-      $("#account-status").textContent = r.ok ? t("account.subscription_removed") : errorText(r.body);
-      renderAccountSubs();
-    } }, t("account.remove")))));
-}
-
-async function logout(all = false) {
-  await api(all ? "/api/account/logout-all" : "/api/auth/logout", { method: "POST" });
-  state.auth = { user: null, csrf: null };
-  updateAccountButton();
-  $("#account-dialog").close();
-  announce(t("auth.logged_out"));
-}
-
 async function handleAccountLinks() {
   const q = new URLSearchParams(location.search);
   const action = q.get("konto");
   const token = q.get("token");
-  if (action === "panel") { history.replaceState(null, "", location.pathname); openAccount(); return; }
+  if (action === "panel") { history.replaceState(null, "", location.pathname); account().then((m) => m.openAccount()); return; }
+  if (action === "sprawy") { history.replaceState(null, "", location.pathname); if (state.auth?.user) account().then((m) => m.openCases()); else openAuth("login"); return; }
   if (!action || !token) return;
   history.replaceState(null, "", location.pathname); // token nie zostaje w historii ani w linku
   if (action === "weryfikacja") {
@@ -998,6 +872,16 @@ async function handleAccountLinks() {
   } else if (action === "reset") {
     openAuth("reset", token);
   }
+}
+
+
+// ------------------------------------------------------------------ funkcje dla zalogowanych
+
+function needLogin() {
+  if (state.auth?.user) return false;
+  openAuth("login");
+  $("#auth-status").textContent = t("personal.login_needed");
+  return true;
 }
 
 // ------------------------------------------------------------------ instalacja (PWA)
@@ -1113,43 +997,18 @@ function bind() {
   $("#show-stats").addEventListener("click", toggleStats);
   $("#watch-submit").addEventListener("click", submitWatch);
   for (const d of ["#auth-dialog", "#account-dialog", "#install-dialog"]) closeOnButtons($(d));
-  $("#account-btn").addEventListener("click", openAccount);
+  $("#account-btn").addEventListener("click", () => (state.auth?.user ? account().then((m) => m.openAccount()) : openAuth("login")));
   $("#auth-form").addEventListener("submit", submitAuth);
   for (const tab of document.querySelectorAll("#auth-tabs [role=tab]")) tab.addEventListener("click", () => setAuthView(tab.dataset.view));
   $("#auth-forgot").addEventListener("click", () => { setAuthView(forgotView()); focusAuth(); });
   $("#auth-alt").addEventListener("click", () => { setAuthView($("#auth-alt").dataset.view); focusAuth(); });
   $("#auth-back").addEventListener("click", () => { state.challenge = null; setAuthView("login"); focusAuth(); });
-  closeOnButtons($("#codes-dialog"));
-  $("#codes-copy").addEventListener("click", copyCodes);
-  $("#codes-download").addEventListener("click", downloadCodes);
-  $("#twofa-start").addEventListener("submit", startTwoFactor);
-  $("#twofa-confirm").addEventListener("submit", confirmTwoFactor);
-  $("#twofa-disable").addEventListener("submit", disableTwoFactor);
-  $("#codes-form").addEventListener("submit", regenerateCodes);
-  $("#email-form").addEventListener("submit", changeEmail);
   setupPasswordHelpers();
   $("#auth-show").addEventListener("click", () => {
     const input = $("#auth-password");
     const show = input.type === "password";
     input.type = show ? "text" : "password";
     $("#auth-show").setAttribute("aria-pressed", String(show));
-  });
-  $("#account-logout").addEventListener("click", () => logout(false));
-  $("#account-logout-all").addEventListener("click", () => logout(true));
-  $("#password-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const r = await api("/api/account/password", { method: "POST", json: { current: $("#pw-current").value, new: $("#pw-new").value } });
-    if (r.ok) { state.auth = r.body; e.target.reset(); }
-    $("#account-status").textContent = r.ok ? t("account.password_changed") : errorText(r.body);
-  });
-  $("#delete-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const r = await api("/api/account/delete", { method: "POST", json: { password: $("#delete-password").value } });
-    if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
-    state.auth = { user: null, csrf: null };
-    updateAccountButton();
-    $("#account-dialog").close();
-    announce(t("account.deleted"));
   });
   setupInstall();
   setupStorageBanner();
@@ -1171,3 +1030,5 @@ async function init() {
 }
 
 init();
+
+export { $, h, t, state, api, errorText, announce, icon, telHref, closeOnButtons, isIos, isStandalone, updateAccountButton, openAuth, onAuthChange };

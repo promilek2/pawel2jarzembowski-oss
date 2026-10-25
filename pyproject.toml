@@ -39,6 +39,7 @@ dependencies = [
   "slowapi>=0.1.9",
   "prometheus-client>=0.20",
   "segno>=1.6",
+  "cryptography>=42",
 ]
 
 [project.optional-dependencies]

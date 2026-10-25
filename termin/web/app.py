@@ -36,13 +36,16 @@ from termin.notify.channels import build_notifiers
 from termin.notify.message import unsubscribe_url
 from termin.notify.subscribe import SubscribeError, SubscribeRequest, create_subscription
 from termin.notify.watcher import Watcher
+from termin.notify.webpush import PushNotifier
 from termin.runtime import Runtime, Transports
 from termin.security import BusyError
+from termin.store.push import PushStore
 from termin.store.snapshots import to_csv, to_json
 from termin.store.subscriptions import SubscriptionStore
 from termin.web.auth import Mailer, build_auth_router, csrf_guard, current_user, default_mailer
 from termin.web.ics import call_reminder
 from termin.web.legal import LEGAL_PAGES, missing_operator_fields, render_legal, security_txt
+from termin.web.personal import build_personal_router
 from termin.web.protection import BodyLimitMiddleware, IpRateLimiter, MailThrottle, client_ip
 
 log = get_logger(__name__)
@@ -70,7 +73,7 @@ class SubscriptionIn(BaseModel):
     province: str | None = Field(default=None, pattern=r"^\d{2}$")
     before: dt.date | None = None
     case: Literal[1, 2] = 1
-    channel: Literal["ntfy", "telegram", "email"]
+    channel: Literal["ntfy", "telegram", "email", "push"]
     target: str = Field(min_length=1, max_length=200)
     consent: bool = False
     """Wyraźna zgoda na przetwarzanie informacji o świadczeniu (art. 9 ust. 2 lit. a RODO)."""
@@ -92,13 +95,18 @@ def create_app(
         runtime = Runtime(settings, transports=transports, today=today)
         app.state.runtime = runtime
         app.state.search_slots = asyncio.Semaphore(settings.max_concurrent_searches)
+        app.state.push = (
+            PushNotifier(runtime.conn, settings, runtime.transports.notify)
+            if settings.push_enabled
+            else None
+        )
         missing = missing_operator_fields(settings)
         if missing:
             log.warning("legal.operator_missing", fields=",".join(missing))
         task: asyncio.Task[None] | None = None
         stop = asyncio.Event()
         if start_watcher:
-            notifiers = build_notifiers(settings, runtime.transports.notify)
+            notifiers = build_notifiers(settings, runtime.transports.notify, runtime.conn)
             task = asyncio.create_task(Watcher(runtime, notifiers).run_forever(stop))
         try:
             yield
@@ -167,6 +175,7 @@ def create_app(
             raise HTTPException(504, "Wyszukiwanie trwało za długo. Spróbuj ponownie.") from exc
 
     app.include_router(build_auth_router(settings, limiter))
+    app.include_router(build_personal_router(settings, limiter))
 
     def rt(request: Request) -> Runtime:
         runtime: Runtime = request.app.state.runtime
@@ -360,6 +369,16 @@ def create_app(
             raise HTTPException(400, "Powiadomienia Telegram nie są włączone w tej instancji.")
         if payload.channel == "email" and not (settings.smtp_host and settings.smtp_from):
             raise HTTPException(400, "Powiadomienia e-mail nie są włączone w tej instancji.")
+        user = current_user(request)
+        target = payload.target
+        if payload.channel == "push":
+            if user is None:
+                raise HTTPException(401, "Zaloguj się, żeby dostawać powiadomienia w aplikacji.")
+            if not settings.push_enabled or PushStore(runtime.conn).count(user.id) == 0:
+                raise HTTPException(
+                    400, "Najpierw włącz powiadomienia na tym urządzeniu (Konto → Powiadomienia)."
+                )
+            target = str(user.id)
         try:
             sub = await create_subscription(
                 runtime,
@@ -374,9 +393,9 @@ def create_app(
                     before_date=payload.before,
                     case=Case(payload.case),
                     channel=payload.channel,
-                    target=payload.target,
+                    target=target,
                     consent=payload.consent,
-                    user_id=user.id if (user := current_user(request)) else None,
+                    user_id=user.id if user else None,
                 ),
             )
         except SubscribeError as exc:

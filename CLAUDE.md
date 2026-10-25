@@ -96,6 +96,12 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   `security.py` (bez zależności; QR przez `segno` jako macierz rysowana na `<canvas>`),
   logowanie dwuetapowe przez `login_challenges` (`start_login` w `auth.py`: reset hasła nigdy
   nie omija 2FA). Sesje mają `device` (zgrubny opis, bez UA i IP) i `persistent`.
+- Funkcje dla zalogowanych (ADR-0012): `termin/store/personal.py` (zgłoszenia z telefonu,
+  sprawy, notatki, zgoda art. 9 `health_consent_at`; zapis bez zgody → 428), `termin/web/personal.py`
+  (API `/api/me/*`, `/api/reports*`, `/api/cases*`, `/api/notes*`, `/api/push/*`),
+  `termin/notify/webpush.py` (RFC 8291 + VAPID, lista `PUSH_HOSTS` przeciw SSRF, kanał `push`),
+  przypomnienia o wizytach w `watcher.py`. Frontend: kod konta w leniwym `static/account.js`
+  (importuje helpery z `app.js`; budżet 40 KB w teście).
 - Obserwacja wymaga zgody (`consent`): API, `--zgoda` w CLI, `; zgoda` w bocie. Bez niej
   `SubscribeError`.
 - Strony prawne: szablony `termin/web/legal_docs/*.html` (string.Template, `$zmienne`),
