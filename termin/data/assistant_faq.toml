@@ -330,6 +330,7 @@ weight = 3
 keywords = ["co nowego", "nowosc", "nowe funkcj", "zmiany", "aktualizac"]
 answer = """Nowości w Termin:
 - „Najkrótsza prognoza w okolicy” nad wynikami: gdzie i o ile krócej się czeka, jeśli pojedziesz trochę dalej,
+- „Zapisz wyszukiwanie” pokazuje potem, gdzie prognoza skróciła się od ostatniego sprawdzenia,
 - szybkie filtry wyników („z telefonem”, „bez zapisów przez IKP”, „z dokładnym adresem”) i „Pokaż jeszcze”,
 - „Wyślij listę”: 5 placówek z telefonami do wysłania SMS-em, oraz „Drukuj listę”,
 - „Tryb rozmowy” z dużym numerem i „Przeczytaj na głos”,
@@ -338,6 +339,7 @@ answer = """Nowości w Termin:
 keywords_en = ["what's new", "whats new", "new feature", "changes", "update"]
 answer_en = """New in Termin:
 - “Shortest forecast nearby” above the results: where and how much shorter the wait is if you travel a bit further,
+- “Save search” later shows where the forecast got shorter since your last check,
 - quick result filters (“with a phone number”, “not booked via IKP”, “with an exact address”) and “Show more”,
 - “Send list”: 5 facilities with phone numbers to send by text message, plus “Print list”,
 - “Call mode” with a large number and “Read aloud”,
@@ -346,6 +348,7 @@ answer_en = """New in Termin:
 keywords_uk = ["що нового", "новин", "нові функці", "змін", "оновлен"]
 answer_uk = """Нове в Termin:
 - «Найкоротший прогноз поблизу» над результатами: де і наскільки менше чекати, якщо поїхати трохи далі,
+- «Зберегти пошук» потім показує, де прогноз скоротився з останньої перевірки,
 - швидкі фільтри результатів («з телефоном», «без запису через IKP», «з точною адресою») і «Показати ще»,
 - «Надіслати список»: 5 закладів із телефонами для SMS, а також «Друкувати список»,
 - «Режим розмови» з великим номером і «Прочитати вголос»,
