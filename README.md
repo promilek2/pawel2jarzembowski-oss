@@ -47,7 +47,8 @@ dać znać, gdy pojawi się wcześniejszy termin. Bez reklam, a konto jest opcjo
 - ♿ **Dojazd i dostępność**: linie komunikacji miejskiej i udogodnienia z danych NFZ (podjazd,
   winda, wózki, drzwi automatyczne) oraz filtr „Tylko bez barier”.
 - 🖨️ **Lista do druku i tryb „Dzwonię”**: tabela z telefonami do odhaczania przy dzwonieniu oraz
-  pełnoekranowy asystent rozmowy z dużym numerem i skryptem. Zapisane wyszukiwania na stronie
+  pełnoekranowy asystent rozmowy z dużym numerem i skryptem. „Wyślij listę” daje krótki tekst
+  z pięcioma placówkami i telefonami do wklejenia w SMS-ie dla rodziny. Zapisane wyszukiwania na stronie
   startowej, bez konta.
 - 📞 **Po zalogowaniu**: „Sprawdziłem telefonicznie” (zbiorczo widać, czy termin z NFZ zgadza się
   z tym, co mówi rejestracja), „Moje sprawy” ze skierowaniami, datami wizyt i prywatnymi notatkami

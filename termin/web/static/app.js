@@ -957,6 +957,7 @@ function bind() {
   document.addEventListener("visibilitychange", onReturnFromCall);
   $("#save-search").addEventListener("click", saveSearch);
   $("#print-list").addEventListener("click", () => extras().then((m) => m.printList(state.last)));
+  $("#send-list").addEventListener("click", () => extras().then((m) => m.sendList(state.last)));
   renderSaved();
   setupInstall();
   setupStorageBanner();

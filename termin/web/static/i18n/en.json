@@ -502,5 +502,11 @@
     "s_none": "Why are there no results?",
     "s_cer": "What does “Book via IKP” mean?",
     "s_approx": "Why is the distance approximate?"
+  },
+  "sendlist": {
+    "button": "Send list",
+    "head": "Termin: {label} – best facilities (NFZ data):",
+    "tip": "Call and ask for the nearest free date. Have the referral and PESEL ready.",
+    "copied": "List copied. Paste it into a text message or a messenger."
   }
 }

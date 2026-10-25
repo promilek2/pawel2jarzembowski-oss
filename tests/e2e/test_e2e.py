@@ -541,3 +541,20 @@ def test_help_chat_suggestions_follow_results(page) -> None:  # type: ignore[no-
     page.wait_for_selector("#chat-panel[open] #chat-suggest button")
     first = page.locator("#chat-suggest button").first.inner_text()
     assert "IKP" in first or "przybliżona" in first
+
+
+def test_send_list_copies_short_text(browser, base_url) -> None:  # type: ignore[no-untyped-def]
+    context = browser.new_context(viewport={"width": 1280, "height": 900})
+    context.grant_permissions(["clipboard-read", "clipboard-write"], origin=base_url)
+    context.add_init_script(NO_BANNER + " try { delete Navigator.prototype.share; } catch (e) {}")
+    pg = context.new_page()
+    pg.goto(base_url)
+    search(pg, "okulista dorośli")
+    pg.wait_for_selector("#result-list li")
+    pg.click("#send-list")
+    pg.wait_for_selector("#status:has-text('Lista skopiowana')")
+    text = pg.evaluate("() => navigator.clipboard.readText()")
+    assert text.startswith("Termin: Okulista")
+    assert "1. " in text and "tel. " in text and "5. " in text and "6. " not in text
+    assert "prognoza NFZ" in text and base_url in text
+    context.close()

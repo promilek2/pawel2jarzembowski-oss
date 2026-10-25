@@ -79,3 +79,23 @@ export async function printList(data) {
   window.print();
 }
 
+
+// ------------------------------------------------------------------ lista do wysłania SMS-em
+
+// Krótki tekst z 5 najlepszymi placówkami (telefon + prognoza), np. dla rodziny.
+export function listText(data, url = location.href) {
+  const lines = data.results.slice(0, 5).map((r, i) =>
+    `${i + 1}. ${r.provider || r.place || "—"}, ${[r.address, r.locality].filter(Boolean).join(", ")}` +
+    `${r.phone ? ` – tel. ${r.phone}` : ""} – ${whenLine(r)}`);
+  return [t("sendlist.head", { label: data.label }), ...lines, t("sendlist.tip"), url].join("\n");
+}
+
+export async function sendList(data) {
+  if (!data?.results?.length) { announce(t("results.none")); return; }
+  const text = listText(data);
+  if (navigator.share) {
+    try { await navigator.share({ title: "Termin", text }); return; } catch (e) { if (e?.name === "AbortError") return; }
+  }
+  try { await navigator.clipboard.writeText(text); announce(t("sendlist.copied")); }
+  catch { prompt(t("sendlist.button"), text); }
+}
