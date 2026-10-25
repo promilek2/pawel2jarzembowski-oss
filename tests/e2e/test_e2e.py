@@ -248,6 +248,11 @@ def test_register_login_account_flow(page) -> None:  # type: ignore[no-untyped-d
     page.click("#auth-submit")
     page.wait_for_selector("#account-label:has-text('Konto')")
     assert not dialog.evaluate("d => d.open")
+    # po rejestracji: kody odzyskiwania do zapisania
+    page.wait_for_selector("#codes-dialog[open]")
+    assert page.locator("#codes-list li").count() == 10
+    assert _axe_violations(page) == []
+    page.locator("#codes-dialog").get_by_role("button", name="Zapisałem/zapisałam kody").click()
     # obserwacja zapisana na koncie
     search(page, "okulista dorośli")
     page.wait_for_selector("#result-list li")
@@ -266,6 +271,71 @@ def test_register_login_account_flow(page) -> None:  # type: ignore[no-untyped-d
     page.click("#account-btn")
     page.fill("#auth-email", "babcia@example.com")
     page.fill("#auth-password", "Kolejka-do-okulisty-7")
+    page.click("#auth-submit")
+    page.wait_for_selector("#account-label:has-text('Konto')")
+
+
+def _register(page, email: str) -> list[str]:  # type: ignore[no-untyped-def]
+    page.click("#account-btn")
+    page.click("#tab-register")
+    page.fill("#auth-email", email)
+    page.fill("#auth-password", "Kolejka-do-okulisty-7")
+    page.check("#auth-terms")
+    page.click("#auth-submit")
+    page.wait_for_selector("#codes-dialog[open]")
+    codes = [c.strip() for c in page.locator("#codes-list li").all_inner_texts()]
+    page.click("#codes-dialog [data-close].btn")
+    return codes
+
+
+def test_forgot_password_with_recovery_code(page) -> None:  # type: ignore[no-untyped-def]
+    codes = _register(page, "dziadek@example.com")
+    page.click("#account-btn")
+    page.click("#account-logout")
+    page.wait_for_selector("#account-label:has-text('Zaloguj')")
+    page.click("#account-btn")
+    page.click("#auth-forgot")  # bez poczty od razu formularz z kodem
+    page.wait_for_selector("#auth-code-field:not([hidden])")
+    assert _axe_violations(page) == []
+    page.fill("#auth-email", "dziadek@example.com")
+    page.fill("#auth-code", codes[0].lower())
+    page.fill("#auth-password", "Nowe-haslo-do-kolejki-9")
+    page.wait_for_selector(".strength[data-level='3']")
+    page.click("#auth-submit")
+    page.wait_for_selector("#account-label:has-text('Konto')")
+    page.click("#account-btn")
+    page.wait_for_selector("#security-codes:has-text('9 z 10')")
+    page.click("#sessions-details summary")
+    page.wait_for_selector("#account-sessions li")
+    assert "To urządzenie" in page.locator("#account-sessions").inner_text()
+
+
+def test_two_factor_setup_and_login(page) -> None:  # type: ignore[no-untyped-def]
+    import time
+
+    from termin.security import totp_now
+
+    _register(page, "wnuczka@example.com")
+    page.click("#account-btn")
+    page.click("#twofa-details summary")
+    page.fill("#twofa-password", "Kolejka-do-okulisty-7")
+    page.click("#twofa-start button[type=submit]")
+    page.wait_for_selector("#twofa-setup:not([hidden])")
+    assert page.locator("#twofa-link").get_attribute("href").startswith("otpauth://totp/")  # type: ignore[union-attr]
+    assert _axe_violations(page) == []
+    secret = page.locator("#twofa-secret").inner_text().replace(" ", "")
+    page.fill("#twofa-code", totp_now(secret, time.time()))
+    page.click("#twofa-confirm button[type=submit]")
+    page.wait_for_selector("#security-2fa[data-on='true']")
+    page.click("#account-logout")
+    page.wait_for_selector("#account-label:has-text('Zaloguj')")
+    page.click("#account-btn")
+    page.fill("#auth-email", "wnuczka@example.com")
+    page.fill("#auth-password", "Kolejka-do-okulisty-7")
+    page.click("#auth-submit")
+    page.wait_for_selector("#auth-code-field:not([hidden])")
+    assert page.locator("#account-label").inner_text() == "Zaloguj"
+    page.fill("#auth-code", totp_now(secret, time.time() + 30))  # następny kod (poprzedni zużyty)
     page.click("#auth-submit")
     page.wait_for_selector("#account-label:has-text('Konto')")
 

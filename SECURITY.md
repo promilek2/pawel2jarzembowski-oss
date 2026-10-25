@@ -24,6 +24,9 @@ Poprawki bezpieczeństwa trafiają do najnowszej wersji z gałęzi `main` i najn
 | Sesje | losowy token 256 bitów w ciasteczku `HttpOnly`, `SameSite=Lax`, `Secure` i prefiks `__Host-` przy HTTPS; w bazie tylko skrót SHA-256; wygasanie po 30 dniach; zmiana hasła wylogowuje wszystkie urządzenia |
 | CSRF | weryfikacja nagłówka `Origin` dla zapytań zmieniających stan oraz token CSRF w nagłówku `X-CSRF-Token` dla zapytań z sesją |
 | Logowanie | stały czas odpowiedzi (także dla nieistniejących kont), blokada konta po 10 nieudanych próbach na 15 min, limit 10 prób/min na IP |
+| Odzyskiwanie dostępu | 10 jednorazowych kodów odzyskiwania (80 bitów, w bazie tylko SHA-256), działa bez poczty; nieudane próby liczą się do blokady konta; słabe nowe hasło nie zużywa kodu |
+| Weryfikacja dwuetapowa | TOTP (RFC 6238) z aplikacji w telefonie, każdy kod działa raz; drugi krok logowania przez jednorazowe wyzwanie (5 min, 5 prób); reset hasła nigdy jej nie omija; kody odzyskiwania jako zapas |
+| Urządzenia | lista aktywnych sesji z opisem urządzenia, wylogowanie pojedynczego urządzenia, „Nie wylogowuj mnie” (bez niego sesja do zamknięcia przeglądarki, maks. 12 h); e-mail o zmianie hasła, adresu, kodów i 2FA |
 | Linki z e-maili | jednorazowe, ważne 1 h (reset) lub 3 dni (weryfikacja), w bazie tylko skrót; reset nie zdradza, czy konto istnieje |
 | Nagłówki | CSP bez `unsafe-inline`/`unsafe-eval`, `X-Frame-Options: DENY`, `frame-ancestors 'none'`, HSTS (przy HTTPS), `X-Content-Type-Options`, `Referrer-Policy: no-referrer`, COOP/CORP, `Permissions-Policy`, `Cache-Control: no-store` dla API |
 | Wejście | walidacja Pydantic, limit rozmiaru zapytania (64 KB, także przy przesyłaniu porcjami), zapytania SQL parametryzowane, DOM budowany przez `textContent` (brak XSS z danych NFZ) |

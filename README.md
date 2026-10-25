@@ -5,7 +5,7 @@ numer zadzwonić.**
 
 Termin przeszukuje publiczne dane NFZ o kolejkach, rozumie zwykły język („okulsta”, „rezonans
 kolana”, „zacma”), liczy odległość od Ciebie i podpowiada, co powiedzieć przez telefon. Może też
-dać znać, gdy pojawi się wcześniejszy termin. Bez kont i bez reklam. To projekt open-source,
+dać znać, gdy pojawi się wcześniejszy termin. Bez reklam, a konto jest opcjonalne. To projekt open-source,
 **nie jest oficjalną aplikacją NFZ**.
 
 [English version](README.en.md)
@@ -42,7 +42,8 @@ dać znać, gdy pojawi się wcześniejszy termin. Bez kont i bez reklam. To proj
   aplikacjami (PWA). Działa też offline, w trzech językach (polski, angielski, ukraiński) i
   spełnia WCAG 2.1 AA.
 - 👤 **Opcjonalne konto**: obserwacje na wielu urządzeniach, eksport i usunięcie danych
-  jednym kliknięciem. Bez konta też wszystko działa.
+  jednym kliknięciem. Kody odzyskiwania („Nie pamiętam hasła” działa nawet bez poczty),
+  weryfikacja dwuetapowa kodem z aplikacji, lista zalogowanych urządzeń. Bez konta też wszystko działa.
 - 🔒 **Bezpieczeństwo i prywatność**: zgoda RODO na dane o zdrowiu, brak śledzenia,
   bezpieczne sesje, ochrona CSRF, CSP, limity logowania (szczegóły w [SECURITY.md](SECURITY.md)).
   Regulamin, polityka prywatności, cookies i deklaracja dostępności są wbudowane.

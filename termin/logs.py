@@ -35,6 +35,11 @@ SENSITIVE_KEYS = frozenset(
         "telegram_token",
         "ip",
         "client_ip",
+        "code",
+        "recovery_codes",
+        "challenge",
+        "secret",
+        "totp_secret",
     }
 )
 

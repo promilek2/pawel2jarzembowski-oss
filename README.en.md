@@ -5,7 +5,7 @@ how far away, how to get there and which number to call.**
 
 Termin searches the public NFZ waiting-list data. It understands everyday Polish (and typos:
 “okulsta”, “rezonans kolana”, “zacma”), computes distances from you and suggests what to say on
-the phone. It can also notify you when an earlier slot appears. No accounts, no ads.
+the phone. It can also notify you when an earlier slot appears. No ads, and an account is optional.
 Open source. **Not an official NFZ application.**
 
 [Wersja polska](README.md)
@@ -33,6 +33,8 @@ Open source. **Not an official NFZ application.**
 - Data-quality warnings: data older than 14 days, dates in the past, missing phone numbers.
   The “as of” date is always shown.
 - Notifications about earlier slots via ntfy (no account), Telegram, e-mail or desktop.
+- Optional account: recovery codes (password reset works even without e-mail), two-step
+  verification with an authenticator app, list of signed-in devices, data export and deletion.
 - Trends: whether a facility's queue is getting shorter, provincial medians, a district heat map.
 - Mobile-first PWA that works offline, WCAG 2.1 AA, in Polish, English and Ukrainian.
 
@@ -74,7 +76,7 @@ Always confirm by phone. We show the “as of” date and warn about stale data.
 
 **Is this medical advice?** No. We only show facts about appointment dates.
 
-**Privacy?** No accounts and no analytics. See [PRIVACY.md](PRIVACY.md).
+**Privacy?** No analytics or ads; the account is optional. See [PRIVACY.md](PRIVACY.md).
 
 ## License
 

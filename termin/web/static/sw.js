@@ -1,5 +1,5 @@
 // Service worker: pliki aplikacji offline (stale-while-revalidate), bez danych z API.
-const VERSION = "termin-v3";
+const VERSION = "termin-v4";
 const SHELL = [
   "/",
   "/static/style.css",

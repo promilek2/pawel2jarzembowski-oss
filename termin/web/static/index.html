@@ -212,14 +212,23 @@
           <label for="auth-email" data-i18n="auth.email">Adres e-mail</label>
           <input id="auth-email" name="email" type="email" autocomplete="email" required>
         </div>
+        <div class="field" id="auth-code-field">
+          <label for="auth-code" id="auth-code-label"></label>
+          <input id="auth-code" name="code" type="text" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="40" aria-describedby="auth-code-hint">
+          <p id="auth-code-hint" class="hint"></p>
+        </div>
         <div class="field" id="auth-password-field">
           <label for="auth-password" id="auth-password-label" data-i18n="auth.password">Hasło</label>
           <div class="input-row">
-            <input id="auth-password" name="password" type="password" autocomplete="current-password" required aria-describedby="auth-password-hint">
+            <input id="auth-password" name="password" type="password" autocomplete="current-password" required aria-describedby="auth-password-hint" data-strength>
             <button type="button" id="auth-show" class="btn btn-outline" aria-pressed="false" data-i18n="auth.show">Pokaż</button>
           </div>
           <p id="auth-password-hint" class="hint"></p>
         </div>
+        <label class="check" id="auth-remember-field">
+          <input type="checkbox" id="auth-remember" name="remember" checked>
+          <span data-i18n="auth.remember">Nie wylogowuj mnie na tym urządzeniu</span>
+        </label>
         <label class="check" id="auth-terms-field">
           <input type="checkbox" id="auth-terms" name="accept_terms">
           <span><span data-i18n="auth.terms_prefix">Akceptuję</span> <a href="/regulamin" target="_blank" rel="noopener" data-i18n="auth.terms_link">Regulamin</a> <span data-i18n="auth.terms_mid">i zapoznałem/zapoznałam się z</span> <a href="/prywatnosc" target="_blank" rel="noopener" data-i18n="auth.privacy_link">Polityką prywatności</a>. <span data-i18n="auth.terms_age">Mam ukończone 16 lat.</span></span>
@@ -228,6 +237,8 @@
         <p id="auth-status" class="watch-result" role="status"></p>
         <button type="submit" id="auth-submit" class="btn btn-signal btn-big"></button>
         <button type="button" id="auth-forgot" class="link-btn" data-i18n="auth.forgot">Nie pamiętam hasła</button>
+        <button type="button" id="auth-alt" class="link-btn" hidden></button>
+        <button type="button" id="auth-back" class="link-btn" data-i18n="auth.back" hidden>Wróć do logowania</button>
         <p class="hint" data-i18n="auth.optional">Konto jest opcjonalne: wyszukiwanie i obserwowanie działają też bez logowania.</p>
       </form>
     </div>
@@ -247,6 +258,71 @@
         <h3 id="account-subs-title" data-i18n="account.subscriptions">Moje obserwacje</h3>
         <ul id="account-subs" class="account-subs"></ul>
       </section>
+      <section aria-labelledby="account-security-title">
+        <h3 id="account-security-title" data-i18n="account.security">Bezpieczeństwo</h3>
+        <ul class="security-list">
+          <li id="security-2fa"></li>
+          <li id="security-codes"></li>
+        </ul>
+      </section>
+      <details class="more-light" id="twofa-details">
+        <summary data-i18n="account.twofa">Weryfikacja dwuetapowa</summary>
+        <div id="twofa-off" class="stack">
+          <p data-i18n="account.twofa_intro">Przy logowaniu poza hasłem podasz 6-cyfrowy kod z aplikacji w telefonie (np. Google Authenticator, Microsoft Authenticator, 2FAS albo Aegis). Nawet gdy ktoś pozna hasło, nie zaloguje się bez telefonu.</p>
+          <form id="twofa-start" class="stack" novalidate>
+            <div class="field"><label for="twofa-password" data-i18n="account.confirm_password">Potwierdź hasłem</label>
+              <input id="twofa-password" type="password" autocomplete="current-password" required></div>
+            <button type="submit" class="btn btn-ink" data-i18n="account.twofa_start">Włącz weryfikację dwuetapową</button>
+          </form>
+          <div id="twofa-setup" class="stack" hidden>
+            <ol class="steps">
+              <li data-i18n="account.twofa_step1">Zainstaluj na telefonie aplikację uwierzytelniającą.</li>
+              <li><span data-i18n="account.twofa_step2">Zeskanuj kod QR albo, na tym telefonie, otwórz link:</span>
+                <canvas id="twofa-qr" width="232" height="232" role="img" aria-label="Kod QR do aplikacji uwierzytelniającej" data-i18n-label="account.twofa_qr"></canvas>
+                <a id="twofa-link" class="btn btn-outline" href="#" data-i18n="account.twofa_link">Otwórz w aplikacji uwierzytelniającej</a>
+                <span class="hint"><span data-i18n="account.twofa_manual">Albo wpisz klucz ręcznie:</span> <code id="twofa-secret" class="secret"></code></span>
+              </li>
+              <li data-i18n="account.twofa_step3">Wpisz 6-cyfrowy kod, który pokazuje aplikacja.</li>
+            </ol>
+            <form id="twofa-confirm" class="stack" novalidate>
+              <div class="field"><label for="twofa-code" data-i18n="account.twofa_code">Kod z aplikacji</label>
+                <input id="twofa-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required></div>
+              <button type="submit" class="btn btn-signal" data-i18n="account.twofa_confirm">Potwierdź i włącz</button>
+            </form>
+          </div>
+        </div>
+        <form id="twofa-disable" class="stack" novalidate hidden>
+          <p data-i18n="account.twofa_on">Weryfikacja dwuetapowa jest włączona.</p>
+          <div class="field"><label for="twofa-off-password" data-i18n="account.confirm_password">Potwierdź hasłem</label>
+            <input id="twofa-off-password" type="password" autocomplete="current-password" required></div>
+          <div class="field"><label for="twofa-off-code" data-i18n="auth.code_mfa">Kod z aplikacji albo kod odzyskiwania</label>
+            <input id="twofa-off-code" type="text" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="40" required></div>
+          <button type="submit" class="btn btn-outline" data-i18n="account.twofa_disable">Wyłącz weryfikację dwuetapową</button>
+        </form>
+      </details>
+      <details class="more-light">
+        <summary data-i18n="account.codes">Kody odzyskiwania</summary>
+        <form id="codes-form" class="stack" novalidate>
+          <p data-i18n="account.codes_intro">Kod odzyskiwania pozwala ustawić nowe hasło, gdy je zapomnisz, albo zalogować się bez telefonu. Każdy działa raz. Nowe kody unieważniają poprzednie.</p>
+          <div class="field"><label for="codes-password" data-i18n="account.confirm_password">Potwierdź hasłem</label>
+            <input id="codes-password" type="password" autocomplete="current-password" required></div>
+          <button type="submit" class="btn btn-ink" data-i18n="account.codes_new">Wygeneruj nowe kody</button>
+        </form>
+      </details>
+      <details class="more-light" id="sessions-details">
+        <summary data-i18n="account.sessions">Zalogowane urządzenia</summary>
+        <ul id="account-sessions" class="account-subs"></ul>
+      </details>
+      <details class="more-light">
+        <summary data-i18n="account.change_email">Zmień adres e-mail</summary>
+        <form id="email-form" class="stack" novalidate>
+          <div class="field"><label for="email-new" data-i18n="account.new_email">Nowy adres e-mail</label>
+            <input id="email-new" type="email" autocomplete="email" required></div>
+          <div class="field"><label for="email-password" data-i18n="account.confirm_password">Potwierdź hasłem</label>
+            <input id="email-password" type="password" autocomplete="current-password" required></div>
+          <button type="submit" class="btn btn-ink" data-i18n="account.save_email">Zapisz adres</button>
+        </form>
+      </details>
       <section aria-labelledby="account-data-title">
         <h3 id="account-data-title" data-i18n="account.data">Moje dane</h3>
         <div class="account-actions">
@@ -261,7 +337,7 @@
           <div class="field"><label for="pw-current" data-i18n="account.current_password">Obecne hasło</label>
             <input id="pw-current" type="password" autocomplete="current-password" required></div>
           <div class="field"><label for="pw-new" data-i18n="account.new_password">Nowe hasło</label>
-            <input id="pw-new" type="password" autocomplete="new-password" required aria-describedby="pw-hint">
+            <input id="pw-new" type="password" autocomplete="new-password" required aria-describedby="pw-hint" data-strength>
             <p id="pw-hint" class="hint" data-i18n="auth.password_rules">Co najmniej 10 znaków. Najlepiej kilka słów, które łatwo zapamiętać.</p></div>
           <button type="submit" class="btn btn-ink" data-i18n="account.save_password">Zapisz nowe hasło</button>
         </form>
@@ -276,6 +352,26 @@
         </form>
       </details>
       <p id="account-status" class="watch-result" role="status"></p>
+    </div>
+  </dialog>
+
+  <dialog id="codes-dialog" aria-labelledby="codes-title">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2 id="codes-title" data-i18n="codes.title">Zapisz kody odzyskiwania</h2>
+        <button type="button" class="icon-close" data-close aria-label="Zamknij" data-i18n-label="common.close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p data-i18n="codes.intro">Jeśli zapomnisz hasła albo zgubisz telefon, jeden z tych kodów przywróci dostęp do konta. Każdy działa tylko raz. Zapisz je teraz: później ich nie pokażemy.</p>
+      <ol id="codes-list" class="codes"></ol>
+      <div class="account-actions">
+        <button type="button" id="codes-copy" class="btn btn-outline" data-i18n="codes.copy">Kopiuj</button>
+        <button type="button" id="codes-download" class="btn btn-outline" data-i18n="codes.download">Pobierz plik .txt</button>
+      </div>
+      <p class="hint" data-i18n="codes.where">Dobre miejsca: menedżer haseł, wydruk w domu, notatka poza tym telefonem.</p>
+      <p id="codes-status" class="watch-result" role="status"></p>
+      <button type="button" class="btn btn-signal btn-big" data-close data-i18n="codes.done">Zapisałem/zapisałam kody</button>
     </div>
   </dialog>
 

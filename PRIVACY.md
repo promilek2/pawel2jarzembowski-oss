@@ -23,7 +23,10 @@ albo korzysta z własnego serwera Nominatim.
 
 Przechowujemy: adres e-mail, skrót hasła (scrypt z solą), daty rejestracji, akceptacji
 regulaminu, potwierdzenia adresu i ostatniego logowania. Sesja to losowy token w ciasteczku
-HttpOnly; w bazie jest tylko jego skrót. Konto usuniesz sam (razem z obserwacjami), a dane
+HttpOnly; w bazie jest tylko jego skrót oraz zgrubny opis urządzenia („Chrome · Android”), żeby
+lista „Zalogowane urządzenia” była czytelna (bez adresu IP i pełnego identyfikatora przeglądarki).
+Kody odzyskiwania trzymamy tylko jako skrót SHA-256. Jeśli włączysz weryfikację dwuetapową,
+zapisujemy sekret do generowania kodów (bez niego serwer nie sprawdzi kodu). Konto usuniesz sam (razem z obserwacjami), a dane
 pobierzesz jako JSON („Pobierz moje dane”). Konta z niepotwierdzonym e-mailem usuwamy po 7 dniach.
 
 ## Obserwowanie (powiadomienia)

@@ -16,6 +16,7 @@ import threading
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import TypeVar
+from urllib.parse import quote
 
 SCRYPT_N = 2**15
 SCRYPT_R = 8
@@ -145,3 +146,101 @@ async def hash_password_async(password: str) -> str:
 
 async def verify_password_async(password: str, stored: str) -> bool:
     return await run_hashing(lambda: verify_password(password, stored))
+
+
+# ---------------------------------------------------------------------- weryfikacja dwuetapowa
+
+TOTP_PERIOD = 30
+TOTP_DIGITS = 6
+TOTP_WINDOW = 1
+"""Ile kroków (po 30 s) w przód i w tył akceptujemy: zegar telefonu bywa przesunięty."""
+
+
+def new_totp_secret() -> str:
+    """Sekret TOTP w base32 (160 bitów, RFC 4226 zaleca co najmniej 128)."""
+    return base64.b32encode(secrets.token_bytes(20)).decode()
+
+
+def _hotp(secret: str, counter: int) -> str:
+    key = base64.b32decode(secret + "=" * (-len(secret) % 8), casefold=True)
+    mac = hmac.new(key, counter.to_bytes(8, "big"), hashlib.sha1).digest()
+    offset = mac[-1] & 0x0F
+    value = int.from_bytes(mac[offset : offset + 4], "big") & 0x7FFFFFFF
+    return str(value % 10**TOTP_DIGITS).zfill(TOTP_DIGITS)
+
+
+def totp_now(secret: str, at: float) -> str:
+    return _hotp(secret, int(at) // TOTP_PERIOD)
+
+
+def totp_match(secret: str, code: str, at: float, *, after_step: int | None = None) -> int | None:
+    """Krok czasowy pasującego kodu albo None. Kroki <= `after_step` odrzucamy (powtórka kodu)."""
+    code = re.sub(r"\s", "", code)
+    if not re.fullmatch(rf"\d{{{TOTP_DIGITS}}}", code):
+        return None
+    now = int(at) // TOTP_PERIOD
+    for step in range(now - TOTP_WINDOW, now + TOTP_WINDOW + 1):
+        if after_step is not None and step <= after_step:
+            continue
+        if hmac.compare_digest(_hotp(secret, step), code):
+            return step
+    return None
+
+
+def totp_uri(secret: str, email: str, issuer: str = "Termin") -> str:
+    label = quote(f"{issuer}:{email}", safe=":@")
+    return f"otpauth://totp/{label}?secret={secret}&issuer={quote(issuer)}&digits={TOTP_DIGITS}"
+
+
+# ---------------------------------------------------------------------- kody odzyskiwania
+
+RECOVERY_CODES = 10
+_RECOVERY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # bez 0/O i 1/I, łatwo przepisać
+
+
+def new_recovery_code() -> str:
+    """16 znaków (80 bitów) w grupach po 4, np. `K7QM-3XRA-PL9D-W2HF`."""
+    raw = "".join(secrets.choice(_RECOVERY_ALPHABET) for _ in range(16))
+    return "-".join(raw[i : i + 4] for i in range(0, 16, 4))
+
+
+def normalize_recovery_code(code: str) -> str | None:
+    raw = re.sub(r"[\s-]", "", code).upper()
+    if len(raw) != 16 or any(ch not in _RECOVERY_ALPHABET for ch in raw):
+        return None
+    return "-".join(raw[i : i + 4] for i in range(0, 16, 4))
+
+
+# ---------------------------------------------------------------------- urządzenia
+
+
+def device_label(user_agent: str | None) -> str:
+    """Zgrubny opis urządzenia do listy sesji („Chrome · Android”). Nie zapisujemy pełnego UA."""
+    ua = (user_agent or "")[:512]
+    if "Edg/" in ua:
+        browser = "Edge"
+    elif "OPR/" in ua or "Opera" in ua:
+        browser = "Opera"
+    elif "SamsungBrowser" in ua:
+        browser = "Samsung Internet"
+    elif "Firefox/" in ua or "FxiOS" in ua:
+        browser = "Firefox"
+    elif "Chrome/" in ua or "CriOS" in ua:
+        browser = "Chrome"
+    elif "Safari/" in ua:
+        browser = "Safari"
+    else:
+        browser = "Przeglądarka"
+    if "Android" in ua:
+        system = "Android"
+    elif "iPhone" in ua or "iPad" in ua:
+        system = "iOS"
+    elif "Windows" in ua:
+        system = "Windows"
+    elif "Mac OS X" in ua or "Macintosh" in ua:
+        system = "macOS"
+    elif "Linux" in ua:
+        system = "Linux"
+    else:
+        return browser
+    return f"{browser} · {system}"

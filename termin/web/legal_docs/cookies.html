@@ -7,7 +7,7 @@
 <div class="table-wrap" tabindex="0" role="region" aria-label="Tabela (przewiń w poziomie)"><table>
   <thead><tr><th scope="col">Nazwa</th><th scope="col">Rodzaj</th><th scope="col">Po co</th><th scope="col">Jak długo</th></tr></thead>
   <tbody>
-    <tr><td><code>$session_cookie</code></td><td>ciasteczko (HttpOnly, Secure, SameSite=Lax)</td><td>utrzymanie zalogowania; tylko gdy się zalogujesz</td><td>do wylogowania, maks. $session_days dni</td></tr>
+    <tr><td><code>$session_cookie</code></td><td>ciasteczko (HttpOnly, Secure, SameSite=Lax)</td><td>utrzymanie zalogowania; tylko gdy się zalogujesz</td><td>do wylogowania, maks. $session_days dni; bez „Nie wylogowuj mnie”: do zamknięcia przeglądarki</td></tr>
     <tr><td><code>termin:lang</code>, <code>termin:large</code></td><td>pamięć przeglądarki (localStorage)</td><td>zapamiętanie wybranego języka i trybu „duży tekst”</td><td>do usunięcia danych strony w przeglądarce</td></tr>
     <tr><td><code>termin:consent</code></td><td>pamięć przeglądarki</td><td>zapamiętanie Twojego wyboru dotyczącego zapisu wyników offline</td><td>jw.</td></tr>
     <tr><td>Pamięć podręczna aplikacji (service worker)</td><td>Cache Storage</td><td>pliki samej aplikacji (wygląd, skrypty, ikony), żeby działała po zainstalowaniu i bez internetu</td><td>do aktualizacji aplikacji albo usunięcia danych strony</td></tr>

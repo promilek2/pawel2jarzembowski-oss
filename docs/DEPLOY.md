@@ -188,6 +188,12 @@ Przycisk czyta `render.yaml`: darmowy plan, Docker, health check `/healthz`, HTT
 `https://<nazwa>.onrender.com` (trafia sam do `TERMIN_PUBLIC_URL` przez `RENDER_EXTERNAL_URL`).
 Po kilku minutach otwórz ten adres na telefonie i kliknij „Zainstaluj”.
 
+**Poczta (opcjonalnie):** bez niej „Nie pamiętam hasła” działa przez kody odzyskiwania.
+Żeby wysyłać linki resetu, potwierdzenia i powiadomienia, dodaj w Render → Environment
+zmienne `TERMIN_SMTP_HOST`, `TERMIN_SMTP_PORT` (zwykle 587), `TERMIN_SMTP_USER`,
+`TERMIN_SMTP_PASSWORD`, `TERMIN_SMTP_FROM`. Działa każdy serwer SMTP, np. darmowy plan
+Brevo albo Gmail z hasłem do aplikacji (konto z weryfikacją dwuetapową → „Hasła do aplikacji”).
+
 Ograniczenia darmowego planu:
 
 - usługa zasypia po 15 min bez ruchu, pierwsze wejście potem trwa około minuty,

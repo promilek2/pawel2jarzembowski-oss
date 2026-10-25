@@ -38,6 +38,9 @@ def running_server(port: int | None = None) -> Iterator[str]:
             geocoder="offline",
             tile_url="/static/icons/icon-192.png?{z}{x}{y}",  # bez sieci: zaślepka kafelków
             rate_limit="1000/minute",
+            # wszystkie testy idą z 127.0.0.1, więc limity na IP podnosimy
+            login_rate_limit="1000/minute",
+            global_requests_per_minute=100_000,
         )
         app = create_app(
             settings,

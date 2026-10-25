@@ -92,6 +92,10 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   SHA-256), `termin/security.py` (scrypt, polityka haseł, e-mail), `termin/web/auth.py`
   (API `/api/auth/*`, `/api/account/*`, ciasteczko sesji, `csrf_guard`). Zapytania
   zmieniające stan z sesją wymagają nagłówka `X-CSRF-Token` (wartość z `/api/auth/me`).
+- Odzyskiwanie i 2FA (ADR-0011): kody odzyskiwania (`recovery_codes`, SHA-256), TOTP w
+  `security.py` (bez zależności; QR przez `segno` jako macierz rysowana na `<canvas>`),
+  logowanie dwuetapowe przez `login_challenges` (`start_login` w `auth.py`: reset hasła nigdy
+  nie omija 2FA). Sesje mają `device` (zgrubny opis, bez UA i IP) i `persistent`.
 - Obserwacja wymaga zgody (`consent`): API, `--zgoda` w CLI, `; zgoda` w bocie. Bez niej
   `SubscribeError`.
 - Strony prawne: szablony `termin/web/legal_docs/*.html` (string.Template, `$zmienne`),

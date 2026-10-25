@@ -683,14 +683,17 @@ function closeOnButtons(dialog) {
 }
 
 const AUTH_VIEWS = {
-  login: { title: "auth.title_login", submit: "auth.submit_login", email: true, password: true, terms: false, forgot: true, autocomplete: "current-password" },
-  register: { title: "auth.title_register", submit: "auth.submit_register", email: true, password: true, terms: true, forgot: false, autocomplete: "new-password" },
-  forgot: { title: "auth.title_forgot", submit: "auth.submit_forgot", email: true, password: false, terms: false, forgot: false, intro: "auth.forgot_intro" },
-  reset: { title: "auth.title_reset", submit: "auth.submit_reset", email: false, password: true, terms: false, forgot: false, autocomplete: "new-password" },
+  login: { title: "auth.title_login", submit: "auth.submit_login", email: true, password: "current-password", remember: true, forgot: true },
+  register: { title: "auth.title_register", submit: "auth.submit_register", email: true, password: "new-password", terms: true },
+  forgot: { title: "auth.title_forgot", submit: "auth.submit_forgot", email: true, intro: "auth.forgot_intro", alt: ["auth.have_code", "recover"] },
+  recover: { title: "auth.title_recover", submit: "auth.submit_reset", email: true, password: "new-password", code: "auth.code_recovery", intro: "auth.recover_intro", alt: ["auth.send_link", "forgot"] },
+  reset: { title: "auth.title_reset", submit: "auth.submit_reset", password: "new-password" },
+  mfa: { title: "auth.title_mfa", submit: "auth.submit_mfa", code: "auth.code_mfa", intro: "auth.mfa_intro" },
 };
 
 function setAuthView(view, token = null) {
   const cfg = AUTH_VIEWS[view];
+  const mail = Boolean(state.config?.mail_enabled);
   state.authView = view;
   state.resetToken = token ?? state.resetToken;
   $("#auth-title").textContent = t(cfg.title);
@@ -698,46 +701,154 @@ function setAuthView(view, token = null) {
   $("#auth-intro").textContent = cfg.intro ? t(cfg.intro) : "";
   $("#auth-email-field").hidden = !cfg.email;
   $("#auth-password-field").hidden = !cfg.password;
+  $("#auth-code-field").hidden = !cfg.code;
+  $("#auth-remember-field").hidden = !cfg.remember;
   $("#auth-terms-field").hidden = !cfg.terms;
-  $("#auth-forgot").hidden = !cfg.forgot || !state.config?.mail_enabled;
+  $("#auth-forgot").hidden = !cfg.forgot;
   $("#auth-tabs").hidden = !(view === "login" || view === "register");
-  $("#auth-password").setAttribute("autocomplete", cfg.autocomplete || "off");
-  $("#auth-password-label").textContent = view === "reset" ? t("account.new_password") : t("auth.password");
-  $("#auth-password-hint").textContent = cfg.terms || view === "reset" ? t("auth.password_rules") : "";
+  $("#auth-back").hidden = view === "login" || view === "register";
+  const alt = $("#auth-alt");
+  alt.hidden = !cfg.alt || !mail;
+  if (cfg.alt) { alt.textContent = t(cfg.alt[0]); alt.dataset.view = cfg.alt[1]; }
+  const pw = $("#auth-password");
+  pw.setAttribute("autocomplete", cfg.password || "off");
+  pw.toggleAttribute("data-strength", cfg.password === "new-password");
+  updateStrength(pw);
+  $("#auth-password-label").textContent = cfg.password === "new-password" && view !== "register" ? t("account.new_password") : t("auth.password");
+  $("#auth-password-hint").textContent = cfg.password === "new-password" ? t("auth.password_rules") : "";
+  if (cfg.code) {
+    $("#auth-code-label").textContent = t(cfg.code);
+    $("#auth-code").setAttribute("inputmode", "text");
+    $("#auth-code-hint").textContent = view === "mfa" ? t("auth.code_mfa_hint") : t("auth.code_recovery_hint");
+  }
   for (const tab of document.querySelectorAll("#auth-tabs [role=tab]")) tab.setAttribute("aria-selected", String(tab.dataset.view === view));
   $("#auth-error").hidden = true;
   $("#auth-status").textContent = "";
 }
 
+function focusAuth() {
+  const cfg = AUTH_VIEWS[state.authView];
+  (cfg.email ? $("#auth-email") : cfg.code ? $("#auth-code") : $("#auth-password")).focus();
+}
+
 function openAuth(view = "login", token = null) {
   setAuthView(view, token);
-  $("#auth-dialog").showModal();
-  (view === "reset" ? $("#auth-password") : $("#auth-email")).focus();
+  if (!$("#auth-dialog").open) $("#auth-dialog").showModal();
+  focusAuth();
 }
+
+function forgotView() { return state.config?.mail_enabled ? "forgot" : "recover"; }
 
 async function submitAuth(event) {
   event.preventDefault();
   const view = state.authView;
   const email = $("#auth-email").value.trim();
   const password = $("#auth-password").value;
+  const code = $("#auth-code").value.trim();
   const error = $("#auth-error");
   error.hidden = true;
+  const post = (path, json) => api(path, { method: "POST", json });
   let res;
-  if (view === "login") res = await api("/api/auth/login", { method: "POST", json: { email, password } });
+  if (view === "login") res = await post("/api/auth/login", { email, password, remember: $("#auth-remember").checked });
   else if (view === "register") {
     if (!$("#auth-terms").checked) { error.textContent = t("auth.terms_required"); error.hidden = false; return; }
-    res = await api("/api/auth/register", { method: "POST", json: { email, password, accept_terms: true } });
-  } else if (view === "forgot") res = await api("/api/auth/request-reset", { method: "POST", json: { email } });
-  else res = await api("/api/auth/reset", { method: "POST", json: { token: state.resetToken, password } });
+    res = await post("/api/auth/register", { email, password, accept_terms: true });
+  } else if (view === "forgot") res = await post("/api/auth/request-reset", { email });
+  else if (view === "recover") res = await post("/api/auth/recover", { email, code, password });
+  else if (view === "mfa") res = await post("/api/auth/login/2fa", { challenge: state.challenge, code });
+  else res = await post("/api/auth/reset", { token: state.resetToken, password });
 
-  if (!res.ok) { error.textContent = errorText(res.body); error.hidden = false; return; }
+  if (!res.ok) {
+    error.textContent = errorText(res.body); error.hidden = false;
+    if (view === "mfa" && res.status === 401 && /wygas|expired/i.test(errorText(res.body))) setTimeout(() => openAuth("login"), 1500);
+    return;
+  }
   if (view === "forgot") { $("#auth-status").textContent = errorText(res.body); return; }
-  state.auth = res.body;
-  updateAccountButton();
   $("#auth-password").value = "";
+  $("#auth-code").value = "";
+  if (res.body.mfa_required) {
+    state.challenge = res.body.challenge;
+    setAuthView("mfa");
+    $("#auth-status").textContent = view === "recover" ? t("auth.password_saved_mfa") : "";
+    focusAuth();
+    return;
+  }
+  state.auth = res.body;
+  state.challenge = null;
+  updateAccountButton();
   $("#auth-dialog").close();
-  announce(view === "register" ? t("auth.registered") : t("auth.logged_in"));
+  if (view === "register") { announce(t(state.config?.mail_enabled ? "auth.registered" : "auth.registered_nomail")); showCodes(res.body.recovery_codes); return; }
+  const left = res.body.recovery_codes_left;
+  announce(typeof left === "number" && left <= 3 ? t("auth.codes_low", { n: left }) : t(view === "recover" || view === "reset" ? "auth.password_reset_done" : "auth.logged_in"));
 }
+
+// ------------------------------------------------------------------ kody odzyskiwania
+
+function showCodes(codes) {
+  if (!codes?.length) return;
+  state.codes = codes;
+  $("#codes-list").replaceChildren(...codes.map((c) => h("li", {}, h("code", {}, c))));
+  $("#codes-status").textContent = "";
+  $("#codes-dialog").showModal();
+}
+
+function codesText() {
+  return [t("codes.file_header", { email: state.auth?.user?.email || "" }), "", ...state.codes, "", t("codes.file_footer")].join("\n");
+}
+
+async function copyCodes() {
+  try { await navigator.clipboard.writeText(codesText()); $("#codes-status").textContent = t("codes.copied"); }
+  catch { $("#codes-status").textContent = t("codes.copy_failed"); }
+}
+
+function downloadCodes() {
+  const url = URL.createObjectURL(new Blob([codesText()], { type: "text/plain;charset=utf-8" }));
+  const a = h("a", { href: url, download: "termin-kody-odzyskiwania.txt" });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ------------------------------------------------------------------ hasła: Caps Lock i siła
+
+function passwordStrength(pw) {
+  if (!pw) return 0;
+  if (pw.length < 10) return 1;
+  const kinds = [/[a-ząćęłńóśźż]/, /[A-ZĄĆĘŁŃÓŚŹŻ]/, /\d/, /[^\p{L}\d]/u].filter((r) => r.test(pw)).length;
+  const words = pw.split(/[\s\-_.]+/).filter((w) => w.length >= 3).length;
+  if (pw.length >= 16 || (pw.length >= 12 && (kinds >= 3 || words >= 3))) return 3;
+  return 2;
+}
+
+function updateStrength(input) {
+  const meter = input.closest(".field")?.querySelector(".strength");
+  if (!meter) return;
+  const show = input.hasAttribute("data-strength") && input.value.length > 0;
+  meter.hidden = !show;
+  if (!show) return;
+  const level = passwordStrength(input.value);
+  meter.dataset.level = String(level);
+  meter.querySelector(".strength-label").textContent = t(`auth.strength_${level}`);
+}
+
+function setupPasswordHelpers() {
+  for (const input of document.querySelectorAll('input[type="password"]')) {
+    const field = input.closest(".field");
+    if (!field) continue;
+    const caps = h("p", { class: "caps-warning", hidden: true, "data-i18n": "auth.caps_lock" }, t("auth.caps_lock"));
+    const meter = h("div", { class: "strength", hidden: true, "aria-live": "polite" },
+      h("span", { class: "strength-bar", "aria-hidden": "true" }, h("span", {})), h("span", { class: "strength-label" }));
+    field.append(meter, caps);
+    const check = (e) => { if (e.getModifierState) caps.hidden = !e.getModifierState("CapsLock"); };
+    input.addEventListener("keydown", check);
+    input.addEventListener("keyup", check);
+    input.addEventListener("blur", () => { caps.hidden = true; });
+    input.addEventListener("input", () => updateStrength(input));
+  }
+}
+
+// ------------------------------------------------------------------ ustawienia konta
 
 async function openAccount() {
   if (!state.auth?.user) { openAuth("login"); return; }
@@ -753,8 +864,102 @@ async function openAccount() {
       } }, t("account.resend")));
   }
   $("#account-status").textContent = "";
-  await renderAccountSubs();
+  await Promise.all([renderAccountSubs(), renderSecurity(), renderSessions()]);
   $("#account-dialog").showModal();
+}
+
+async function renderSecurity() {
+  const { ok, body } = await api("/api/account/security");
+  if (!ok) return;
+  const on = body.two_factor;
+  $("#security-2fa").textContent = on ? t("account.twofa_status_on") : t("account.twofa_status_off");
+  $("#security-2fa").dataset.on = String(on);
+  const left = body.recovery_codes_left;
+  $("#security-codes").textContent = t("account.codes_left", { n: left });
+  $("#security-codes").dataset.on = String(left > 3);
+  $("#twofa-off").hidden = on;
+  $("#twofa-disable").hidden = !on;
+  $("#twofa-setup").hidden = true;
+  $("#twofa-start").hidden = false;
+}
+
+async function renderSessions() {
+  const list = $("#account-sessions");
+  const { ok, body } = await api("/api/account/sessions");
+  if (!ok) { list.replaceChildren(h("li", {}, errorText(body))); return; }
+  const when = (iso) => new Date(iso).toLocaleString(state.lang, { dateStyle: "medium", timeStyle: "short" });
+  list.replaceChildren(...body.map((s) => h("li", {},
+    h("span", {}, s.device || t("account.unknown_device"),
+      h("small", {}, s.current ? t("account.this_device") : t("account.last_seen", { when: when(s.last_seen_at) }))),
+    s.current ? null : h("button", { type: "button", class: "btn btn-outline", onclick: async () => {
+      const r = await api(`/api/account/sessions/${encodeURIComponent(s.id)}`, { method: "DELETE" });
+      $("#account-status").textContent = r.ok ? t("account.session_ended") : errorText(r.body);
+      renderSessions();
+    } }, t("account.logout")))));
+}
+
+function drawQr(canvas, rows) {
+  const ctx = canvas.getContext("2d");
+  const n = rows.length + 8; // 4 moduły marginesu z każdej strony
+  const scale = Math.floor(canvas.width / n);
+  const offset = Math.floor((canvas.width - scale * rows.length) / 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#000000";
+  rows.forEach((row, y) => { for (let x = 0; x < row.length; x++) if (row[x] === "1") ctx.fillRect(offset + x * scale, offset + y * scale, scale, scale); });
+}
+
+async function startTwoFactor(e) {
+  e.preventDefault();
+  const r = await api("/api/account/2fa/setup", { method: "POST", json: { password: $("#twofa-password").value } });
+  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
+  e.target.reset();
+  $("#twofa-start").hidden = true;
+  $("#twofa-setup").hidden = false;
+  drawQr($("#twofa-qr"), r.body.qr);
+  $("#twofa-link").href = r.body.uri;
+  $("#twofa-secret").textContent = r.body.secret;
+  $("#twofa-code").focus();
+}
+
+async function confirmTwoFactor(e) {
+  e.preventDefault();
+  const r = await api("/api/account/2fa/enable", { method: "POST", json: { code: $("#twofa-code").value.trim() } });
+  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
+  e.target.reset();
+  state.auth.user.two_factor = true;
+  $("#account-status").textContent = t("account.twofa_enabled");
+  await renderSecurity();
+  showCodes(r.body.recovery_codes);
+}
+
+async function disableTwoFactor(e) {
+  e.preventDefault();
+  const r = await api("/api/account/2fa/disable", { method: "POST", json: { password: $("#twofa-off-password").value, code: $("#twofa-off-code").value.trim() } });
+  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
+  e.target.reset();
+  state.auth.user.two_factor = false;
+  $("#account-status").textContent = t("account.twofa_disabled");
+  renderSecurity();
+}
+
+async function regenerateCodes(e) {
+  e.preventDefault();
+  const r = await api("/api/account/recovery-codes", { method: "POST", json: { password: $("#codes-password").value } });
+  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
+  e.target.reset();
+  renderSecurity();
+  showCodes(r.body.recovery_codes);
+}
+
+async function changeEmail(e) {
+  e.preventDefault();
+  const r = await api("/api/account/email", { method: "POST", json: { email: $("#email-new").value.trim(), password: $("#email-password").value } });
+  if (!r.ok) { $("#account-status").textContent = errorText(r.body); return; }
+  e.target.reset();
+  state.auth = { ...state.auth, user: r.body.user };
+  $("#account-email").textContent = r.body.user.email;
+  $("#account-status").textContent = r.body.verification_sent ? t("account.email_changed_verify") : t("account.email_changed");
 }
 
 async function renderAccountSubs() {
@@ -911,7 +1116,18 @@ function bind() {
   $("#account-btn").addEventListener("click", openAccount);
   $("#auth-form").addEventListener("submit", submitAuth);
   for (const tab of document.querySelectorAll("#auth-tabs [role=tab]")) tab.addEventListener("click", () => setAuthView(tab.dataset.view));
-  $("#auth-forgot").addEventListener("click", () => setAuthView("forgot"));
+  $("#auth-forgot").addEventListener("click", () => { setAuthView(forgotView()); focusAuth(); });
+  $("#auth-alt").addEventListener("click", () => { setAuthView($("#auth-alt").dataset.view); focusAuth(); });
+  $("#auth-back").addEventListener("click", () => { state.challenge = null; setAuthView("login"); focusAuth(); });
+  closeOnButtons($("#codes-dialog"));
+  $("#codes-copy").addEventListener("click", copyCodes);
+  $("#codes-download").addEventListener("click", downloadCodes);
+  $("#twofa-start").addEventListener("submit", startTwoFactor);
+  $("#twofa-confirm").addEventListener("submit", confirmTwoFactor);
+  $("#twofa-disable").addEventListener("submit", disableTwoFactor);
+  $("#codes-form").addEventListener("submit", regenerateCodes);
+  $("#email-form").addEventListener("submit", changeEmail);
+  setupPasswordHelpers();
   $("#auth-show").addEventListener("click", () => {
     const input = $("#auth-password");
     const show = input.type === "password";
