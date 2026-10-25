@@ -214,6 +214,10 @@ Ograniczenia darmowego planu:
 - bez dysku: baza (historia, obserwacje, konta) znika przy restarcie i każdym wdrożeniu.
   Na stałe: plan płatny i w `render.yaml` odkomentuj sekcję `disk`,
 - obserwator powiadomień nie działa niezawodnie, bo usługa śpi,
+  (obejście: darmowy monitoring, np. UptimeRobot albo cron-job.org, który co 10 minut
+  otwiera `https://<nazwa>.onrender.com/healthz`; usługa wtedy nie zasypia, obserwator działa
+  co godzinę, a baza nie znika przy uśpieniu, tylko przy wdrożeniu lub restarcie. Jedna usługa
+  całą dobę zużywa ok. 744 z 750 darmowych godzin w miesiącu),
 - aplikacja nie ufa nagłówkowi `X-Forwarded-For` (Render nie czyści go, więc klient mógłby
   podać dowolne IP), dlatego limity zapytań są wspólne dla wszystkich użytkowników instancji.
   Do użytku prywatnego to nie przeszkadza; publiczną instancję postaw na VPS z Caddy.
