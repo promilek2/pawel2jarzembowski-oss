@@ -67,6 +67,20 @@ async def test_help_and_unknown(bot: tuple[TelegramBot, FakeNotifyServices]) -> 
     assert "Nie znam" in last(services)
 
 
+async def test_plain_question_gets_help_answer(
+    bot: tuple[TelegramBot, FakeNotifyServices],
+) -> None:
+    b, services = bot
+    await b.handle("1", "jak zainstalować aplikację?")
+    assert "Zainstaluj" in last(services) and "/pomoc" in last(services)
+    await b.handle("1", "/pomoc zapomniałem hasła")
+    assert "Nie pamiętam hasła" in last(services)
+    await b.handle("1", "qwerty asdf")
+    assert "/szukaj" in last(services)  # brak tematu: lista komend
+    await b.handle("1", "<b>boli</b> mnie")
+    assert "porad medycznych" in last(services)
+
+
 async def test_search(bot: tuple[TelegramBot, FakeNotifyServices]) -> None:
     b, services = bot
     await b.handle("7", "/szukaj okulsta w Gdyni")

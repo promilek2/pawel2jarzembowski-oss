@@ -123,3 +123,9 @@ def test_cli_benefits_and_version(fake: FakeNfz, monkeypatch: pytest.MonkeyPatch
     result = runner.invoke(cli.app, ["swiadczenia", "okul"])
     assert result.exit_code == 0
     assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in result.output
+
+
+def test_cli_helper_answers_from_builtin_help() -> None:
+    result = runner.invoke(cli.app, ["pomoc", "jak", "obserwować", "termin?"])
+    assert result.exit_code == 0, result.output
+    assert "Obserwuj" in result.output

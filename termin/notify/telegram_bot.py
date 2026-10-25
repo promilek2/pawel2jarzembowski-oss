@@ -17,6 +17,7 @@ from typing import Any
 
 import httpx
 
+from termin.assistant import faq_answer
 from termin.core.benefits import Variant
 from termin.core.client import NfzError
 from termin.core.i18n import format_number, when
@@ -41,7 +42,8 @@ HELP = (
     "<b>/szukaj</b> okulista; 81-310 Gdynia\n"
     "<b>/obserwuj</b> rezonans; Gdańsk; przed 31.12.2026; 40 km; zgoda\n"
     "<b>/lista</b>: Twoje obserwowane wyszukiwania\n"
-    "<b>/stop</b> token albo <b>/stop wszystko</b>\n\n"
+    "<b>/stop</b> token albo <b>/stop wszystko</b>\n"
+    "Pytanie o obsługę? Napisz je zwykłym tekstem, np. „co znaczy prognoza NFZ”.\n\n"
     "Dane: NFZ (aktualizowane przez placówki ok. raz w tygodniu). Zawsze potwierdź termin "
     "telefonicznie. To nie jest oficjalna aplikacja NFZ."
 )
@@ -161,12 +163,30 @@ class TelegramBot:
         }
         handler = handlers.get(command)
         if handler is None:
+            if not text.lstrip().startswith("/"):
+                await self._question(chat_id, text.strip()[:500])  # zwykłe pytanie
+                return
             await self.reply(chat_id, "Nie znam tej komendy. Wpisz /pomoc.")
             return
         await handler(chat_id, args.strip())
 
-    async def _help(self, chat_id: str, _args: str) -> None:
+    async def _help(self, chat_id: str, args: str) -> None:
+        if args:
+            await self._question(chat_id, args)
+            return
         await self.reply(chat_id, HELP)
+
+    async def _question(self, chat_id: str, question: str) -> None:
+        """Pytanie zwykłym tekstem: odpowiedź z wbudowanej pomocy (bez wysyłania do AI)."""
+        answer = faq_answer(question)
+        if answer.topic is None:
+            await self.reply(chat_id, HELP)
+            return
+        await self.reply(
+            chat_id,
+            f"{html.escape(answer.reply)}\n\n<i>Przyciski są w aplikacji internetowej. "
+            "Komendy bota: /pomoc</i>",
+        )
 
     async def _search(self, chat_id: str, args: str) -> None:
         q = parse_query(args)

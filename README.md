@@ -79,7 +79,8 @@ termin szukaj kardiolog --dla-dzieci -w mazowieckie --json
 ```
 
 Więcej komend: `termin --help` (`statystyki`, `historia`, `eksport`, `obserwuj`, `watcher`,
-`telegram`, `serwer`, `dane usun`).
+`telegram`, `serwer`, `dane usun`, `pomoc "co znaczy prognoza NFZ"`). W bocie Telegram pytanie o
+obsługę można napisać zwykłym tekstem.
 
 **Powiadomienia przez ntfy** (aplikacja ntfy na telefon, bez konta):
 

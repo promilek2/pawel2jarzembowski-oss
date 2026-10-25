@@ -16,6 +16,7 @@ from rich.console import Console
 from rich.table import Table
 
 from termin import __version__
+from termin.assistant import Assistant, Turn
 from termin.cli.render import print_json, print_results
 from termin.config import Settings, get_settings
 from termin.core.benefits import BenefitCatalog, Resolution, Variant
@@ -86,6 +87,23 @@ def benefits(fragment: str = typer.Argument(..., help="Fragment nazwy, np. 'okul
         console.print("Brak świadczeń pasujących do tego fragmentu.")
     for name in names:
         console.print(name)
+
+
+@app.command("pomoc")
+def ask_helper(
+    question: list[str] = typer.Argument(..., help="Pytanie, np. 'co znaczy prognoza NFZ'."),
+) -> None:
+    """Zapytaj pomocnika, jak korzystać z Termin (z kluczem TERMIN_AI_API_KEY: Claude)."""
+    text = " ".join(question).strip()[:500]
+
+    async def run() -> str:
+        helper = Assistant(get_settings())
+        try:
+            return (await helper.answer([Turn("user", text)])).reply
+        finally:
+            await helper.aclose()
+
+    console.print(asyncio.run(run()), markup=False, highlight=False)
 
 
 class Mode(StrEnum):
