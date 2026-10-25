@@ -116,7 +116,7 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   `termin/notify/webpush.py` (RFC 8291 + VAPID, lista `PUSH_HOSTS` przeciw SSRF, kanał `push`),
   przypomnienia o wizytach w `watcher.py`. Frontend: kod konta w leniwym `static/account.js`
   (importuje helpery z `app.js`; budżet 40 KB w teście). Tryb „Dzwonię” i lista do druku w
-  leniwym `static/extras.js` + `extras.css` (budżet 20 KB). Historia, statystyki i mapa w leniwym `static/insights.js` (budżet 12 KB), pomocnik w `chat.js`. Pierwszy pakiet ma ok. 140/150 KB:
+  leniwym `static/extras.js` + `extras.css` (budżet 20 KB). Historia, statystyki i mapa w leniwym `static/insights.js` (budżet 12 KB), pomocnik w `chat.js`, instalacja PWA i komunikat o nowej wersji w `later.js` (po starcie). Pierwszy pakiet ma ok. 147/150 KB:
   nowe ekrany dokładaj do modułów leniwych.
 - Obserwacja wymaga zgody (`consent`): API, `--zgoda` w CLI, `; zgoda` w bocie. Bez niej
   `SubscribeError`.

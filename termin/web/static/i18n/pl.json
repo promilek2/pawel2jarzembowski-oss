@@ -525,5 +525,9 @@
     "nocer": "bez zapisów przez IKP",
     "exact": "z dokładnym adresem",
     "count": "Widoczne placówki: {n} z {total}."
+  },
+  "update": {
+    "ready": "Jest nowa wersja Termin z poprawkami.",
+    "reload": "Odśwież"
   }
 }

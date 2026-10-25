@@ -859,28 +859,6 @@ function isIos() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
-function setupInstall() {
-  const button = $("#install-btn");
-  if (isStandalone()) return;
-  if (isIos()) button.hidden = false; // Safari nie ma zdarzenia instalacji: pokazujemy instrukcję
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    state.installPrompt = event;
-    button.hidden = false;
-  });
-  window.addEventListener("appinstalled", () => { button.hidden = true; state.installPrompt = null; announce(t("install.done")); });
-  button.addEventListener("click", async () => {
-    if (state.installPrompt) {
-      state.installPrompt.prompt();
-      const choice = await state.installPrompt.userChoice;
-      if (choice.outcome === "accepted") button.hidden = true;
-      state.installPrompt = null;
-    } else {
-      $("#install-dialog").showModal();
-    }
-  });
-}
-
 // ------------------------------------------------------------------ pamięć w urządzeniu (zgoda)
 
 function setupStorageBanner() {
@@ -995,7 +973,6 @@ function bind() {
   $("#print-list").addEventListener("click", () => extras().then((m) => m.printList(state.last)));
   $("#send-list").addEventListener("click", () => extras().then((m) => m.sendList(state.last)));
   renderSaved();
-  setupInstall();
   setupStorageBanner();
 }
 
@@ -1017,8 +994,11 @@ async function init() {
     if (new URLSearchParams(location.search).has("pomoc")) chat().then((m) => m.toggleChat());
   }
   if (applyUrlParams()) runSearch(formParams(), { auto: true });
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  import("./later.js").then((m) => { m.setupInstall(); if ("serviceWorker" in navigator) m.registerWorker(); });
 }
+
+// Zdarzenie instalacji przychodzi wcześnie; resztę obsługi instalacji ma later.js.
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); state.installPrompt = e; $("#install-btn").hidden = false; });
 
 init();
 

@@ -523,5 +523,9 @@
     "nocer": "not booked via IKP",
     "exact": "with an exact address",
     "count": "Facilities shown: {n} of {total}."
+  },
+  "update": {
+    "ready": "A new version of Termin is available.",
+    "reload": "Reload"
   }
 }
