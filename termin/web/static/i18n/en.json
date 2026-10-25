@@ -486,7 +486,8 @@
   "call": {
     "button": "Call mode (large text)",
     "say": "What to say",
-    "after": "After the call"
+    "after": "After the call",
+    "read": "Read aloud"
   },
   "chat": {
     "title": "How does it work?",

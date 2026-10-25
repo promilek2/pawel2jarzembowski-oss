@@ -488,7 +488,8 @@
   "call": {
     "button": "Tryb rozmowy (duże litery)",
     "say": "Co powiedzieć",
-    "after": "Po rozmowie"
+    "after": "Po rozmowie",
+    "read": "Przeczytaj na głos"
   },
   "chat": {
     "title": "Jak to działa?",

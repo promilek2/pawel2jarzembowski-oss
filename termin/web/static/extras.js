@@ -57,6 +57,39 @@ export async function openCallMode(r, data) {
         h("button", { type: "button", class: "btn btn-outline", onclick: () => dialog.close() }, t("common.close"))))));
   dialog.showModal();
   dialog.querySelector(".call-number")?.focus();
+  addReadAloud(dialog, r);
+}
+
+// Czytanie na głos syntezatorem urządzenia. Tylko głosy lokalne (`localService`): głosy
+// „sieciowe” wysyłałyby tekst do dostawcy przeglądarki.
+function localVoice() {
+  const pick = () => speechSynthesis.getVoices().find((v) => v.localService && v.lang.toLowerCase().startsWith(document.documentElement.lang));
+  const now = pick();
+  if (now || !("onvoiceschanged" in speechSynthesis)) return Promise.resolve(now);
+  return new Promise((resolve) => {
+    const done = () => resolve(pick());
+    speechSynthesis.addEventListener("voiceschanged", done, { once: true });
+    setTimeout(done, 1500);
+  });
+}
+
+async function addReadAloud(dialog, r) {
+  if (!("speechSynthesis" in window)) return;
+  const voice = await localVoice();
+  if (!voice || !dialog.open) return;
+  const digits = (r.phone || "").replace(/\D/g, "").split("").join(" ");
+  const text = [r.provider || r.place, [r.address, r.locality].filter(Boolean).join(", "), whenLine(r),
+    digits ? `${t("card.call")}: ${digits}` : ""].filter(Boolean).join(". ");
+  const button = h("button", { type: "button", class: "btn btn-outline", "aria-pressed": "false", onclick: () => {
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); button.setAttribute("aria-pressed", "false"); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voice; u.lang = voice.lang; u.rate = 0.9;
+    u.onend = () => button.setAttribute("aria-pressed", "false");
+    button.setAttribute("aria-pressed", "true");
+    speechSynthesis.speak(u);
+  } }, t("call.read"));
+  dialog.querySelector(".call-when")?.after(button);
+  dialog.addEventListener("close", () => speechSynthesis.cancel(), { once: true });
 }
 
 // ------------------------------------------------------------------ lista do druku

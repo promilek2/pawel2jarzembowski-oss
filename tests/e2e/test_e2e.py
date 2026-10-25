@@ -627,3 +627,32 @@ def test_quick_filters_hide_results_without_new_search(page) -> None:  # type: i
     chips.first.click()
     assert page.locator("#result-list > li:visible").count() == total
     assert requests == []
+
+
+FAKE_TTS = """
+window.__spoken = [];
+class FakeUtterance { constructor(text) { this.text = text; } }
+const voices = [{ localService: false, lang: "pl-PL" }, { localService: true, lang: "pl-PL" }];
+Object.defineProperty(window, "SpeechSynthesisUtterance", { value: FakeUtterance });
+Object.defineProperty(window, "speechSynthesis", { value: {
+  speaking: false, getVoices: () => voices, addEventListener() {}, cancel() {},
+  speak(u) { window.__spoken.push({ text: u.text, local: u.voice.localService }); },
+} });
+"""
+
+
+def test_call_mode_reads_aloud_with_local_voice(browser, base_url) -> None:  # type: ignore[no-untyped-def]
+    context = browser.new_context(viewport=MOBILE)
+    context.add_init_script(NO_BANNER + FAKE_TTS)
+    pg = context.new_page()
+    pg.goto(base_url)
+    search(pg, "okulista dorośli")
+    pg.wait_for_selector("#result-list li")
+    card = pg.locator("#result-list article").first
+    card.locator(".script summary").click()
+    card.get_by_role("button", name="Tryb rozmowy (duże litery)").click()
+    pg.get_by_role("button", name="Przeczytaj na głos").click()
+    spoken = pg.evaluate("() => window.__spoken")
+    assert len(spoken) == 1 and spoken[0]["local"] is True
+    assert "prognoza NFZ" in spoken[0]["text"] and "0 0" in spoken[0]["text"]
+    context.close()
