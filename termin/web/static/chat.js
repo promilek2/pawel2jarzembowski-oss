@@ -144,7 +144,7 @@ function suggestionKeys() {
   if (results && !results.length) keys.push("chat.s_none");
   if (results?.some((r) => r.in_cer)) keys.push("chat.s_cer");
   if (results?.some((r) => r.location_approx)) keys.push("chat.s_approx");
-  return [...keys, "chat.s1", "chat.s2", "chat.s3"].slice(0, 3);
+  return [...keys, "chat.s1", "chat.s2", "chat.s_news", "chat.s3"].slice(0, 3);
 }
 
 function renderSuggest() {

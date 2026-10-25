@@ -359,5 +359,5 @@ def test_privacy_policy_names_anthropic_only_with_key(tmp_path: Path) -> None:
 def test_chat_suggestions_have_builtin_answers(lang: str) -> None:
     static = Path(__file__).resolve().parents[1] / "termin" / "web" / "static"
     chat = json.loads((static / "i18n" / f"{lang}.json").read_text("utf-8"))["chat"]
-    for key in ("s1", "s2", "s3", "s_none", "s_cer", "s_approx"):
+    for key in ("s1", "s2", "s3", "s_none", "s_cer", "s_approx", "s_news"):
         assert faq_answer(chat[key], lang).topic is not None, (lang, key, chat[key])

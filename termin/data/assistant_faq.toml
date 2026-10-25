@@ -323,3 +323,31 @@ If your account or cases disappear (e.g. after a server restart without a perman
 keywords_uk = ["резервн", "копі", "відновит", "зникл", "втрат", "завантажити мої дані"]
 answer_uk = """Копію даних зробите в «Акаунт» → «Завантажити мої дані»: збережеться файл .json зі справами, нотатками та стеженнями.
 Якщо акаунт або справи зникнуть (напр. після перезапуску сервера без постійного диска), створіть акаунт знову й оберіть «Акаунт» → «Відновити справи з файлу». Дублікати пропускаються, тож імпорт можна повторити."""
+
+[[topic]]
+id = "news"
+weight = 3
+keywords = ["co nowego", "nowosc", "nowe funkcj", "zmiany", "aktualizac"]
+answer = """Nowości w Termin:
+- „Najkrótsza prognoza w okolicy” nad wynikami: gdzie i o ile krócej się czeka, jeśli pojedziesz trochę dalej,
+- szybkie filtry wyników („z telefonem”, „bez zapisów przez IKP”, „z dokładnym adresem”) i „Pokaż jeszcze”,
+- „Wyślij listę”: 5 placówek z telefonami do wysłania SMS-em, oraz „Drukuj listę”,
+- „Tryb rozmowy” z dużym numerem i „Przeczytaj na głos”,
+- motyw jasny/ciemny w stopce, „Kopiuj numer” na komputerze,
+- „Przywróć sprawy z pliku” w koncie i ten pomocnik z przyciskiem „Pokaż mi”."""
+keywords_en = ["what's new", "whats new", "new feature", "changes", "update"]
+answer_en = """New in Termin:
+- “Shortest forecast nearby” above the results: where and how much shorter the wait is if you travel a bit further,
+- quick result filters (“with a phone number”, “not booked via IKP”, “with an exact address”) and “Show more”,
+- “Send list”: 5 facilities with phone numbers to send by text message, plus “Print list”,
+- “Call mode” with a large number and “Read aloud”,
+- light/dark theme in the footer, “Copy number” on a computer,
+- “Restore cases from file” in your account and this helper with a “Show me” button."""
+keywords_uk = ["що нового", "новин", "нові функці", "змін", "оновлен"]
+answer_uk = """Нове в Termin:
+- «Найкоротший прогноз поблизу» над результатами: де і наскільки менше чекати, якщо поїхати трохи далі,
+- швидкі фільтри результатів («з телефоном», «без запису через IKP», «з точною адресою») і «Показати ще»,
+- «Надіслати список»: 5 закладів із телефонами для SMS, а також «Друкувати список»,
+- «Режим розмови» з великим номером і «Прочитати вголос»,
+- світла/темна тема внизу сторінки, «Копіювати номер» на комп’ютері,
+- «Відновити справи з файлу» в акаунті та цей помічник із кнопкою «Покажи»."""

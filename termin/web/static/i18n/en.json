@@ -512,7 +512,8 @@
     "s_none": "Why are there no results?",
     "s_cer": "What does “Book via IKP” mean?",
     "s_approx": "Why is the distance approximate?",
-    "show": "Show me"
+    "show": "Show me",
+    "s_news": "What's new?"
   },
   "sendlist": {
     "button": "Send list",
