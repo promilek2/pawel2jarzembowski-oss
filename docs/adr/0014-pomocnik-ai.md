@@ -12,7 +12,7 @@ porad medycznych, bez śledzenia, nie logujemy danych wrażliwych, testy bez sie
 
 ## Decyzja
 
-- Okrągły przycisk „?” w prawym dolnym rogu. Nic nie wyskakuje samo. Kod okienka
+- Przycisk „? Pomoc” w nagłówku (obok „A+”; pływający przycisk w rogu zasłaniał wyniki na telefonie). Nic nie wyskakuje samo. Kod okienka
   (`static/chat.js`, `chat.css`) ładuje się dopiero po kliknięciu, więc pierwszy pakiet rośnie
   o ok. 2 KB (budżet 150 KB, osobny budżet 12 KB na czat w teście).
 - Okienko to nie-modalny `<dialog>`: strona działa dalej, Escape zamyka i oddaje fokus

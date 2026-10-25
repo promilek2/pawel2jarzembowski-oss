@@ -77,7 +77,7 @@ Temat ntfy działa jak hasło: wybierz trudny do zgadnięcia.
 
 ### Pomocnik „Jak to działa?”
 
-Okienko „?” w rogu odpowiada na pytania o obsługę aplikacji. Bez klucza API odpowiada z
+Okienko „? Pomoc” (w nagłówku) odpowiada na pytania o obsługę aplikacji. Bez klucza API odpowiada z
 wbudowanej bazy (`termin/data/assistant_faq.toml`) i nic nie wychodzi poza serwer. Z kluczem
 pytanie trafia do Anthropic (model Claude); przed pierwszym pytaniem pokazujemy o tym
 informację. Rozmowy nie zapisujemy ani w bazie, ani w przeglądarce, a jej treści nie logujemy

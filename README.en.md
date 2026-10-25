@@ -38,7 +38,7 @@ Open source. **Not an official NFZ application.**
 - Signed-in extras: “I checked by phone” reports (aggregated: does the NFZ date match what the
   clinic says?), “My cases” with referrals, visit dates and private notes, and Web Push
   notifications on your phone with a reminder the day before a visit.
-- A small “How does it work?” helper (the “?” button) explains where things are and how to book.
+- A small “How does it work?” helper (the “? Help” button in the header) explains where things are and how to book.
   Works out of the box with built-in help; with an Anthropic API key, the Claude AI model answers.
   No medical advice, conversations are not stored.
 - Trends: whether a facility's queue is getting shorter, provincial medians, a district heat map.

@@ -307,9 +307,26 @@ function renderResults(data) {
 
   announce(data.results.length ? t("results.found", { n: data.total_found }) : t("results.none"));
   renderWiden(data);
+  renderTip(data);
   const target = location.hash.match(/wynik=([\w-]+)/);
   if (target) document.getElementById(`r-${target[1]}`)?.scrollIntoView();
   if (state.auth?.user) account().then((m) => m.loadPersonal(data));
+}
+
+// „Pojedziesz 23 km dalej, a prognoza jest krótsza o 39 dni”: porównanie najbliższej
+// placówki z najszybszą (bez pustych kolejek i placówek bez odległości).
+function renderTip(data) {
+  const box = $("#results-tip");
+  const ok = data.results.filter((r) => r.days_until >= 0 && r.distance_km != null && !r.alerts.some((a) => a.code === "empty_queue"));
+  const nearest = ok.reduce((a, b) => (b.distance_km < a.distance_km ? b : a), ok[0]);
+  const fastest = ok.reduce((a, b) => (b.days_until < a.days_until || (b.days_until === a.days_until && b.distance_km < a.distance_km) ? b : a), ok[0]);
+  const gain = nearest && fastest ? nearest.days_until - fastest.days_until : 0;
+  box.hidden = gain < 7;
+  if (box.hidden) { box.replaceChildren(); return; }
+  const place = (fastest.locality || "").toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase()) || fastest.provider || "";
+  box.replaceChildren(
+    t("results.tip", { km: fastest.distance_km, days: gain, place }), " ",
+    h("button", { type: "button", class: "link-btn", onclick: () => { const el = document.getElementById(`r-${fastest.id}`); el?.scrollIntoView({ block: "start" }); el?.focus(); } }, t("results.tip_show")));
 }
 
 // Pusty albo skromny wynik: jednym dotknięciem większy promień albo całe województwo.
@@ -446,7 +463,7 @@ function renderCard(r, index, data) {
     renderScript(r, data));
 
   return h("li", {},
-    h("article", { class: `ticket${top ? " ticket--top" : ""}`, id: `r-${r.id}`, "aria-label": `${t("card.rank", { n: index + 1 })}: ${r.provider || ""}` },
+    h("article", { class: `ticket${top ? " ticket--top" : ""}`, id: `r-${r.id}`, tabindex: "-1", "aria-label": `${t("card.rank", { n: index + 1 })}: ${r.provider || ""}` },
       renderStub(r, index, top),
       h("div", { class: "ticket-perf", "aria-hidden": "true" }),
       h("div", { class: "ticket-body" },

@@ -1,7 +1,7 @@
 /* Pomocnik „Jak to działa?” (ładowany razem z chat.js) */
 
 .chat-panel[open] {
-  position: fixed; inset: auto 1rem 4.75rem auto; margin: 0; z-index: 940;
+  position: fixed; inset: auto 1rem 1rem auto; margin: 0; z-index: 940;
   width: min(100vw - 2rem, 23rem); max-height: min(70dvh, 34rem); padding: 0.875rem;
   display: flex; flex-direction: column; gap: 0.625rem;
   border: 1.5px solid var(--line); border-radius: 18px;
@@ -30,5 +30,5 @@
 .chat-form .btn { flex: none; }
 
 @media (max-width: 30rem) {
-  .chat-panel[open] { inset: auto 0.5rem 4.5rem 0.5rem; width: auto; max-height: calc(100dvh - 6rem); }
+  .chat-panel[open] { inset: auto 0.5rem 0.5rem 0.5rem; width: auto; max-height: calc(100dvh - 1rem); }
 }

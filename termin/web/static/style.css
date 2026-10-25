@@ -472,7 +472,7 @@ dialog p { margin: 0; }
 .todo-banner { padding: 0.875rem 1rem; border-radius: 12px; border: 2px dashed var(--signal-ink); color: var(--warn-ink); }
 
 /* --- stopka --- */
-.site-footer { margin-top: 2rem; padding: 2rem 0 5rem; background: var(--panel); color: var(--panel-muted); }
+.site-footer { margin-top: 2rem; padding: 2rem 0 2.5rem; background: var(--panel); color: var(--panel-muted); }
 .site-footer a { color: var(--panel-text); }
 .site-footer a:hover { color: var(--signal); }
 .site-footer :focus-visible { outline-color: var(--focus-on-panel); }
@@ -590,10 +590,6 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 .chip-remove { font: inherit; font-size: 1.25rem; min-width: 44px; min-height: 44px; border: 0; border-left: 1px solid var(--line-soft); border-radius: 0 999px 999px 0; background: var(--surface); color: var(--ink); cursor: pointer; }
 .dispenser .check { color: var(--panel-text); }
 .dispenser .check input { accent-color: var(--signal); }
-.help-fab {
-  position: fixed; right: 1rem; bottom: 1rem; z-index: 900; width: 48px; height: 48px; border-radius: 50%;
-  border: 2px solid var(--ink); background: var(--surface); color: var(--ink); cursor: pointer;
-  font: 800 1.375rem/1 var(--font-display); box-shadow: 0 6px 20px rgb(0 0 0 / 0.22);
-}
-.help-fab:hover, .help-fab[aria-expanded="true"] { background: var(--ink); color: var(--surface); }
-.help-fab[hidden] { display: none; }
+.pill-icon { font-family: var(--font-display); font-weight: 800; font-size: 1.125rem; }
+.results-tip { margin: 0.5rem 0 0; padding: 0.75rem 0.875rem; border-radius: 12px; background: var(--surface); border-left: 6px solid var(--signal); font-weight: 650; line-height: 1.45; }
+.results-tip[hidden] { display: none; }

@@ -38,6 +38,9 @@
       <button type="button" id="large-text" class="pill" aria-pressed="false">
         <span aria-hidden="true">A+</span> <span class="pill-label" data-i18n="settings.large_text">Duży tekst</span>
       </button>
+      <button type="button" id="help-btn" class="pill" hidden aria-expanded="false" aria-haspopup="dialog">
+        <span aria-hidden="true" class="pill-icon">?</span> <span class="pill-label" data-i18n="chat.pill">Pomoc</span>
+      </button>
       <label class="pill pill-select">
         <span class="visually-hidden" data-i18n="settings.language">Język</span>
         <select id="lang">
@@ -159,6 +162,7 @@
             <h2 id="results-heading" tabindex="-1"></h2>
             <p id="results-meta" class="meta"></p>
             <p id="results-note" class="results-note" role="note" hidden></p>
+            <p id="results-tip" class="results-tip" hidden></p>
             <div id="results-widen" class="widen" hidden></div>
           </div>
           <div class="view-switch">
@@ -400,7 +404,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <button type="button" id="help-btn" class="help-fab" hidden aria-expanded="false" aria-label="Pomoc: jak to działa?" data-i18n-label="chat.open"><span aria-hidden="true">?</span></button>
 
   <dialog id="report-dialog" aria-labelledby="report-title">
     <form id="report-form" class="dialog-body stack" novalidate>

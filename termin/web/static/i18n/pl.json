@@ -62,7 +62,9 @@
     "benefit_names": "Świadczenia w wynikach: {names}",
     "slow": "Pobieram dane z NFZ… Przy dużym zasięgu to może potrwać do minuty (NFZ pozwala na 10 zapytań na 10 sekund).",
     "widen_label": "Mało wyników. Poszukać dalej?",
-    "widen": "Szukaj w {km} km"
+    "widen": "Szukaj w {km} km",
+    "tip": "Najkrótsza prognoza w okolicy: {place}, {km} km od Ciebie. To ok. {days} {days_word} krócej niż w najbliższej placówce.",
+    "tip_show": "Pokaż tę placówkę"
   },
   "card": {
     "no_date": "Brak terminu w danych",
@@ -481,7 +483,6 @@
     "after": "Po rozmowie"
   },
   "chat": {
-    "open": "Pomoc: jak to działa?",
     "title": "Jak to działa?",
     "intro_ai": "Zapytaj, gdzie co jest i jak korzystać z aplikacji. Nie udzielam porad medycznych.",
     "intro_faq": "Zapytaj, gdzie co jest i jak korzystać z aplikacji. Odpowiadam z wbudowanej pomocy. Nie udzielam porad medycznych.",
@@ -496,6 +497,7 @@
     "helper": "Pomocnik:",
     "s1": "Co znaczy „prognoza NFZ”?",
     "s2": "Jak zainstalować aplikację?",
-    "s3": "Jak obserwować termin?"
+    "s3": "Jak obserwować termin?",
+    "pill": "Pomoc"
   }
 }

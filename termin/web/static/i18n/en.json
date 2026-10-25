@@ -62,7 +62,9 @@
     "benefit_names": "Services in the results: {names}",
     "slow": "Fetching NFZ data… With a large radius this can take up to a minute (NFZ allows 10 requests per 10 seconds).",
     "widen_label": "Few results. Search further?",
-    "widen": "Search within {km} km"
+    "widen": "Search within {km} km",
+    "tip": "Shortest forecast nearby: {place}, {km} km from you. That is about {days} {days_word} less than at the nearest facility.",
+    "tip_show": "Show this facility"
   },
   "card": {
     "no_date": "No date in the data",
@@ -479,7 +481,6 @@
     "after": "After the call"
   },
   "chat": {
-    "open": "Help: how does it work?",
     "title": "How does it work?",
     "intro_ai": "Ask where things are and how to use the app. I don't give medical advice.",
     "intro_faq": "Ask where things are and how to use the app. Answers come from the built-in help (in Polish). I don't give medical advice.",
@@ -494,6 +495,7 @@
     "helper": "Helper:",
     "s1": "What does “NFZ forecast” mean?",
     "s2": "How do I install the app?",
-    "s3": "How do I watch for an earlier date?"
+    "s3": "How do I watch for an earlier date?",
+    "pill": "Help"
   }
 }

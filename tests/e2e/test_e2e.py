@@ -482,3 +482,14 @@ def test_help_chat_ai_notice(page) -> None:  # type: ignore[no-untyped-def]
     page.press("#chat-input", "Enter")
     page.wait_for_selector("#chat-log .chat-assistant:not(.chat-busy)")
     assert "Pokaż mapę" in page.locator("#chat-log").inner_text()
+
+
+def test_results_tip_points_to_faster_place(page) -> None:  # type: ignore[no-untyped-def]
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    tip = page.locator("#results-tip")
+    assert "Najkrótsza prognoza w okolicy" in tip.inner_text()
+    assert "GDYNIA" not in tip.inner_text()
+    tip.get_by_role("button").click()
+    assert page.evaluate("() => document.activeElement.id").startswith("r-")
+    assert _axe_violations(page) == []
