@@ -205,6 +205,8 @@ miesięczny limit wydatków. Na Render limity na IP są wspólne dla wszystkich,
 `TERMIN_AI_RATE_LIMIT` (6/min, 40/dzień) dotyczy całej instancji. Przed publicznym
 uruchomieniem zaakceptuj umowę powierzenia (DPA) Anthropic: polityka prywatności sama dopisze
 Anthropic jako odbiorcę, gdy klucz jest ustawiony (ADR-0014).
+Czy klucz działa, sprawdzisz pod `/api/status`: `assistant.mode` = `ai`, a `last_error`
+= `401` oznacza zły klucz, `400` zwykle brak kredytów, a `429` przekroczony limit.
 
 Ograniczenia darmowego planu:
 

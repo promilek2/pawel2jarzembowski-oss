@@ -109,6 +109,8 @@ def test_every_topic_has_keywords_and_answer() -> None:
         ("Boli mnie głowa, do jakiego lekarza?", "medical"),
         ("Wynik badań krwi: co znaczy?", "medical"),
         ("Gdzie jest mapa?", "distance"),
+        ("Jak szybciej dostać termin?", "tips"),
+        ("Muszę odwołać wizytę", "tips"),
     ],
 )
 def test_faq_matches_topic(question: str, topic: str) -> None:
@@ -233,6 +235,10 @@ async def test_api_error_falls_back_to_faq(tmp_path: Path, status: int) -> None:
     helper = Assistant(ai_settings(tmp_path), transport=fake.transport())
     answer = await helper.answer([Turn("user", "zapomniałem hasła")])
     assert answer.mode == "faq" and answer.topic == "password"
+    assert helper.status()["last_error"] == str(status)
+    fake.status = 200
+    assert (await helper.answer([Turn("user", "hasło")])).mode == "ai"
+    assert helper.status()["last_error"] is None
 
 
 async def test_daily_limit_switches_to_faq_and_resets(tmp_path: Path) -> None:
@@ -324,6 +330,10 @@ def test_api_ai_mode(tmp_path: Path) -> None:
         )
     assert res.json()["mode"] == "ai"
     assert "po angielsku" in fake.requests[0]["system"]
+    with make_client(tmp_path, settings, fake) as c:
+        status = c.get("/api/status").json()["assistant"]
+    assert status["mode"] == "ai" and status["model"] == "claude-opus-5-5"
+    assert "sk-ant" not in json.dumps(status)
 
 
 def test_api_disabled(tmp_path: Path) -> None:

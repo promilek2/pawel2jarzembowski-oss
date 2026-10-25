@@ -200,6 +200,8 @@ class Assistant:
         self._today = today
         self._day: dt.date | None = None
         self._used_today = 0
+        self.last_error: str | None = None
+        """Ostatni błąd API (np. „401”), żeby operator widział w /api/status zły klucz."""
         key = settings.ai_api_key.get_secret_value() if settings.ai_api_key else None
         self._client: anthropic.AsyncAnthropic | None = None
         if key and settings.ai_enabled:
@@ -218,6 +220,19 @@ class Assistant:
     @property
     def ai_available(self) -> bool:
         return self._client is not None
+
+    def status(self) -> dict[str, Any]:
+        """Stan pomocnika do /api/status (bez klucza i bez treści rozmów)."""
+        if self._client is None:
+            return {"mode": "faq"}
+        used = self._used_today if self._day == self._today() else 0
+        return {
+            "mode": "ai",
+            "model": self.settings.ai_model,
+            "used_today": used,
+            "daily_limit": self.settings.ai_daily_limit,
+            "last_error": self.last_error,
+        }
 
     def _take_budget(self) -> bool:
         today = self._today()
@@ -239,11 +254,16 @@ class Assistant:
             log.warning("assistant.daily_limit")
             return faq_answer(question, lang)
         try:
-            return await self._ask(history, lang)
+            answer = await self._ask(history, lang)
         except anthropic.APIStatusError as exc:
             log.warning("assistant.api_error", status=exc.status_code)
+            self.last_error = str(exc.status_code)
         except anthropic.APIConnectionError as exc:
             log.warning("assistant.connection_error", reason=type(exc).__name__)
+            self.last_error = type(exc).__name__
+        else:
+            self.last_error = None
+            return answer
         return faq_answer(question, lang)
 
     async def _ask(self, history: list[Turn], lang: Lang) -> Answer:

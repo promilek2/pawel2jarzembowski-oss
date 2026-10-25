@@ -285,3 +285,28 @@ keywords_en = ["who are you", "what are you", "what can you do", "help", "ai", "
 answer_en = """I'm Termin's helper. I can tell you where things are and how to use the app: how to search, what “NFZ forecast” means, how to call, watch for an earlier date, install the app or recover your account. I don't give medical advice."""
 keywords_uk = ["хто ти", "що ти", "що вмієш", "допомог", "ші", "чат", "бот"]
 answer_uk = """Я помічник застосунку Termin. Підкажу, де що знаходиться і як ним користуватися: як шукати, що означає «прогноз NFZ», як подзвонити, стежити за терміном, встановити застосунок чи відновити акаунт. Я не надаю медичних порад."""
+
+[[topic]]
+id = "tips"
+weight = 3
+keywords = ["porad", "wskazowk", "jak szybciej", "przyspiesz", "kiedy dzwonic", "o ktorej", "lista rezerwow", "odwolan", "odwolac", "rezygnac"]
+answer = """Kilka sprawdzonych sposobów na szybszy termin:
+- dzwoń rano, zaraz po otwarciu rejestracji, i obdzwoń kilka placówek z listy („Drukuj listę” pomaga odhaczać),
+- zapytaj o listę rezerwową i o terminy zwolnione przez innych pacjentów,
+- włącz „Obserwuj”, żeby dostać wiadomość, gdy prognoza się skróci,
+- jeśli masz skierowanie „pilne”, powiedz o tym od razu.
+Jeśli wizyta przestanie być potrzebna, odwołaj ją: zwolnione miejsce dostanie ktoś inny."""
+keywords_en = ["tip", "advice", "sooner", "faster", "speed up", "when to call", "what time", "waiting list", "cancel"]
+answer_en = """A few proven ways to get an earlier appointment:
+- call in the morning, right after the registration desk opens, and call several facilities from the list (“Print list” helps you tick them off),
+- ask about the reserve list and slots freed up by other patients,
+- turn on “Watch” to get a message when the forecast gets shorter,
+- if your referral is marked urgent (“pilne”), say so straight away.
+If you no longer need the visit, cancel it: someone else will get the freed slot."""
+keywords_uk = ["порад", "як швидше", "пришвидш", "коли дзвонит", "о котрій", "резервн", "скасув", "відмов"]
+answer_uk = """Кілька перевірених способів отримати прийом раніше:
+- дзвоніть зранку, одразу після відкриття реєстратури, і обдзвоніть кілька закладів зі списку («Друкувати список» допомагає відмічати),
+- запитайте про резервний список і про звільнені іншими пацієнтами терміни,
+- увімкніть «Стежити», щоб отримати повідомлення, коли прогноз скоротиться,
+- якщо направлення термінове («pilne»), одразу про це скажіть.
+Якщо візит більше не потрібен, скасуйте його: звільнене місце отримає хтось інший."""

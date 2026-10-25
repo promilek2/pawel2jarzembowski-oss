@@ -442,6 +442,7 @@ def create_app(
             "nfz_fallback": settings.nfz_fallback_url,
             "requests_made": client.requests_made,
             **client.health,
+            "assistant": request.app.state.assistant.status(),
         }
         if sprawdz:
             out["check"] = await nfz_probe(runtime)
