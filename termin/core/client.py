@@ -109,6 +109,8 @@ class NfzClient:
             follow_redirects=True,
         )
         self.requests_made = 0
+        self.health: dict[str, Any] = {"last_ok_at": None, "last_error": None, "fallbacks": 0}
+        """Stan połączenia z NFZ do /api/status (bez danych użytkowników)."""
 
     async def __aenter__(self) -> Self:
         return self
@@ -156,6 +158,7 @@ class NfzClient:
         if isinstance(exc, NfzNotFoundError) and not is_list:
             raise exc  # nieznane id kolejki: 1.3 ma inne identyfikatory, nie szukamy dalej
         log.warning("nfz.fallback", path=path, reason=type(exc).__name__)
+        self.health["fallbacks"] += 1
         NFZ_REQUESTS.labels(path.split("/")[1], "fallback").inc()
         return await self._fetch(path, params, base=fallback.rstrip("/"), api_version="1.3")
 
@@ -191,6 +194,8 @@ class NfzClient:
                 status = response.status_code
                 if status < 400:
                     NFZ_REQUESTS.labels(endpoint, "ok").inc()
+                    self.health["last_ok_at"] = time.time()
+                    self.health["last_ok_base"] = base or self._settings.nfz_base_url
                     try:
                         return response.json()
                     except ValueError as exc:
@@ -213,6 +218,8 @@ class NfzClient:
                 await self._sleep(min(delay, MAX_BACKOFF_S))
 
         NFZ_ERRORS.labels(endpoint, "unavailable").inc()
+        self.health["last_error"] = f"{endpoint}: {last_error}"
+        self.health["last_error_at"] = time.time()
         log.warning("nfz.unavailable", endpoint=endpoint, reason=last_error)
         raise NfzUnavailableError(f"API NFZ jest niedostępne ({last_error}). Spróbuj za chwilę.")
 

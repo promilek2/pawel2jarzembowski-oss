@@ -24,7 +24,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from termin import REPO_URL, __version__
 from termin.config import Settings, get_settings
 from termin.core.benefits import Variant
-from termin.core.client import NfzError
+from termin.core.client import NfzError, QueueQuery
 from termin.core.geo import GeocodingError
 from termin.core.models import Case, SortMode
 from termin.core.provinces import PROVINCES
@@ -417,6 +417,24 @@ def create_app(
             raise HTTPException(404, "Nie ma takiej obserwacji.")
         return Response(status_code=204)
 
+    @app.get("/api/status")
+    @limiter.limit("6/minute")
+    async def status(request: Request, sprawdz: bool = False) -> dict[str, Any]:
+        """Diagnostyka połączenia z NFZ (bez danych użytkowników). `sprawdz=1`: próbne zapytanie."""
+        runtime = rt(request)
+        client = runtime.client
+        out: dict[str, Any] = {
+            "version": __version__,
+            "nfz_api": settings.nfz_base_url,
+            "nfz_api_version": settings.nfz_api_version or "1.4",
+            "nfz_fallback": settings.nfz_fallback_url,
+            "requests_made": client.requests_made,
+            **client.health,
+        }
+        if sprawdz:
+            out["check"] = await nfz_probe(runtime)
+        return out
+
     @app.get("/healthz", include_in_schema=False)
     async def healthz(request: Request) -> JSONResponse:
         try:
@@ -590,3 +608,25 @@ def _page(title: str, body: str, *, legal: bool = False) -> str:
 <ul class="footer-links">{links}</ul>
 <p class="small">Termin nie jest oficjalną aplikacją NFZ.</p></div></footer>
 </body></html>"""
+
+
+async def nfz_probe(runtime: Runtime) -> dict[str, Any]:
+    """Jedno zapytanie kontrolne (okulistyka, pomorskie): kształt prawdziwych danych NFZ."""
+    query = QueueQuery(benefit="ŚWIADCZENIA Z ZAKRESU OKULISTYKI", province="11", case=1)
+    try:
+        page = await runtime.client.queues_page(query, 1)
+    except NfzError as exc:
+        return {"ok": False, "error": str(exc)}
+    entries = page.entries
+    return {
+        "ok": True,
+        "count": page.count,
+        "page_entries": len(entries),
+        "with_pcus": sum(1 for e in entries if e.pcus),
+        "with_first_date": sum(1 for e in entries if e.first_date),
+        "with_coords": sum(1 for e in entries if e.has_coords),
+        "in_cer": sum(1 for e in entries if e.in_cer),
+        "benefit_names": sorted({e.benefit for e in entries})[:10],
+        "sample_pcus": [e.pcus for e in entries if e.pcus][:5],
+        "skipped_unparsable": page.skipped,
+    }

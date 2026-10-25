@@ -283,3 +283,16 @@ def test_rate_limit(tmp_path: Path, fake: FakeNfz) -> None:
         assert r.headers["Retry-After"] == "60"
         assert c.get("/api/suggest", params={"q": "okul"}).status_code == 200  # osobny limit
         assert "termin_rate_limited_total" in c.get("/metrics").text
+
+
+def test_status_diagnostics(client: TestClient) -> None:
+    data = client.get("/api/status").json()
+    assert data["nfz_api"].startswith("https://apinfz.nfz.gov.pl")
+    assert data["nfz_api_version"] == "1.4"
+    assert "check" not in data
+    check = client.get("/api/status", params={"sprawdz": 1}).json()["check"]
+    assert check["ok"] is True
+    assert check["page_entries"] >= 1  # atrapa: 1. strona w dawnym formacie (z datami)
+    assert check["with_first_date"] + check["with_pcus"] >= 1
+    assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in check["benefit_names"]
+    assert client.get("/api/status").json()["last_ok_at"] is not None
