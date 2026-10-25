@@ -11,7 +11,7 @@ from rich.text import Text
 from termin.core.i18n import format_number, when
 from termin.core.models import RankedResult
 from termin.core.provinces import PROVINCES
-from termin.core.ranking import alert_text
+from termin.core.ranking import alert_text, shorter_nearby_text
 from termin.core.search import SearchResponse
 from termin.core.serialize import response_to_dict
 from termin.core.text import plural_pl
@@ -84,6 +84,9 @@ def print_results(console: Console, response: SearchResponse) -> None:
             str(i), _date_cell(r), place, _distance_cell(r), loc.phone or r.entry.phone or "—"
         )
     console.print(table)
+    tip = shorter_nearby_text(response.results)
+    if tip:
+        console.print(f"[bold]{tip}[/bold]", highlight=False)
     extra = []
     if response.total_found > len(response.results):
         extra.append(f"pokazano {len(response.results)} z {response.total_found}")

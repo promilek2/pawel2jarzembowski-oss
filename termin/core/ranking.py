@@ -246,3 +246,35 @@ def alert_text(alert: Alert, lang: str = "pl") -> str:
             with contextlib.suppress(ValueError):
                 params[key] = dt.date.fromisoformat(value).strftime("%d.%m.%Y")
     return t(f"alerts.{alert.code}", lang, **params)
+
+
+def shorter_nearby(
+    results: Iterable[RankedResult], min_gain_days: int = 7
+) -> tuple[RankedResult, int] | None:
+    """Placówka z najkrótszą prognozą, jeśli czeka się w niej wyraźnie krócej niż w najbliższej.
+
+    Zwraca (placówka, o ile dni krócej) albo None. Pomija puste kolejki i wyniki bez odległości.
+    """
+    ok = [
+        r
+        for r in results
+        if r.days_until is not None
+        and r.days_until >= 0
+        and r.distance_km is not None
+        and not is_empty_queue(r.entry)
+    ]
+    if not ok:
+        return None
+    nearest = min(ok, key=lambda r: r.distance_km or 0.0)
+    fastest = min(ok, key=lambda r: (r.days_until or 0, r.distance_km or 0.0))
+    gain = (nearest.days_until or 0) - (fastest.days_until or 0)
+    return (fastest, gain) if gain >= min_gain_days else None
+
+
+def shorter_nearby_text(results: Iterable[RankedResult]) -> str | None:
+    found = shorter_nearby(results)
+    if found is None:
+        return None
+    best, gain = found
+    place = (best.location.locality or best.entry.provider or "").title()
+    return t("tips.shorter_nearby", place=place, km=best.distance_km, days=gain)

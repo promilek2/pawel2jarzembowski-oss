@@ -21,6 +21,7 @@ from termin.assistant import faq_answer
 from termin.core.benefits import Variant
 from termin.core.client import NfzError
 from termin.core.i18n import format_number, when
+from termin.core.ranking import shorter_nearby_text
 from termin.core.search import SearchError, SearchRequest
 from termin.logs import get_logger
 from termin.notify.base import NotifyError
@@ -55,6 +56,9 @@ CONSENT_PROMPT = (
     "a szczegóły są w polityce prywatności.\n\n"
     "Jeśli się zgadzasz, wyślij:\n/obserwuj {args}; zgoda"
 )
+
+BOT_RESULTS = 20
+"""Ile wyników bierzemy do porównania („najkrótsza prognoza w okolicy”); pokazujemy 3."""
 
 _RADIUS = re.compile(r"^(\d{1,3}(?:[.,]\d+)?)\s*km$", re.IGNORECASE)
 _BEFORE = re.compile(r"^przed\s+(.+)$", re.IGNORECASE)
@@ -193,7 +197,7 @@ class TelegramBot:
         if not q.what or not q.where:
             await self.reply(chat_id, "Napisz np.: /szukaj okulista; 81-310 Gdynia")
             return
-        req = SearchRequest(text=q.what, where=q.where, radius_km=q.radius_km, limit=3)
+        req = SearchRequest(text=q.what, where=q.where, radius_km=q.radius_km, limit=BOT_RESULTS)
         try:
             resp = await self.runtime.search.search(req)
             if resp.resolution.status == "choose_variant":
@@ -202,7 +206,7 @@ class TelegramBot:
                         text=q.what,
                         where=q.where,
                         radius_km=q.radius_km,
-                        limit=3,
+                        limit=BOT_RESULTS,
                         variant=Variant.ADULT,
                     )
                 )
@@ -218,7 +222,7 @@ class TelegramBot:
             await self.reply(chat_id, "Nie znalazłem terminów. Spróbuj dodać np. „; 80 km”.")
             return
         lines = [f"<b>{html.escape(res.label)}</b>"]
-        for i, r in enumerate(resp.results, 1):
+        for i, r in enumerate(resp.results[:3], 1):
             first = r.expected_date
             if r.entry.is_forecast:
                 date_text = f"ok. {html.escape(r.entry.pcus or '')} (prognoza NFZ)"
@@ -237,6 +241,9 @@ class TelegramBot:
             )
             if r.entry.as_at:
                 lines.append(f"stan na {r.entry.as_at:%d.%m.%Y}")
+        tip = shorter_nearby_text(resp.results)
+        if tip:
+            lines.append(f"\n<b>{html.escape(tip)}</b>")
         lines.append("\nPotwierdź termin telefonicznie. Obserwuj: /obserwuj " + html.escape(args))
         await self.reply(chat_id, "\n".join(lines))
 

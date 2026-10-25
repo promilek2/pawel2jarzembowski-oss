@@ -183,3 +183,19 @@ def test_format_number() -> None:
     assert format_number(2.0) == "2"
     assert format_number(2.54) == "2,5"
     assert format_number(2.54, "en") == "2.5"
+
+
+def test_shorter_nearby(pool: list[Candidate]) -> None:
+    from termin.core.ranking import shorter_nearby, shorter_nearby_text
+
+    results = rank(pool, RankingOptions(today=TODAY, mode=SortMode.NEAREST))
+    found = shorter_nearby(results)
+    assert found is not None
+    best, gain = found
+    assert best.entry.id == "far-fast" and gain == 83  # 90 dni (2 km) vs 7 dni (60 km)
+    text = shorter_nearby_text(results)
+    assert text is not None and "60 km" in text and "83 dni krócej" in text
+    # bez wyraźnej różnicy (< 7 dni) nie ma podpowiedzi
+    close = [cand(entry("a", "2026-11-23"), 2.0), cand(entry("b", "2026-11-20"), 30.0)]
+    assert shorter_nearby(rank(close, RankingOptions(today=TODAY))) is None
+    assert shorter_nearby([]) is None

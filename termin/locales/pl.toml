@@ -33,3 +33,6 @@ today = "dziś"
 tomorrow = "jutro"
 in_days = "za {days} {days_word}"
 days_ago = "{days} {days_word} temu"
+
+[tips]
+shorter_nearby = "Najkrótsza prognoza w okolicy: {place}, {km} km od Ciebie. To ok. {days} {days_word} krócej niż w najbliższej placówce."
