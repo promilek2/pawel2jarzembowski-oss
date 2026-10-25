@@ -128,7 +128,8 @@ class Settings(BaseSettings):
     max_concurrent_searches: int = Field(default=8, ge=1)
     """Ile wyszukiwań (zapytań do NFZ) obsługujemy naraz; reszta czeka albo dostaje 503."""
     search_queue_timeout_s: float = Field(default=3.0, gt=0)
-    search_timeout_s: float = Field(default=25.0, gt=0)
+    search_timeout_s: float = Field(default=60.0, gt=0)
+    """API 1.4 przyjmuje 10 zapytań na 10 s, więc duży promień (kilka województw) trwa dłużej."""
     subscribe_rate_limit: str = "20/hour"
     max_subscriptions_per_target: int = Field(default=10, ge=1)
     max_subscriptions_per_user: int = Field(default=25, ge=1)

@@ -58,7 +58,10 @@
     "show_map": "Show map",
     "hide_map": "Hide map",
     "map_label": "Map of facilities in the results. The same information is in the list below.",
-    "benefit_names": "Services in the results: {names}"
+    "benefit_names": "Services in the results: {names}",
+    "slow": "Fetching NFZ data… With a large radius this can take up to a minute (NFZ allows 10 requests per 10 seconds).",
+    "widen_label": "Few results. Search further?",
+    "widen": "Search within {km} km"
   },
   "card": {
     "no_date": "No date in the data",
@@ -86,7 +89,8 @@
     "from_you": "from you",
     "forecast_sr": "NFZ forecast: about {pcus} wait, roughly until {date}. This is not a free slot.",
     "forecast_label": "NFZ forecast · ~{date}",
-    "cer": "Book via IKP"
+    "cer": "Book via IKP",
+    "average": "Clinic average: {n} days"
   },
   "when": {
     "today": "today",

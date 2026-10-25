@@ -58,7 +58,10 @@
     "show_map": "Pokaż mapę",
     "hide_map": "Ukryj mapę",
     "map_label": "Mapa placówek z wynikami. Te same informacje są na liście poniżej.",
-    "benefit_names": "Świadczenia w wynikach: {names}"
+    "benefit_names": "Świadczenia w wynikach: {names}",
+    "slow": "Pobieram dane z NFZ… Przy dużym zasięgu to może potrwać do minuty (NFZ pozwala na 10 zapytań na 10 sekund).",
+    "widen_label": "Mało wyników. Poszukać dalej?",
+    "widen": "Szukaj w {km} km"
   },
   "card": {
     "no_date": "Brak terminu w danych",
@@ -86,7 +89,8 @@
     "from_you": "od Ciebie",
     "forecast_sr": "Prognoza NFZ: około {pcus} oczekiwania, czyli mniej więcej do {date}. To nie jest wolny termin.",
     "forecast_label": "prognoza NFZ · ok. {date}",
-    "cer": "Zapisy przez IKP"
+    "cer": "Zapisy przez IKP",
+    "average": "Średnio {n} dni wg placówki"
   },
   "when": {
     "today": "dziś",

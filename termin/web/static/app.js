@@ -195,6 +195,7 @@ async function runSearch(params, { auto = false } = {}) {
   const submit = $("#search-form button[type=submit]");
   submit.disabled = true;
   announce(t("results.loading"));
+  const slow = setTimeout(() => announce(t("results.slow")), 4000); // limit NFZ: 10 zapytań / 10 s
   state.lastParams = params;
   updateShareUrl(params);
   try {
@@ -228,6 +229,7 @@ async function runSearch(params, { auto = false } = {}) {
       announce("");
     }
   } finally {
+    clearTimeout(slow);
     submit.disabled = false;
   }
 }
@@ -299,9 +301,29 @@ function renderResults(data) {
   if (state.map) drawMarkers(data);
 
   announce(data.results.length ? t("results.found", { n: data.total_found }) : t("results.none"));
+  renderWiden(data);
   const target = location.hash.match(/wynik=([\w-]+)/);
   if (target) document.getElementById(`r-${target[1]}`)?.scrollIntoView();
   if (state.auth?.user) account().then((m) => m.loadPersonal(data));
+}
+
+// Pusty albo skromny wynik: jednym dotknięciem większy promień albo całe województwo.
+function renderWiden(data) {
+  const box = $("#results-widen");
+  const radius = Number(state.lastParams?.get("radius")) || 50;
+  const few = data.results.length < 3 && data.status === "ok" && !data.note;
+  box.hidden = !few;
+  if (!few) { box.replaceChildren(); return; }
+  const go = (patch) => () => {
+    const params = new URLSearchParams(state.lastParams);
+    for (const [k, v] of Object.entries(patch)) params.set(k, v);
+    const radio = document.querySelector(`input[name=radius][value="${params.get("radius")}"]`);
+    if (radio) radio.checked = true;
+    runSearch(params);
+  };
+  const buttons = [100, 200, 300].filter((r) => r > radius).slice(0, 2)
+    .map((r) => h("button", { type: "button", class: "chip", onclick: go({ radius: String(r) }) }, t("results.widen", { km: r })));
+  box.replaceChildren(h("span", { class: "choices-label" }, t("results.widen_label")), ...buttons);
 }
 
 function telHref(phone) {
@@ -389,6 +411,7 @@ function renderCard(r, index, data) {
   const tags = [];
   if (r.for_children) tags.push(t("card.children"));
   if (r.awaiting != null) tags.push(t("card.waiting", { n: r.awaiting }));
+  if (r.average_period) tags.push(t("card.average", { n: r.average_period }));
   for (const a of access) tags.push(a);
 
   const tel = telHref(r.phone);

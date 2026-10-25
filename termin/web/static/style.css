@@ -572,3 +572,5 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .results-note { background: #3a2f12; color: #fbecc6; }
 }
+.widen { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+.widen .chip { background: var(--ink); color: var(--surface); font-weight: 750; }
