@@ -313,6 +313,7 @@ function renderResults(data) {
   renderWiden(data);
   renderTip(data);
   renderMore(data);
+  insights().then((m) => m.renderFilters(data));
   const target = location.hash.match(/wynik=([\w-]+)/);
   if (target) document.getElementById(`r-${target[1]}`)?.scrollIntoView();
   if (state.auth?.user) account().then((m) => m.loadPersonal(data));
@@ -487,7 +488,7 @@ function renderCard(r, index, data) {
     h("button", { type: "button", class: "btn btn-ink", onclick: () => extras().then((m) => m.openCallMode(r, data)) }, icon("phone"), t("call.button")),
     renderScript(r, data));
 
-  return h("li", {},
+  return h("li", { "data-phone": tel ? "1" : null, "data-cer": r.in_cer ? "1" : null, "data-approx": r.location_approx ? "1" : null },
     h("article", { class: `ticket${top ? " ticket--top" : ""}`, id: `r-${r.id}`, tabindex: "-1", "aria-label": `${t("card.rank", { n: index + 1 })}: ${r.provider || ""}` },
       renderStub(r, index, top),
       h("div", { class: "ticket-perf", "aria-hidden": "true" }),

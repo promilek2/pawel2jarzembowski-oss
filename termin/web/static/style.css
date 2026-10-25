@@ -620,3 +620,7 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 .footer-theme { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0; }
 .footer-theme select { min-height: 44px; border-radius: 10px; padding: 0 0.75rem; font: inherit; background: var(--panel-2); color: var(--panel-text); border: 1.5px solid var(--panel-line); }
 .more-results { display: flex; justify-content: center; margin: 1rem 0 0; }
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.75rem 0 0; }
+.filters .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+#result-list.f-phone > li:not([data-phone]), #result-list.f-nocer > li[data-cer], #result-list.f-exact > li[data-approx] { display: none; }
+.filters-count { font-weight: 650; color: var(--ink-2); }

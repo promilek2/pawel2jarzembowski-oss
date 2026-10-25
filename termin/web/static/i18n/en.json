@@ -514,5 +514,12 @@
     "head": "Termin: {label} – best facilities (NFZ data):",
     "tip": "Call and ask for the nearest free date. Have the referral and PESEL ready.",
     "copied": "List copied. Paste it into a text message or a messenger."
+  },
+  "filters": {
+    "label": "Show only:",
+    "phone": "with a phone number",
+    "nocer": "not booked via IKP",
+    "exact": "with an exact address",
+    "count": "Facilities shown: {n} of {total}."
   }
 }

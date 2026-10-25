@@ -14,6 +14,14 @@ function loadCss() {
   return cssReady;
 }
 
+// Wyniki widoczne po szybkich filtrach (insights.js ukrywa je klasami na liście).
+function visibleResults(data) {
+  const hidden = new Set([...document.querySelectorAll("#result-list > li")]
+    .filter((li) => getComputedStyle(li).display === "none")
+    .map((li) => li.querySelector("article")?.id.slice(2)));
+  return data.results.filter((r) => !hidden.has(r.id));
+}
+
 function whenLine(r) {
   if (r.forecast && r.pcus) return t("print.forecast", { pcus: r.pcus });
   if (r.first_date) return fmtDate(r.first_date);
@@ -61,7 +69,7 @@ export async function printList(data) {
     sheet = h("section", { id: "print-sheet", "aria-hidden": "true" });
     document.body.append(sheet);
   }
-  const rows = data.results.slice(0, 12).map((r, i) => h("tr", {},
+  const rows = visibleResults(data).slice(0, 12).map((r, i) => h("tr", {},
     h("td", {}, String(i + 1)),
     h("td", {}, h("strong", {}, r.provider || r.place || "—"), h("br", {}), [r.address, r.locality].filter(Boolean).join(", "),
       r.distance_km != null ? ` (${r.location_approx ? "~" : ""}${t("card.km", { km: r.distance_km })})` : ""),
@@ -84,7 +92,7 @@ export async function printList(data) {
 
 // Krótki tekst z 5 najlepszymi placówkami (telefon + prognoza), np. dla rodziny.
 export function listText(data, url = location.href) {
-  const lines = data.results.slice(0, 5).map((r, i) =>
+  const lines = visibleResults(data).slice(0, 5).map((r, i) =>
     `${i + 1}. ${r.provider || r.place || "—"}, ${[r.address, r.locality].filter(Boolean).join(", ")}` +
     `${r.phone ? ` – tel. ${r.phone}` : ""} – ${whenLine(r)}`);
   return [t("sendlist.head", { label: data.label }), ...lines, t("sendlist.tip"), url].join("\n");

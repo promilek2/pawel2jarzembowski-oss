@@ -516,5 +516,12 @@
     "head": "Termin: {label} – najlepsze placówki (dane NFZ):",
     "tip": "Zadzwoń i zapytaj o najbliższy wolny termin. Przygotuj skierowanie i PESEL.",
     "copied": "Lista skopiowana. Wklej ją w SMS-ie albo komunikatorze."
+  },
+  "filters": {
+    "label": "Pokaż tylko:",
+    "phone": "z telefonem",
+    "nocer": "bez zapisów przez IKP",
+    "exact": "z dokładnym adresem",
+    "count": "Widoczne placówki: {n} z {total}."
   }
 }

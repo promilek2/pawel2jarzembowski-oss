@@ -609,3 +609,21 @@ def test_nfz_down_suggests_official_search(page) -> None:  # type: ignore[no-unt
     page.wait_for_selector("#form-error:not([hidden]) a")
     assert "nie odpowiada" in page.locator("#form-error").inner_text()
     assert "nfz.gov.pl" in page.locator("#form-error a").get_attribute("href")
+
+
+def test_quick_filters_hide_results_without_new_search(page) -> None:  # type: ignore[no-untyped-def]
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#results-filters:not([hidden]) .chip")
+    total = page.locator("#result-list > li").count()
+    requests: list[str] = []
+    page.on("request", lambda r: requests.append(r.url) if "/api/search" in r.url else None)
+    chips = page.locator("#results-filters .chip")
+    chips.first.click()
+    assert chips.first.get_attribute("aria-pressed") == "true"
+    visible = page.locator("#result-list > li:visible").count()
+    assert 0 < visible < total
+    assert f"{visible} z {total}" in page.locator(".filters-count").inner_text()
+    assert _axe_violations(page) == []
+    chips.first.click()
+    assert page.locator("#result-list > li:visible").count() == total
+    assert requests == []

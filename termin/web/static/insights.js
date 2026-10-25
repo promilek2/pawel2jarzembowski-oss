@@ -1,5 +1,5 @@
 // Historia placówki, statystyki województwa i mapa: ładowane leniwie z app.js.
-import { $, h, t, state, fmtDate, fmtNumber, plural } from "./app.js";
+import { $, h, t, state, fmtDate, fmtNumber, plural, announce } from "./app.js";
 
 // ------------------------------------------------------------------ historia
 
@@ -165,4 +165,36 @@ function drawHeat(districts, min, max) {
       .bindTooltip(`${d.localities.slice(0, 2).join(", ")}: ${fmtNumber(d.median_days)} ${plural("days", Math.round(d.median_days))}`)
       .addTo(state.heatLayer);
   }
+}
+
+// ------------------------------------------------------------------ szybkie filtry wyników
+
+// Filtry działają na już pobranej liście (klasy na <ol>, reguły w style.css), bez nowego
+// zapytania do NFZ. Pokazujemy tylko te, które coś zmieniają.
+const FILTERS = [
+  ["f-phone", "filters.phone", (r) => !r.phone],
+  ["f-nocer", "filters.nocer", (r) => r.in_cer],
+  ["f-exact", "filters.exact", (r) => r.location_approx],
+];
+
+export function renderFilters(data) {
+  const box = $("#results-filters");
+  const list = $("#result-list");
+  list.classList.remove(...FILTERS.map(([cls]) => cls));
+  const useful = FILTERS.filter(([, , hides]) => data.results.some(hides) && !data.results.every(hides));
+  box.hidden = data.results.length < 2 || !useful.length;
+  if (box.hidden) { box.replaceChildren(); return; }
+  const count = h("span", { class: "filters-count" });
+  const update = () => {
+    const visible = [...list.children].filter((li) => getComputedStyle(li).display !== "none").length;
+    const any = list.className.includes("f-");
+    count.textContent = any ? t("filters.count", { n: visible, total: data.results.length }) : "";
+    announce(count.textContent);
+  };
+  box.replaceChildren(h("span", { class: "choices-label" }, t("filters.label")),
+    ...useful.map(([cls, key]) => h("button", { type: "button", class: "chip", "aria-pressed": "false", onclick: (e) => {
+      const on = list.classList.toggle(cls);
+      e.currentTarget.setAttribute("aria-pressed", String(on));
+      update();
+    } }, t(key))), count);
 }
