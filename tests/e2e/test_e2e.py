@@ -341,6 +341,22 @@ def test_two_factor_setup_and_login(page) -> None:  # type: ignore[no-untyped-de
     page.wait_for_selector("#account-label:has-text('Konto')")
 
 
+def test_report_prompt_after_call(page) -> None:  # type: ignore[no-untyped-def]
+    page.clock.install()
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    link = page.locator("#result-list article").first.locator("a.call")
+    link.evaluate("a => a.addEventListener('click', e => e.preventDefault())")  # bez tel:
+    link.click()
+    page.clock.fast_forward(10_000)  # „rozmowa” trwała 10 s
+    page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+    page.wait_for_selector("#toast:not([hidden])")
+    assert "Jak poszła rozmowa" in page.locator("#toast").inner_text()
+    assert _axe_violations(page) == []
+    page.locator("#toast").get_by_role("button", name="Sprawdziłem telefonicznie").click()
+    page.wait_for_selector("#auth-dialog[open]")  # bez konta: logowanie
+
+
 def test_personal_features_need_login(page) -> None:  # type: ignore[no-untyped-def]
     search(page, "okulista dorośli")
     page.wait_for_selector("#result-list li")

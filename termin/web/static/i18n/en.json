@@ -389,7 +389,9 @@
     "summary_none": "no slots: {n}",
     "summary_not_reached": "couldn't get through: {n}",
     "summary_later": "The offered date is usually {n} days later than in NFZ data",
-    "summary_earlier": "The offered date is usually {n} days earlier than in NFZ data"
+    "summary_earlier": "The offered date is usually {n} days earlier than in NFZ data",
+    "after_call": "How did the call with “{provider}” go? One tap helps others see whether the NFZ forecast is right.",
+    "later": "Not now"
   },
   "health": {
     "title": "Consent to store your cases",

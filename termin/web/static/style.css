@@ -574,3 +574,13 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 }
 .widen { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
 .widen .chip { background: var(--ink); color: var(--surface); font-weight: 750; }
+.toast {
+  position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); z-index: 950;
+  width: min(100% - 2rem, 30rem); padding: 1rem; border-radius: 16px;
+  background: var(--panel); color: var(--panel-text); box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
+  display: grid; gap: 0.75rem;
+}
+.toast[hidden] { display: none; }
+.toast p { margin: 0; font-weight: 600; line-height: 1.45; }
+.toast-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.toast .btn-outline { color: var(--panel-text); border-color: var(--panel-line); }

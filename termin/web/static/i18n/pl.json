@@ -391,7 +391,9 @@
     "summary_none": "brak miejsc: {n}",
     "summary_not_reached": "nie dodzwonili się: {n}",
     "summary_later": "Proponowany termin zwykle o {n} dni później niż w danych NFZ",
-    "summary_earlier": "Proponowany termin zwykle o {n} dni wcześniej niż w danych NFZ"
+    "summary_earlier": "Proponowany termin zwykle o {n} dni wcześniej niż w danych NFZ",
+    "after_call": "Jak poszła rozmowa z „{provider}”? Jedno stuknięcie pomoże innym sprawdzić, czy prognoza NFZ się zgadza.",
+    "later": "Nie teraz"
   },
   "health": {
     "title": "Zgoda na zapis Twoich spraw",

@@ -416,7 +416,7 @@ function renderCard(r, index, data) {
 
   const tel = telHref(r.phone);
   const call = tel
-    ? h("a", { class: `btn ${top ? "btn-signal" : "btn-ink"} call`, href: tel }, icon("phone"), `${t("card.call")}: ${r.phone}`)
+    ? h("a", { class: `btn ${top ? "btn-signal" : "btn-ink"} call`, href: tel, onclick: () => { state.lastCall = { r, at: Date.now() }; } }, icon("phone"), `${t("card.call")}: ${r.phone}`)
     : null;
   const actions = h("div", { class: "actions" },
     h("a", { class: "btn btn-outline", href: directionsHref(r, data), rel: "noopener", target: "_blank" }, icon("route"), t("card.directions")),
@@ -918,6 +918,23 @@ function needLogin() {
   return true;
 }
 
+// ------------------------------------------------------------------ po rozmowie: prośba o zgłoszenie
+
+// Po powrocie z rozmowy (aplikacja znów widoczna) prosimy o krótkie zgłoszenie wyniku:
+// tylko raz na połączenie i tylko gdy rozmowa mogła się odbyć (co najmniej 8 s poza aplikacją).
+function onReturnFromCall() {
+  const call = state.lastCall;
+  if (document.visibilityState !== "visible" || !call || Date.now() - call.at < 8000) return;
+  state.lastCall = null;
+  const toast = $("#toast");
+  toast.replaceChildren(
+    h("p", {}, t("report.after_call", { provider: call.r.provider || "" })),
+    h("div", { class: "toast-actions" },
+      h("button", { type: "button", class: "btn btn-signal", onclick: () => { toast.hidden = true; if (!needLogin()) account().then((m) => m.openReport(call.r)); } }, t("report.button")),
+      h("button", { type: "button", class: "btn btn-outline", onclick: () => { toast.hidden = true; } }, t("report.later"))));
+  toast.hidden = false;
+}
+
 // ------------------------------------------------------------------ instalacja (PWA)
 
 function isStandalone() {
@@ -1044,6 +1061,7 @@ function bind() {
     input.type = show ? "text" : "password";
     $("#auth-show").setAttribute("aria-pressed", String(show));
   });
+  document.addEventListener("visibilitychange", onReturnFromCall);
   setupInstall();
   setupStorageBanner();
 }
