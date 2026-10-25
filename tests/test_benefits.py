@@ -52,10 +52,11 @@ def test_ambiguous_child_adult_requires_choice(catalog: BenefitCatalog) -> None:
     assert res.needs_input
     adult = res.with_variant(Variant.ADULT)
     assert adult.status == "ok"
-    assert adult.query == "PORADNIA OKULISTYCZNA"
+    assert adult.query == "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
     assert adult.exclude == ("DLA DZIECI",)
     child = res.with_variant(Variant.CHILD)
-    assert child.query == "PORADNIA OKULISTYCZNA DLA DZIECI"
+    # od 07.2026 wariant dla dzieci ma tę samą nazwę, rozpoznajemy go po fladze NFZ
+    assert child.query == "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
     assert child.label.endswith("dla dzieci")
 
 
@@ -109,17 +110,27 @@ def test_suggest_for_autocomplete(catalog: BenefitCatalog) -> None:
 
 
 def test_matches_filters_variant(catalog: BenefitCatalog) -> None:
-    adult = catalog.resolve("okulista dla dorosłych")
-    child = catalog.resolve("okulista dla dzieci")
-    e_adult = QueueEntry(id="1", benefit="PORADNIA OKULISTYCZNA")
-    e_child = QueueEntry(id="2", benefit="PORADNIA OKULISTYCZNA DLA DZIECI")
-    e_flag = QueueEntry(id="3", benefit="PORADNIA OKULISTYCZNA", benefits_for_children="Y")
+    # nazwy z „DLA DZIECI” (jak dermatologia) i flaga NFZ (jak okulistyka od 07.2026)
+    adult = catalog.resolve("dermatolog dla dorosłych")
+    child = catalog.resolve("dermatolog dla dzieci")
+    e_adult = QueueEntry(id="1", benefit="PORADNIA DERMATOLOGICZNA")
+    e_child = QueueEntry(id="2", benefit="PORADNIA DERMATOLOGICZNA DLA DZIECI")
+    e_flag = QueueEntry(id="3", benefit="PORADNIA DERMATOLOGICZNA", benefits_for_children="Y")
     assert adult.matches(e_adult)
     assert not adult.matches(e_child)
     assert not adult.matches(e_flag)
     assert child.matches(e_child)
     assert child.matches(e_flag)
     assert not child.matches(e_adult)
+
+    eye_adult = catalog.resolve("okulista dla dorosłych")
+    eye_child = catalog.resolve("okulista dla dzieci")
+    real = "Świadczenia z zakresu okulistyki"  # wielkość liter jak w API 1.4
+    assert eye_adult.matches(QueueEntry(id="4", benefit=real, benefits_for_children="N"))
+    assert eye_child.matches(QueueEntry(id="5", benefit=real, benefits_for_children="Y"))
+    assert not eye_adult.matches(QueueEntry(id="6", benefit=real, benefits_for_children="Y"))
+    # szersze dopasowanie NFZ (oddział zamiast poradni) odrzucamy po nazwie
+    assert not eye_adult.matches(QueueEntry(id="7", benefit="ODDZIAŁ OKULISTYCZNY"))
 
 
 def test_detect_variant() -> None:
@@ -146,3 +157,27 @@ def test_synonyms_file_is_well_formed() -> None:
     required = {"kardiolog", "okulista", "ortopeda", "endokrynolog", "rezonans", "usg",
                 "tomograf", "gastroskopia", "endoproteza-biodra", "zacma"}  # fmt: skip
     assert required <= set(ids)
+
+
+def test_every_synonym_matches_real_nfz_names() -> None:
+    """Każdy wpis słownika bez `note` musi trafiać w prawdziwą nazwę świadczenia NFZ.
+
+    Lista z API 1.4 (2026-10-20). Gdy NFZ zmieni nazwy (jak w lipcu 2026: „PORADNIA
+    OKULISTYCZNA” → „ŚWIADCZENIA Z ZAKRESU OKULISTYKI”), ten test pokaże, co poprawić.
+    """
+    from pathlib import Path
+
+    from termin.core.benefits import BenefitCatalog
+    from termin.core.text import fold
+
+    path = Path(__file__).parent / "fixtures" / "nfz_benefit_names_2026-10.txt"
+    names = [fold(n) for n in path.read_text("utf-8").splitlines() if n and not n.startswith("#")]
+    assert len(names) > 400
+    missing = []
+    for entry in BenefitCatalog.load().entries:
+        if entry.note:
+            continue
+        for fragment in filter(None, (entry.query, entry.children_query)):
+            if not any(fold(fragment) in name for name in names):
+                missing.append(f"{entry.id}: {fragment}")
+    assert missing == [], "fragmenty bez odpowiednika w nazwach NFZ: " + "; ".join(missing)

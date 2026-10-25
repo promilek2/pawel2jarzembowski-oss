@@ -83,7 +83,10 @@
     "rank": "Position {n}",
     "rank_short": "No. {n}",
     "km": "{km} km",
-    "from_you": "from you"
+    "from_you": "from you",
+    "forecast_sr": "NFZ forecast: about {pcus} wait, roughly until {date}. This is not a free slot.",
+    "forecast_label": "NFZ forecast · ~{date}",
+    "cer": "Book via IKP"
   },
   "when": {
     "today": "today",
@@ -114,7 +117,11 @@
     "stale": "data is {days} {days_word} old (as of {as_at})",
     "no_as_at": "no data update date",
     "no_phone": "no phone number in NFZ data",
-    "no_location": "no coordinates, distance unknown"
+    "no_location": "no coordinates, distance unknown",
+    "forecast": "this is an NFZ forecast ({pcus}), not a free slot: call and ask for the earliest date",
+    "empty_queue": "nobody is waiting in this queue, so a 0-day forecast may mean the queue is inactive",
+    "cer": "booking via Central e-Registration: the Patient's Internet Account (IKP), the mojeIKP app or by phone",
+    "approx_location": "NFZ gave no map position, so the distance is to the municipality centre (approximate)"
   },
   "script": {
     "intro": "Sample conversation (Polish phrases help):",
@@ -129,7 +136,8 @@
     "item_pesel": "the patient's PESEL number (for a child: the child's PESEL)",
     "item_docs": "medical records and test results they may ask about",
     "item_pen": "a calendar and pen to note the date and time",
-    "note": "Facilities update their data about once a week, so the date shown may differ from reality."
+    "note": "Facilities update their data about once a week, so the date shown may differ from reality.",
+    "check_forecast": "Can I book the earliest available date? (NFZ forecasts about {pcus} of waiting.)"
   },
   "watch": {
     "title": "Watch: {label}",

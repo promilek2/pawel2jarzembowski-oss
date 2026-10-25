@@ -119,6 +119,17 @@ Placówki aktualizują dane mniej więcej raz w tygodniu, a terminy zmieniają s
 Dlatego przy każdym wyniku pokazujemy „stan na” i ostrzegamy, gdy dane są starsze niż 14 dni.
 Traktuj wynik jako wskazówkę, gdzie warto zadzwonić najpierw.
 
+**Dlaczego widzę „~5 dni, prognoza NFZ”, a nie konkretną datę?**
+Od 1 lipca 2026 NFZ nie publikuje pierwszego wolnego terminu, tylko prognozowany czas
+oczekiwania (PCUŚ), liczony zwykle raz w miesiącu. Pokazujemy go uczciwie jako prognozę:
+zadzwoń i zapytaj o najbliższy termin, a potem kliknij „Sprawdziłem telefonicznie”, żeby
+pomóc innym.
+
+**Nie widzę kardiologa ani mammografii.**
+Pierwszą wizytę u kardiologa, mammografię i test HPV umawia się przez Centralną e-Rejestrację
+(Internetowe Konto Pacjenta, mojeIKP). NFZ nie publikuje dla nich kolejek, więc aplikacja
+pokazuje tylko tę informację.
+
 **Czy to porada medyczna?**
 Nie. Pokazujemy wyłącznie fakty o terminach i nie oceniamy, gdzie leczą lepiej. O tym, do jakiego
 specjalisty iść, decyduje lekarz, który wystawia skierowanie.

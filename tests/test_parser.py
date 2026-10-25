@@ -29,7 +29,7 @@ def page1() -> tuple[QueueEntry, ...]:
 
 def test_parse_page_meta() -> None:
     page = parse_queues(load_fixture("queues_okulistyczna_11_p1.json"))
-    assert page.count == 30
+    assert page.count == 38
     assert page.has_next is True
     assert len(page.entries) == 25
     assert page.skipped == 0
@@ -39,7 +39,7 @@ def test_parse_page_meta() -> None:
 
 def test_basic_fields(page1: tuple[QueueEntry, ...]) -> None:
     e = _by_id(page1, 1)
-    assert e.benefit == "PORADNIA OKULISTYCZNA"
+    assert e.benefit == "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
     assert e.locality == "GDYNIA"
     assert e.first_date == dt.date(2026, 11, 3)
     assert e.as_at == dt.date(2026, 10, 21)
@@ -104,7 +104,7 @@ def test_bad_items_are_skipped_not_fatal() -> None:
     payload = load_fixture("queues_okulistyczna_11_p2.json")
     payload["data"].extend([None, "x", {"type": "queues"}, {"id": "", "attributes": {}}])
     page = parse_queues(payload)
-    assert len(page.entries) == 5
+    assert len(page.entries) == 13
     assert page.skipped == 4
 
 
@@ -135,7 +135,7 @@ def test_many_places_recursive() -> None:
 
 def test_dictionaries() -> None:
     names, has_next = parse_string_dictionary(load_fixture("benefits_okul.json"))
-    assert "PORADNIA OKULISTYCZNA" in names
+    assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in names
     assert has_next is False
     objects = {"data": [{"attributes": {"name": "X"}}, {"name": "Y"}, 5], "links": {"next": "n"}}
     assert parse_string_dictionary(objects) == (["X", "Y"], True)

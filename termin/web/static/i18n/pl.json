@@ -83,7 +83,10 @@
     "rank": "Pozycja {n}",
     "rank_short": "Nr {n}",
     "km": "{km} km",
-    "from_you": "od Ciebie"
+    "from_you": "od Ciebie",
+    "forecast_sr": "Prognoza NFZ: około {pcus} oczekiwania, czyli mniej więcej do {date}. To nie jest wolny termin.",
+    "forecast_label": "prognoza NFZ · ok. {date}",
+    "cer": "Zapisy przez IKP"
   },
   "when": {
     "today": "dziś",
@@ -116,7 +119,11 @@
     "stale": "dane sprzed {days} {days_word} (stan na {as_at})",
     "no_as_at": "brak daty aktualizacji danych",
     "no_phone": "brak numeru telefonu w danych NFZ",
-    "no_location": "brak współrzędnych, więc odległość jest nieznana"
+    "no_location": "brak współrzędnych, więc odległość jest nieznana",
+    "forecast": "to prognoza NFZ ({pcus}), a nie wolny termin: zadzwoń i zapytaj o najbliższy",
+    "empty_queue": "w kolejce nie ma oczekujących, więc prognoza 0 dni może oznaczać nieczynną kolejkę",
+    "cer": "zapisy przez Centralną e-Rejestrację: Internetowe Konto Pacjenta, aplikacja mojeIKP albo telefon do placówki",
+    "approx_location": "NFZ nie podał adresu na mapie, więc odległość liczymy do środka gminy (przybliżona)"
   },
   "script": {
     "intro": "Przykładowa rozmowa:",
@@ -131,7 +138,8 @@
     "item_pesel": "PESEL pacjenta (dla dziecka: PESEL dziecka)",
     "item_docs": "dokumentację i wyniki badań, o które mogą zapytać",
     "item_pen": "kalendarz i coś do pisania, żeby zanotować datę i godzinę",
-    "note": "Placówki aktualizują dane mniej więcej raz w tygodniu, dlatego termin w wyszukiwarce może się różnić od faktycznego."
+    "note": "Placówki aktualizują dane mniej więcej raz w tygodniu, dlatego termin w wyszukiwarce może się różnić od faktycznego.",
+    "check_forecast": "Czy mogę zapisać się na najbliższy wolny termin? (NFZ prognozuje około {pcus} oczekiwania.)"
   },
   "watch": {
     "title": "Obserwuj: {label}",

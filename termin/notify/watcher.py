@@ -25,7 +25,8 @@ from termin.core.benefits import Resolution
 from termin.core.client import NfzError, QueueQuery
 from termin.core.models import GeoPoint, QueueEntry, RankedResult, SortMode
 from termin.core.provinces import province_from_teryt, provinces_within
-from termin.core.ranking import Candidate, RankingOptions, nearest_location, rank
+from termin.core.ranking import Candidate, RankingOptions, is_empty_queue, nearest_location, rank
+from termin.core.search import with_approx_location
 from termin.logs import get_logger
 from termin.metrics import NOTIFICATIONS
 from termin.notify.base import Notification, Notifier, NotifyError
@@ -102,9 +103,12 @@ def best_for(
         GeoPoint(lat=sub.lat, lon=sub.lon) if sub.lat is not None and sub.lon is not None else None
     )
     candidates: list[Candidate] = []
-    for province, entry in entries:
-        first = entry.first_date
+    for province, raw_entry in entries:
+        entry = with_approx_location(raw_entry)
+        first = entry.expected_date(today)
         if first is None or first < today or not matcher.matches(entry):
+            continue
+        if is_empty_queue(entry):  # „0 dni” bez oczekujących: nie budzimy ludzi fałszywym alarmem
             continue
         if sub.before_date is not None and first >= sub.before_date:
             continue
@@ -193,13 +197,13 @@ class Watcher:
                         entries.append((province, entry))
             self.store.mark_checked(sub.token, now)
             best = best_for(sub, entries, today, self.runtime.settings.stale_after_days)
-            if best is None or best.entry.first_date is None:
+            if best is None or best.expected_date is None:
                 report.no_match += 1
                 continue
             baseline = sub.last_notified_date
             if baseline is not None and baseline < today:
                 baseline = None  # poprzednio zgłoszony termin już minął: liczymy od nowa
-            if baseline is not None and best.entry.first_date >= baseline:
+            if baseline is not None and best.expected_date >= baseline:
                 report.not_better += 1
                 continue
             if sub.last_notified_at is not None and now - sub.last_notified_at < cooldown:
@@ -257,8 +261,8 @@ class Watcher:
             NOTIFICATIONS.labels(sub.channel, "error").inc()
             log.warning("watcher.notify_failed", channel=sub.channel, reason=str(exc))
             return
-        assert best.entry.first_date is not None
-        self.store.mark_notified(sub.token, best.entry.first_date, best.entry.id, now)
+        assert best.expected_date is not None
+        self.store.mark_notified(sub.token, best.expected_date, best.entry.id, now)
         NOTIFICATIONS.labels(sub.channel, "ok").inc()
         report.notified += 1
 

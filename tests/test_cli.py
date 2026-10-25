@@ -122,4 +122,4 @@ def test_cli_benefits_and_version(fake: FakeNfz, monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr(cli, "NfzClient", patched)
     result = runner.invoke(cli.app, ["swiadczenia", "okul"])
     assert result.exit_code == 0
-    assert "PORADNIA OKULISTYCZNA DLA DZIECI" in result.output
+    assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in result.output

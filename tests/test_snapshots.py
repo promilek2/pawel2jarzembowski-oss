@@ -24,7 +24,7 @@ from termin.store.snapshots import (
 )
 from tests.fake_nfz import load_fixture
 
-QUERY = "PORADNIA OKULISTYCZNA"
+QUERY = "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
 
 
 @pytest.fixture
@@ -113,9 +113,10 @@ def test_wait_stats(conn: sqlite3.Connection, entries: list[QueueEntry]) -> None
     store = SnapshotStore(conn)
     store.save(query=QUERY, province="11", case_no=1, entries=entries, now=at("2026-10-24"))
     stats = store.wait_stats(QUERY, "11", 1)
-    assert stats.n == 30
-    # bez terminu (2) i z terminem w przeszłości (1) nie liczymy
-    assert stats.with_date == 27
+    assert stats.n == 38
+    # bez terminu (2 + kolejka w CeR), z terminem w przeszłości (1) i pustej kolejki
+    # (PCUŚ „0 dni”, nikt nie czeka) nie liczymy; prognozy PCUŚ = dzień zapisu + prognoza
+    assert stats.with_date == 33
     assert stats.median is not None
     assert stats.p25 is not None and stats.p75 is not None and stats.p90 is not None
     assert stats.minimum is not None and stats.maximum is not None
@@ -126,7 +127,7 @@ def test_wait_stats(conn: sqlite3.Connection, entries: list[QueueEntry]) -> None
     assert "GDYNIA" in gdynia.localities
     assert gdynia.lat is not None
     kids = store.wait_stats(QUERY, "11", 1, for_children=True)
-    assert kids.n == 4
+    assert kids.n == 5
     empty = store.wait_stats("XYZ", "11", 1)
     assert empty.n == 0 and empty.median is None
     assert store.wait_stats(QUERY, "11", 1, on=dt.date(2026, 1, 1)).taken_on is None
@@ -143,18 +144,18 @@ def test_export_and_purge(conn: sqlite3.Connection, entries: list[QueueEntry]) -
     store.save(query=QUERY, province="11", case_no=1, entries=entries, now=at("2026-01-10"))
     store.save(query=QUERY, province="11", case_no=1, entries=entries, now=at("2026-10-24"))
     rows = store.export_rows(query=QUERY, since=dt.date(2026, 10, 1))
-    assert len(rows) == 30
+    assert len(rows) == 38
     assert rows[0]["taken_on"] == "2026-10-24"
     assert isinstance(rows[0]["for_children"], bool)
     parsed = list(csv.DictReader(io.StringIO(to_csv(rows))))
-    assert len(parsed) == 30
+    assert len(parsed) == 38
     assert "wait_days" in parsed[0]
     payload = json.loads(to_json(rows))
-    assert payload["meta"]["count"] == 30
+    assert payload["meta"]["count"] == 38
     assert store.export_rows(province="07") == []
-    assert len(store.export_rows(until=dt.date(2026, 2, 1))) == 30
+    assert len(store.export_rows(until=dt.date(2026, 2, 1))) == 38
     assert store.purge(180, today=dt.date(2026, 10, 24)) == 1
-    assert len(store.export_rows()) == 30
+    assert len(store.export_rows()) == 38
 
 
 async def test_search_saves_snapshot(runtime: Runtime) -> None:
@@ -166,8 +167,8 @@ async def test_search_saves_snapshot(runtime: Runtime) -> None:
     )
     rows = runtime.snapshots.export_rows()
     # snapshot zawiera surowe wyniki NFZ dla fragmentu (także wariant dla dzieci)
-    assert len(rows) == 30
-    assert rows[0]["query"] == "PORADNIA OKULISTYCZNA"
+    assert len(rows) == 37
+    assert rows[0]["query"] == "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
 
 
 def test_cli_stats_history_export(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:  # type: ignore[no-untyped-def]
@@ -189,7 +190,7 @@ def test_cli_stats_history_export(monkeypatch: pytest.MonkeyPatch, tmp_path) -> 
     assert stats.exit_code == 0, stats.output
     assert "mediana" in stats.output
     stats_json = runner.invoke(cli.app, ["statystyki", "okulista", "-w", "11", "--json"])
-    assert json.loads(stats_json.stdout)["n"] == 30
+    assert json.loads(stats_json.stdout)["n"] == 37
     out = tmp_path / "e.csv"
     exp = runner.invoke(cli.app, ["eksport", "-s", "okulista", "-o", str(out)])
     assert exp.exit_code == 0, exp.output
@@ -208,7 +209,7 @@ def test_cli_stats_history_export(monkeypatch: pytest.MonkeyPatch, tmp_path) -> 
     assert snap.exit_code == 0, snap.output
     assert runner.invoke(cli.app, ["snapshot"]).exit_code == 2
     monkeypatch.setenv(
-        "TERMIN_TRACKED_QUERIES", '["REZONANS@07", "BAD", "PORADNIA OKULISTYCZNA@11@2"]'
+        "TERMIN_TRACKED_QUERIES", '["REZONANS@07", "BAD", "ŚWIADCZENIA Z ZAKRESU OKULISTYKI@11@2"]'
     )
     from termin.config import get_settings
 

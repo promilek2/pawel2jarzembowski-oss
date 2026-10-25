@@ -1,8 +1,10 @@
-"""Generator ZREKONSTRUOWANYCH fixtures API NFZ (patrz ADR-0007).
+"""Generator ZREKONSTRUOWANYCH fixtures API NFZ (patrz ADR-0007 i ADR-0013).
 
-Środowisko budowy v1.0 nie miało dostępu do api.nfz.gov.pl, więc odpowiedzi są
-odtworzone ze schematu API 1.3. Nazwy placówek i numery telefonów są fikcyjne.
-Pliki celowo zawierają przypadki brzegowe znane z prawdziwych danych.
+Środowisko budowy nie ma dostępu do api.nfz.gov.pl, więc odpowiedzi są odtworzone.
+Nazwy świadczeń są prawdziwe (stan 2026-10, tests/fixtures/nfz_benefit_names_2026-10.txt),
+nazwy placówek i numery telefonów fikcyjne. Pozycje 1–30 mają dawny format 1.3
+(pierwszy wolny termin `dates.date`), pozycje 31–38 format 1.4 (od 10.07.2026):
+prognoza PCUŚ tekstem, zwykle bez współrzędnych, czasem z zamienionymi, kolejki w CeR.
 
 Prawdziwe odpowiedzi: `python scripts/capture_fixtures.py` (zapisuje do tests/fixtures/live/).
 
@@ -29,6 +31,8 @@ META_COMMON = {
     "message": None,
 }
 
+OKULISTYKA = "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
+
 # (miejscowość, lat, lon, teryt_place)
 TOWNS = [
     ("GDYNIA", 54.5189, 18.5305, "2262011"),
@@ -52,7 +56,7 @@ TOWNS = [
 def queue_item(
     idx: int,
     *,
-    benefit: str = "PORADNIA OKULISTYCZNA",
+    benefit: str = OKULISTYKA,
     town: int = 0,
     date: str | None = "2026-12-01",
     as_at: str | None = "2026-10-21",
@@ -64,6 +68,8 @@ def queue_item(
     age_range: Any = None,
     statistics: Any = "default",
     case: int = 1,
+    pcus: str | None = None,
+    in_cer: str | None = None,
 ) -> dict[str, Any]:
     name, tlat, tlon, teryt = TOWNS[town]
     dates = (
@@ -71,6 +77,8 @@ def queue_item(
         if date is None and as_at is None
         else {"applicable": True, "date": date, "date-situation-as-at": as_at}
     )
+    if pcus is not None and dates is not None:
+        dates = {"applicable": True, "pcus": pcus, "date-situation-as-at": as_at}  # API 1.4
     if statistics == "default":
         statistics = {
             "provider-data": {
@@ -113,6 +121,7 @@ def queue_item(
             "dates": dates,
             "benefits-provided": None,
             "age-range": age_range,
+            **({"queue-in-cer": in_cer} if in_cer is not None else {}),
         },
     }
 
@@ -151,8 +160,7 @@ def okulistyka_pomorskie() -> list[dict[str, Any]]:
         month = (month - 1) % 12 + 1
         kwargs: dict[str, Any] = {"town": town, "date": f"{year}-{month:02d}-{day:02d}"}
         if i % 6 == 0:
-            kwargs["benefit"] = "PORADNIA OKULISTYCZNA DLA DZIECI"
-            kwargs["children"] = "Y"
+            kwargs["children"] = "Y"  # od 07.2026: ta sama nazwa, flaga dla dzieci
             kwargs["age_range"] = {"from": 0, "to": 18}
         items.append(queue_item(i, **kwargs))
 
@@ -182,12 +190,35 @@ def okulistyka_pomorskie() -> list[dict[str, Any]]:
     items[12] = queue_item(
         13,
         town=6,
-        benefit="PORADNIA OKULISTYCZNA DLA DZIECI",
         children="Y",
         age_range="0-18",
         date="2026-11-06",
     )
     items[13] = queue_item(14, town=2, lat=45.0, lon=2.0)  # współrzędne poza Polską
+
+    # --- API 1.4: PCUŚ zamiast pierwszego terminu ---
+    v14 = {"as_at": "2026-10-15", "lat": None, "lon": None}
+    items += [
+        queue_item(31, town=0, pcus="2 tyg.", **v14),  # Gdynia, bez współrzędnych
+        queue_item(32, town=1, pcus="1 mies. 3 tyg.", **v14),  # Gdańsk
+        queue_item(33, town=2, pcus="5 dni", as_at="2026-10-15", lat=18.5601, lon=54.4416),
+        queue_item(34, town=0, pcus="3 mies.", children="Y", **v14),  # dla dzieci (flaga)
+        queue_item(
+            35,
+            town=1,
+            pcus="0 dni",
+            statistics={
+                "provider-data": {"awaiting": 0, "removed": 0, "average-period": 0},
+                "computed-data": None,
+            },
+            **v14,
+        ),  # pusta kolejka
+        queue_item(36, town=0, date=None, as_at=None, in_cer="Y", statistics=None),  # CeR
+        queue_item(37, town=3, pcus="11 mies.", in_cer="N", **v14),
+        queue_item(
+            38, town=0, benefit="ODDZIAŁ OKULISTYCZNY", pcus="1 tyg.", **v14
+        ),  # szersze dopasowanie NFZ
+    ]
     return items
 
 
@@ -197,14 +228,15 @@ def write(name: str, payload: dict[str, Any]) -> None:
 
 def main() -> None:
     items = okulistyka_pomorskie()
-    query = "benefit=PORADNIA+OKULISTYCZNA&province=11&case=1"
+    query = "benefit=OKULISTYKI&province=11&case=1"
+    total = len(items)
     write(
         "queues_okulistyczna_11_p1.json",
-        page(items[:25], count=30, page_no=1, limit=25, query=query),
+        page(items[:25], count=total, page_no=1, limit=25, query=query),
     )
     write(
         "queues_okulistyczna_11_p2.json",
-        page(items[25:], count=30, page_no=2, limit=25, query=query),
+        page(items[25:], count=total, page_no=2, limit=25, query=query),
     )
     write(
         "queues_empty.json",
@@ -263,9 +295,9 @@ def main() -> None:
             },
             "links": {"first": None, "prev": None, "self": None, "next": None, "last": None},
             "data": [
-                "PORADNIA OKULISTYCZNA",
-                "PORADNIA OKULISTYCZNA DLA DZIECI",
-                "ŚWIADCZENIA Z ZAKRESU OKULISTYKI DLA DZIECI",
+                "ŚWIADCZENIA Z ZAKRESU OKULISTYKI",
+                "ODDZIAŁ OKULISTYCZNY",
+                "ODDZIAŁ OKULISTYCZNY DLA DZIECI",
             ],
         },
     )

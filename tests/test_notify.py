@@ -106,11 +106,12 @@ async def test_end_to_end_ntfy_and_telegram(
 
     (msg,) = services.ntfy
     assert msg["topic"] == "termin-test-123"
-    assert "03.11.2026" in msg["title"]
+    # od API 1.4 najkrótsza jest prognoza NFZ (PCUŚ „5 dni”) w Sopocie
+    assert "prognoza NFZ 5 dni" in msg["title"]
     assert "Okulista" in msg["title"]
-    assert "UL. TESTOWA 1, GDYNIA" in msg["message"]
-    assert "Tel.: 58 000 00 01" in msg["message"]
-    assert "Stan na 21.10.2026" in msg["message"]
+    assert "UL. TESTOWA 33, SOPOT" in msg["message"]
+    assert "Tel.: 58 000 00 33" in msg["message"]
+    assert "To prognoza NFZ, a nie wolny termin" in msg["message"]
     assert f"https://termin.example/stop/{ntfy_sub.token}" in msg["message"]
     assert "openstreetmap.org" in msg["message"]
     assert [a["label"] for a in msg["actions"]] == ["Mapa", "Przestań obserwować"]
@@ -118,12 +119,12 @@ async def test_end_to_end_ntfy_and_telegram(
     (tg,) = services.telegram
     assert tg["chat_id"] == "4242"
     assert tg["parse_mode"] == "HTML"
-    assert "03.11.2026" in tg["text"]
+    assert "prognoza NFZ 5 dni" in tg["text"]
     assert f"/stop/{tg_sub.token}" in tg["text"]
 
     stored = SubscriptionStore(rt.conn).get(ntfy_sub.token)
     assert stored is not None
-    assert stored.last_notified_date == dt.date(2026, 11, 3)
+    assert stored.last_notified_date == dt.date(2026, 10, 29)  # dziś + PCUŚ
     assert stored.last_checked_at == NOW
 
 
@@ -173,7 +174,7 @@ async def test_dedup_and_cooldown(
 
 
 async def test_before_date_and_province_area(rt: Runtime, services: FakeNotifyServices) -> None:
-    await subscribe(rt, before_date=dt.date(2026, 11, 2))  # nic tak wcześnie
+    await subscribe(rt, before_date=dt.date(2026, 10, 27))  # nic tak wcześnie
     await subscribe(
         rt, point=None, radius_km=None, province="11", target="woj", text="okulista dla dzieci"
     )

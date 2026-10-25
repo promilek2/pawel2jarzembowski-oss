@@ -287,6 +287,9 @@ function renderResults(data) {
   if (data.without_location) meta.push(t("results.skipped_no_location", { n: data.without_location }));
   if (data.benefit_names?.length > 1) meta.push(t("results.benefit_names", { names: data.benefit_names.join("; ") }));
   $("#results-meta").textContent = meta.join(" · ");
+  const note = $("#results-note");
+  note.textContent = data.note || "";
+  note.hidden = !data.note;
 
   const list = $("#result-list");
   list.replaceChildren(...data.results.map((r, i) => renderCard(r, i, data)));
@@ -348,7 +351,15 @@ function fmtDayMonth(iso) {
 
 function renderStub(r, index, top) {
   let date;
-  if (r.first_date) {
+  if (r.forecast && r.pcus) {
+    // Od 07.2026 NFZ podaje tylko prognozę (PCUŚ), np. „1 mies. 3 tyg.”, a nie wolny termin.
+    date = h("p", { class: "ticket-date forecast" },
+      h("span", { class: "visually-hidden" }, t("card.forecast_sr", { pcus: r.pcus, date: r.first_date })),
+      h("span", { class: "dm", "aria-hidden": "true" }, `~${r.pcus}`),
+      h("span", { class: "yr", "aria-hidden": "true" }, t("card.forecast_label", { date: r.first_date })));
+  } else if (r.in_cer && !r.first_date) {
+    date = h("p", { class: "ticket-date none" }, t("card.cer"));
+  } else if (r.first_date) {
     // Czytnik ekranu dostaje pełną datę, wzrok: duże „03.11” jak numerek z automatu.
     date = h("p", { class: "ticket-date" },
       h("span", { class: "visually-hidden" }, `${fmtDate(r.first_date)}, ${whenText(r.days_until)}`),
@@ -359,7 +370,7 @@ function renderStub(r, index, top) {
   }
   let dist = null;
   if (r.travel_min != null || r.distance_km != null) {
-    const main = r.distance_km != null ? t("card.km", { km: r.distance_km }) : t("card.travel", { min: Math.round(r.travel_min) });
+    const main = r.distance_km != null ? `${r.location_approx ? "~" : ""}${t("card.km", { km: r.distance_km })}` : t("card.travel", { min: Math.round(r.travel_min) });
     const sub = r.distance_km != null && r.travel_min != null ? t("card.travel", { min: Math.round(r.travel_min) }) : t("card.from_you");
     dist = h("p", { class: "stub-dist" }, h("strong", {}, main), h("small", {}, sub));
   }
@@ -425,7 +436,7 @@ function renderScript(r, data) {
     h("p", {}, t("script.intro")),
     h("ol", {},
       h("li", {}, t("script.hello", { benefit: r.benefit.toLowerCase(), urgent })),
-      h("li", {}, r.first_date && r.days_until >= 0 ? t("script.check", { date: r.first_date }) : t("script.check_nodate")),
+      h("li", {}, r.forecast ? t("script.check_forecast", { pcus: r.pcus }) : r.first_date && r.days_until >= 0 ? t("script.check", { date: r.first_date }) : t("script.check_nodate")),
       h("li", {}, t("script.earlier")),
       h("li", {}, t("script.referral"))),
     h("p", {}, h("strong", {}, t("script.prepare"))),

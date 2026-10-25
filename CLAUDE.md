@@ -68,9 +68,18 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
 - Czas „dzisiaj” wstrzykujemy (parametr `today`), żeby testy były deterministyczne
   (fixtures zakładają dzisiaj = 2026-10-24).
 
-## Pułapki API NFZ (zweryfikuj na żywym API, patrz ADR-0007)
+## Pułapki API NFZ (zweryfikuj na żywym API, patrz ADR-0007 i ADR-0013)
 
-- Bazowy URL `https://api.nfz.gov.pl/app-itl-api`, zawsze `format=json&api-version=1.3`.
+- **Od 10.07.2026 API 1.4**: `https://apinfz.nfz.gov.pl/app-itl-api-pcus`, `format=json`,
+  bez `api-version`, limit 10 zapytań / 10 s (limiter w `client.py`). Stare 1.3:
+  `https://api.nfz.gov.pl/app-itl-api` z `api-version=1.3`.
+- **Od 1.07.2026 brak pierwszego wolnego terminu**: `dates.pcus` (tekst „1 mies. 3 tyg.”,
+  `text.parse_pcus`). Używaj `entry.expected_date(today)` / `RankedResult.expected_date`
+  (dziś + PCUŚ), nie `first_date`. UI zawsze mówi „prognoza NFZ”.
+- **Nowe nazwy**: „ŚWIADCZENIA Z ZAKRESU OKULISTYKI” zamiast „PORADNIA OKULISTYCZNA” itd.;
+  wariant dla dzieci = ta sama nazwa + flaga. Test `test_every_synonym_matches_real_nfz_names`.
+- W 1.4 zwykle brak współrzędnych → `search.with_approx_location` (środek gminy z TERYT).
+  `queue-in-cer` = zapisy przez IKP. PCUŚ „0 dni” + 0 oczekujących = pusta kolejka.
 - `limit` maks. 25. Paginacja: `meta.count` + `links.next`.
 - `benefit` w `/queues` działa pełnotekstowo (fragment), więc „PORADNIA OKULISTYCZNA”
   łapie też wariant „DLA DZIECI”. Filtrujemy po faktycznej nazwie.

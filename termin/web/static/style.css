@@ -565,3 +565,10 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .my-note { background: #3a2f12; color: #fbecc6; }
 }
+
+/* prognoza NFZ (PCUŚ, od 07.2026) zamiast pierwszego wolnego terminu */
+.ticket-date.forecast .dm { font-size: clamp(1.75rem, 7vw, 2.5rem); }
+.results-note { margin: 0.5rem 0 0; padding: 0.75rem 0.875rem; border-radius: 12px; background: #fff4dc; color: #3d2a00; font-weight: 600; line-height: 1.45; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .results-note { background: #3a2f12; color: #fbecc6; }
+}

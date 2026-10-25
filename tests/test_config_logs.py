@@ -13,7 +13,8 @@ from termin.logs import REDACTED, configure_logging, get_logger, redact_pii
 def test_defaults(tmp_path: Path) -> None:
     s = Settings()
     assert s.nfz_concurrency == 4
-    assert s.nfz_base_url == "https://api.nfz.gov.pl/app-itl-api"
+    assert s.nfz_base_url == "https://apinfz.nfz.gov.pl/app-itl-api-pcus"
+    assert s.nfz_api_version is None  # API 1.4 bez parametru api-version
     assert s.db_path.name == "termin.db"
 
 

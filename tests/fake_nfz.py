@@ -7,6 +7,7 @@ fragmencie nazwy świadczenia, województwie i przypadku, stronicuje po 25.
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
@@ -68,7 +69,7 @@ class FakeNfz:
             status = self.fail_with.pop(0)
             headers = {"Retry-After": "0"} if status == 429 else {}
             return httpx.Response(status, json={"errors": []}, headers=headers)
-        path = request.url.path.removeprefix("/app-itl-api")
+        path = re.sub(r"^/app-itl-api(-pcus)?", "", request.url.path)
         params = dict(request.url.params)
         if path == "/queues":
             return self._queues(params)

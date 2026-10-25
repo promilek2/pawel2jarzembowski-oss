@@ -21,7 +21,11 @@ def result_to_dict(r: RankedResult) -> dict[str, Any]:
         "phone": loc.phone or r.entry.phone,
         "latitude": loc.latitude,
         "longitude": loc.longitude,
-        "first_date": r.entry.first_date.isoformat() if r.entry.first_date else None,
+        "first_date": r.expected_date.isoformat() if r.expected_date else None,
+        "forecast": r.entry.is_forecast,
+        "pcus": r.entry.pcus,
+        "in_cer": r.entry.in_cer,
+        "location_approx": r.entry.location_approx,
         "as_at": r.entry.as_at.isoformat() if r.entry.as_at else None,
         "days_until": r.days_until,
         "distance_km": r.distance_km,
@@ -62,6 +66,7 @@ def response_to_dict(response: SearchResponse) -> dict[str, Any]:
             for c in res.candidates
         ],
         "has_child_variant": bool(res.entry and res.entry.has_child_variant),
+        "note": res.entry.note if res.entry else None,
         "point": (
             {"lat": point.lat, "lon": point.lon, "label": point.label, "source": point.source}
             if point

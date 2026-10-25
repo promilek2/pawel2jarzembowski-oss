@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import random
 import time
+from collections import deque
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from types import TracebackType
@@ -81,6 +82,9 @@ class QueueQuery:
 Sleep = Callable[[float], Awaitable[None]]
 
 
+RATE_WINDOW_S = 10.0
+
+
 class NfzClient:
     def __init__(
         self,
@@ -94,6 +98,8 @@ class NfzClient:
         self._cache: Cache = cache if cache is not None else MemoryCache()
         self._sleep = sleep
         self._semaphore = asyncio.Semaphore(settings.nfz_concurrency)
+        self._slots: deque[float] = deque(maxlen=settings.nfz_requests_per_10s)
+        self._clock = time.monotonic
         self._http = httpx.AsyncClient(
             base_url=settings.nfz_base_url,
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
@@ -121,7 +127,8 @@ class NfzClient:
 
     def _cache_key(self, path: str, params: dict[str, str]) -> str:
         items = "&".join(f"{k}={params[k]}" for k in sorted(params))
-        return f"nfz:{self._settings.nfz_api_version}:{path}?{items}"
+        version = self._settings.nfz_api_version or "1.4"
+        return f"nfz:{version}:{self._settings.nfz_base_url}{path}?{items}"
 
     async def get_json(self, path: str, params: dict[str, str], ttl_s: float) -> Any:
         """GET z cache i ponowieniami. `path` bez bazowego URL, np. '/queues'."""
@@ -138,13 +145,16 @@ class NfzClient:
 
     async def _fetch(self, path: str, params: dict[str, str]) -> Any:
         endpoint = path.split("/")[1] if path.count("/") else path
-        full = {**params, "format": "json", "api-version": self._settings.nfz_api_version}
+        full = {**params, "format": "json"}
+        if self._settings.nfz_api_version:
+            full["api-version"] = self._settings.nfz_api_version
         attempts = self._settings.nfz_max_retries
         last_error = "brak odpowiedzi"
         for attempt in range(attempts):
             delay: float | None = None
             try:
                 async with self._semaphore:
+                    await self._throttle()
                     started = time.perf_counter()
                     self.requests_made += 1
                     response = await self._http.get(path, params=full)
@@ -180,6 +190,16 @@ class NfzClient:
         NFZ_ERRORS.labels(endpoint, "unavailable").inc()
         log.warning("nfz.unavailable", endpoint=endpoint, reason=last_error)
         raise NfzUnavailableError(f"API NFZ jest niedostępne ({last_error}). Spróbuj za chwilę.")
+
+    async def _throttle(self) -> None:
+        """Najwyżej N zapytań w oknie 10 s (limit API 1.4). Kolejne czekają na swój slot."""
+        now = self._clock()
+        slot = now
+        if len(self._slots) == self._slots.maxlen:
+            slot = max(now, self._slots[0] + RATE_WINDOW_S)
+        self._slots.append(slot)  # rezerwacja przed await: kolejność jak przy zgłoszeniu
+        if slot > now:
+            await self._sleep(slot - now)
 
     # ------------------------------------------------------------------ endpointy
 

@@ -15,19 +15,19 @@ from termin.core.client import (
 )
 from tests.fake_nfz import MANY_PLACES_ID, FakeNfz
 
-Q = QueueQuery(benefit="PORADNIA OKULISTYCZNA", province="11")
+Q = QueueQuery(benefit="ŚWIADCZENIA Z ZAKRESU OKULISTYKI", province="11")
 
 
 async def test_fetches_all_pages_and_sends_required_params(
     client: NfzClient, fake_nfz: FakeNfz
 ) -> None:
     entries = await client.queues(Q)
-    assert len(entries) == 30
+    assert len(entries) == 37
     queue_calls = fake_nfz.requests_to("/queues")
     assert len(queue_calls) == 2
     params = dict(queue_calls[0].url.params)
     assert params["format"] == "json"
-    assert params["api-version"] == "1.3"
+    assert "api-version" not in params  # API 1.4 bez tego parametru
     assert params["limit"] == "25"
     assert params["province"] == "11"
     assert params["case"] == "1"
@@ -113,7 +113,7 @@ async def test_concurrency_never_exceeds_four(settings: Settings, fake_nfz: Fake
 
     async with NfzClient(settings, transport=httpx.MockTransport(handler)) as c:
         entries = await c.queues(Q)
-    assert len(entries) == 240
+    assert len(entries) == 296
     assert peak <= 4
 
 
@@ -147,7 +147,7 @@ async def test_single_queue_many_places_and_dictionaries(client: NfzClient) -> N
     places = await client.many_places(MANY_PLACES_ID)
     assert len(places) == 2
     benefits = await client.benefits("okul")
-    assert "PORADNIA OKULISTYCZNA DLA DZIECI" in benefits
+    assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in benefits
     assert await client.localities("gdy", province="11") == ["GDYNIA", "GDYNIA (MIASTO)"]
 
 

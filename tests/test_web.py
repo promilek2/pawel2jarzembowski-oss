@@ -87,8 +87,13 @@ def test_search_flow(client: TestClient) -> None:
     assert data["status"] == "ok"
     assert data["results"]
     top = data["results"][0]
-    assert top["locality"] == "GDYNIA"
     assert top["reasons"]
+    # API 1.4: najkrótsza prognoza NFZ (PCUŚ) wygrywa i jest oznaczona jako prognoza
+    assert top["forecast"] is True and top["pcus"] == "5 dni"
+    assert top["first_date"] == "2026-10-29"  # dziś (24.10) + 5 dni
+    approx = [x for x in data["results"] if x["location_approx"]]
+    assert approx and all(x["distance_km"] is not None for x in approx)
+    assert any(x["forecast"] is False for x in data["results"])  # dawny format 1.3 też działa
     assert data["point"]["source"] == "offline"
 
 
@@ -122,20 +127,20 @@ def test_history_stats_export(client: TestClient) -> None:
     assert hist["direction"] == "unknown"
     assert len(hist["points"]) == 1
     stats = client.get("/api/stats", params={"q": "okulista", "province": "11"}).json()
-    assert stats["n"] == 30
+    assert stats["n"] == 37
     assert stats["median"] is not None
     assert stats["province_name"] == "pomorskie"
     assert stats["districts"]
     adults = client.get(
         "/api/stats", params={"q": "okulista", "province": "11", "variant": "dorosli"}
     ).json()
-    assert adults["n"] == 26
+    assert adults["n"] == 32
     assert client.get("/api/stats", params={"q": "okulista", "province": "99"}).status_code == 400
     csv_resp = client.get("/api/export.csv", params={"q": "okulista", "province": "11"})
     assert csv_resp.headers["content-type"].startswith("text/csv")
     assert csv_resp.text.startswith("taken_on,")
     js = client.get("/api/export.json").json()
-    assert js["meta"]["count"] == 30
+    assert js["meta"]["count"] == 37
 
 
 def test_ics(client: TestClient) -> None:

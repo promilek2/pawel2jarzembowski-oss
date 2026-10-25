@@ -199,12 +199,15 @@ class TelegramBot:
             return
         lines = [f"<b>{html.escape(res.label)}</b>"]
         for i, r in enumerate(resp.results, 1):
-            first = r.entry.first_date
-            date_text = (
-                f"{first:%d.%m.%Y} ({when(r.days_until)})"
-                if first and r.days_until is not None
-                else "brak terminu"
-            )
+            first = r.expected_date
+            if r.entry.is_forecast:
+                date_text = f"ok. {html.escape(r.entry.pcus or '')} (prognoza NFZ)"
+            elif first and r.days_until is not None:
+                date_text = f"{first:%d.%m.%Y} ({when(r.days_until)})"
+            elif r.entry.in_cer:
+                date_text = "zapisy przez IKP (Centralna e-Rejestracja)"
+            else:
+                date_text = "brak terminu"
             dist = f" · {format_number(r.distance_km)} km" if r.distance_km is not None else ""
             phone = r.location.phone or r.entry.phone or "brak telefonu"
             lines.append(

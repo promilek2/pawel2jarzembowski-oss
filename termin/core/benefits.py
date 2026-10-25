@@ -48,6 +48,8 @@ class BenefitEntry:
     kind: str = "poradnia"
     children_query: str | None = None
     exclude: tuple[str, ...] = ()
+    note: str | None = None
+    """Informacja pokazywana przy wynikach, np. że zapisy prowadzi Centralna e-Rejestracja."""
 
     @property
     def has_child_variant(self) -> bool:
@@ -110,6 +112,12 @@ class Resolution:
     def matches(self, entry: QueueEntry) -> bool:
         """Czy pozycja z NFZ pasuje do wariantu (dzieci/dorośli, wykluczenia)."""
         name = fold(entry.benefit)
+        # Świadczenie ze słownika: nazwa musi zawierać fragment (chroni przed szerszym
+        # dopasowaniem pełnotekstowym NFZ albo zignorowanym parametrem `benefit`).
+        if self.entry is not None:
+            fragments = (self.entry.query, self.entry.children_query or self.entry.query)
+            if not any(fold(f) in name for f in fragments):
+                return False
         if any(fold(ex) in name for ex in self.exclude):
             return False
         if self.variant is Variant.CHILD:
@@ -176,6 +184,7 @@ class BenefitCatalog:
                 kind=item.get("kind", "poradnia"),
                 children_query=item.get("children_query"),
                 exclude=tuple(item.get("exclude", ())),
+                note=item.get("note"),
             )
             for item in data.get("benefit", [])
         ]

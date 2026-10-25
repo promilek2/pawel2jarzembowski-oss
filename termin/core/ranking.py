@@ -71,9 +71,13 @@ def nearest_location(entry: QueueEntry, point: GeoPoint | None) -> tuple[Locatio
     return best
 
 
+FORECAST_STALE_DAYS = 45
+"""PCUŚ NFZ liczy raz w miesiącu, więc „stan na” sprzed kilku tygodni to norma."""
+
+
 def days_until(entry: QueueEntry, today: dt.date) -> int | None:
-    first = entry.first_date
-    return (first - today).days if first else None
+    expected = entry.expected_date(today)
+    return (expected - today).days if expected else None
 
 
 def alerts_for(
@@ -81,28 +85,46 @@ def alerts_for(
 ) -> tuple[Alert, ...]:
     out: list[Alert] = []
     first = entry.first_date
-    if first is None:
-        out.append(Alert(code="no_date"))
-    elif first < today:
+    if first is None and not entry.is_forecast:
+        out.append(Alert(code="cer" if entry.in_cer else "no_date"))
+    elif entry.is_forecast:
+        out.append(Alert(code="forecast", params={"pcus": entry.pcus or ""}))
+        if is_empty_queue(entry):
+            out.append(Alert(code="empty_queue"))
+    elif first is not None and first < today:
         out.append(Alert(code="past_date", params={"date": first.isoformat()}))
     as_at = entry.as_at
     if as_at is not None:
         age = (today - as_at).days
-        if age > stale_after_days:
+        limit = (
+            max(stale_after_days, FORECAST_STALE_DAYS) if entry.is_forecast else stale_after_days
+        )
+        if age > limit:
             out.append(Alert(code="stale", params={"days": age, "as_at": as_at.isoformat()}))
     elif entry.dates is not None:
         out.append(Alert(code="no_as_at"))
     if not (location.phone or entry.phone):
         out.append(Alert(code="no_phone"))
-    if not location.has_coords:
+    if entry.location_approx and location == entry.all_locations[0]:
+        out.append(Alert(code="approx_location"))
+    elif not location.has_coords:
         out.append(Alert(code="no_location"))
     return tuple(out)
 
 
-def _tier(days: int | None) -> int:
+def is_empty_queue(entry: QueueEntry) -> bool:
+    """PCUŚ „0 dni” przy zerze oczekujących: zwykle nieczynna kolejka, nie wolne miejsce."""
+    return bool(
+        entry.is_forecast and entry.dates and entry.dates.pcus_days == 0 and entry.awaiting == 0
+    )
+
+
+def _tier(days: int | None, entry: QueueEntry | None = None) -> int:
     if days is None:
         return 2
-    return 1 if days < 0 else 0
+    if days < 0 or (entry is not None and is_empty_queue(entry)):
+        return 1
+    return 0
 
 
 def province_medians(
@@ -112,7 +134,7 @@ def province_medians(
     buckets: dict[str, list[int]] = defaultdict(list)
     for province, entry in items:
         d = days_until(entry, today)
-        if province and d is not None and d >= 0:
+        if province and d is not None and d >= 0 and not is_empty_queue(entry):
             buckets[province].append(d)
     return {p: float(statistics.median(v)) for p, v in buckets.items() if v}
 
@@ -144,11 +166,11 @@ def rank(
         dist_key = dist if dist is not None else inf
         days_key = days if days is not None and days >= 0 else inf
         if opts.mode is SortMode.FASTEST:
-            key: tuple[float, ...] = (_tier(days), days_key, dist_key)
+            key: tuple[float, ...] = (_tier(days, c.entry), days_key, dist_key)
         elif opts.mode is SortMode.NEAREST:
-            key = (dist_key, _tier(days), days_key)
+            key = (dist_key, _tier(days, c.entry), days_key)
         else:
-            key = (_tier(days), score, days_key, dist_key)
+            key = (_tier(days, c.entry), score, days_key, dist_key)
         prepared.append((key, c, days, score))
 
     prepared.sort(key=lambda item: (item[0], item[1].entry.id))
@@ -162,6 +184,7 @@ def rank(
                 distance_km=round(c.distance_km, 1) if c.distance_km is not None else None,
                 travel_min=c.travel_min,
                 days_until=days,
+                expected_date=c.entry.expected_date(opts.today),
                 score=round(score, 2) if math.isfinite(score) else None,
                 province=c.province,
                 reasons=reasons,

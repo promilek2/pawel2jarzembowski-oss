@@ -203,7 +203,9 @@ class SnapshotStore:
                     e.phone,
                     province_from_teryt(e.teryt_place) or province,
                     e.teryt_place,
-                    _iso(e.first_date),
+                    # od API 1.4: dzień zapisu + PCUŚ (prognoza NFZ), więc historia i
+                    # mediany liczą prognozowany czas oczekiwania
+                    _iso(e.expected_date(now.date())),
                     _iso(e.as_at),
                     e.awaiting,
                     e.average_period,
@@ -281,7 +283,7 @@ class SnapshotStore:
             return WaitStats(query, province, case_no, None, 0, 0)
         snapshot_id, taken_on = latest
         sql = (
-            "SELECT first_date, teryt, locality, latitude, longitude, for_children"
+            "SELECT first_date, teryt, locality, latitude, longitude, for_children, awaiting"
             " FROM snapshot_rows WHERE snapshot_id = ?"
         )
         rows = self.conn.execute(sql, (snapshot_id,)).fetchall()
@@ -292,13 +294,15 @@ class SnapshotStore:
         by_district: dict[str, list[tuple[int, str | None, float | None, float | None]]] = (
             defaultdict(list)
         )
-        for first, teryt, locality, lat, lon, _children in rows:
+        for first, teryt, locality, lat, lon, _children, awaiting in rows:
             first_date = _date(first)
             if first_date is None:
                 continue
             wait = (first_date - taken_on).days
             if wait < 0:
                 continue  # termin w przeszłości = nieaktualne dane
+            if wait == 0 and awaiting == 0:
+                continue  # pusta kolejka (PCUŚ „0 dni”, nikt nie czeka) zaniżałaby medianę
             waits.append(wait)
             if teryt and len(teryt) >= 4:
                 by_district[teryt[:4]].append((wait, locality, lat, lon))

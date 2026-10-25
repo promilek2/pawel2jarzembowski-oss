@@ -15,9 +15,14 @@
 #                   bez wskazania „dla dzieci/dorosłych” jest dwuznaczne
 #   exclude         (opcjonalnie) fragmenty nazw do odrzucenia w wariancie dla dorosłych
 #   kind            "poradnia" | "badanie" | "zabieg" | "szpital"
+#   note            (opcjonalnie) informacja przy wynikach, np. że zapisy prowadzi Centralna
+#                   e-Rejestracja albo że NFZ nie publikuje kolejek na to świadczenie
 #
 # Uwaga: `query` to fragment, a nie dokładna nazwa (ADR-0008). Nazwy NFZ sprawdzisz komendą
-# `termin swiadczenia <fragment>`.
+# `termin swiadczenia <fragment>`. Od 07.2026 NFZ nazywa część poradni „ŚWIADCZENIA Z ZAKRESU …”
+# (np. okulistyki), a wariant dla dzieci rozpoznaje po fladze, nie po nazwie (ADR-0013).
+# Każdy `query` bez `note` musi pasować do listy prawdziwych nazw
+# (tests/fixtures/nfz_benefit_names_2026-10.txt, pilnuje tego test).
 
 [[benefit]]
 id = "kardiolog"
@@ -26,40 +31,42 @@ query = "PORADNIA KARDIOLOGICZNA"
 children_query = "PORADNIA KARDIOLOGICZNA DLA DZIECI"
 exclude = ["DLA DZIECI"]
 aliases = ["kardiolog", "kardiologia", "lekarz od serca", "kardiologiczna"]
+note = "Pierwszą wizytę u kardiologa (ze skierowaniem) umawia się przez Centralną e-Rejestrację: Internetowe Konto Pacjenta (pacjent.gov.pl), aplikację mojeIKP albo telefonicznie w placówce. NFZ nie publikuje dla niej kolejek, więc lista bywa pusta."
 kind = "poradnia"
 
 [[benefit]]
 id = "okulista"
-label = "Okulista (poradnia okulistyczna)"
-query = "PORADNIA OKULISTYCZNA"
-children_query = "PORADNIA OKULISTYCZNA DLA DZIECI"
+label = "Okulista (świadczenia z zakresu okulistyki)"
+query = "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
+children_query = "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"
 exclude = ["DLA DZIECI"]
 aliases = ["okulista", "okulistka", "okulistyka", "oftalmolog", "lekarz od oczu"]
 kind = "poradnia"
 
 [[benefit]]
 id = "ortopeda"
-label = "Ortopeda (poradnia chirurgii urazowo-ortopedycznej)"
-query = "PORADNIA CHIRURGII URAZOWO-ORTOPEDYCZNEJ"
-children_query = "PORADNIA CHIRURGII URAZOWO-ORTOPEDYCZNEJ DLA DZIECI"
+label = "Ortopeda (świadczenia z zakresu ortopedii i traumatologii)"
+query = "ŚWIADCZENIA Z ZAKRESU ORTOPEDII"
+children_query = "ŚWIADCZENIA Z ZAKRESU ORTOPEDII"
 exclude = ["DLA DZIECI"]
 aliases = ["ortopeda", "ortopedia", "ortopedyczna", "chirurg urazowy", "chirurgia urazowo-ortopedyczna"]
 kind = "poradnia"
 
 [[benefit]]
 id = "endokrynolog"
-label = "Endokrynolog (poradnia endokrynologiczna)"
-query = "PORADNIA ENDOKRYNOLOGICZNA"
-children_query = "PORADNIA ENDOKRYNOLOGICZNA DLA DZIECI"
+label = "Endokrynolog (świadczenia z zakresu endokrynologii)"
+query = "ŚWIADCZENIA Z ZAKRESU ENDOKRYNOLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU ENDOKRYNOLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["endokrynolog", "endokrynologia"]
+note = "Część poradni zapisuje na pierwszą wizytę przez Centralną e-Rejestrację (Internetowe Konto Pacjenta, mojeIKP); takie miejsca oznaczamy."
 kind = "poradnia"
 
 [[benefit]]
 id = "neurolog"
-label = "Neurolog (poradnia neurologiczna)"
-query = "PORADNIA NEUROLOGICZNA"
-children_query = "PORADNIA NEUROLOGICZNA DLA DZIECI"
+label = "Neurolog (świadczenia z zakresu neurologii)"
+query = "ŚWIADCZENIA Z ZAKRESU NEUROLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU NEUROLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["neurolog", "neurologia", "neurologiczna"]
 kind = "poradnia"
@@ -93,54 +100,54 @@ kind = "poradnia"
 
 [[benefit]]
 id = "urolog"
-label = "Urolog (poradnia urologiczna)"
-query = "PORADNIA UROLOGICZNA"
-children_query = "PORADNIA UROLOGICZNA DLA DZIECI"
+label = "Urolog (świadczenia z zakresu urologii)"
+query = "ŚWIADCZENIA Z ZAKRESU UROLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU UROLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["urolog", "urologia"]
 kind = "poradnia"
 
 [[benefit]]
 id = "gastroenterolog"
-label = "Gastroenterolog (poradnia gastroenterologiczna)"
-query = "PORADNIA GASTROENTEROLOGICZNA"
-children_query = "PORADNIA GASTROENTEROLOGICZNA DLA DZIECI"
+label = "Gastroenterolog (świadczenia z zakresu gastroenterologii)"
+query = "ŚWIADCZENIA Z ZAKRESU GASTROENTEROLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU GASTROENTEROLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["gastroenterolog", "gastrolog", "gastroenterologia"]
 kind = "poradnia"
 
 [[benefit]]
 id = "laryngolog"
-label = "Laryngolog (poradnia otorynolaryngologiczna)"
-query = "LARYNGOLOG"
-children_query = "LARYNGOLOGICZNA DLA DZIECI"
+label = "Laryngolog (świadczenia z zakresu otolaryngologii)"
+query = "ŚWIADCZENIA Z ZAKRESU OTOLARYNGOLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU OTOLARYNGOLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["laryngolog", "otolaryngolog", "otorynolaryngolog", "laryngologia", "laryngologiczna"]
 kind = "poradnia"
 
 [[benefit]]
 id = "pulmonolog"
-label = "Pulmonolog (poradnia chorób płuc)"
-query = "PŁUC"
-children_query = "PŁUC DLA DZIECI"
+label = "Pulmonolog (świadczenia z zakresu chorób płuc)"
+query = "ŚWIADCZENIA Z ZAKRESU GRUŹLICY I CHORÓB PŁUC"
+children_query = "ŚWIADCZENIA Z ZAKRESU GRUŹLICY I CHORÓB PŁUC"
 exclude = ["DLA DZIECI"]
 aliases = ["pulmonolog", "pulmonologia", "lekarz od płuc", "poradnia chorób płuc"]
 kind = "poradnia"
 
 [[benefit]]
 id = "diabetolog"
-label = "Diabetolog (poradnia diabetologiczna)"
-query = "PORADNIA DIABETOLOGICZNA"
-children_query = "PORADNIA DIABETOLOGICZNA DLA DZIECI"
+label = "Diabetolog (świadczenia z zakresu diabetologii)"
+query = "ŚWIADCZENIA Z ZAKRESU DIABETOLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU DIABETOLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["diabetolog", "diabetologia"]
 kind = "poradnia"
 
 [[benefit]]
 id = "nefrolog"
-label = "Nefrolog (poradnia nefrologiczna)"
-query = "PORADNIA NEFROLOGICZNA"
-children_query = "PORADNIA NEFROLOGICZNA DLA DZIECI"
+label = "Nefrolog (świadczenia z zakresu nefrologii)"
+query = "ŚWIADCZENIA Z ZAKRESU NEFROLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU NEFROLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["nefrolog", "nefrologia"]
 kind = "poradnia"
@@ -156,17 +163,17 @@ kind = "poradnia"
 
 [[benefit]]
 id = "onkolog"
-label = "Onkolog (poradnia onkologiczna)"
-query = "PORADNIA ONKOLOGICZNA"
-children_query = "ONKOLOGICZNA DLA DZIECI"
+label = "Onkolog (świadczenia z zakresu onkologii)"
+query = "ŚWIADCZENIA Z ZAKRESU ONKOLOGII"
+children_query = "ŚWIADCZENIA Z ZAKRESU ONKOLOGII"
 exclude = ["DLA DZIECI"]
 aliases = ["onkolog", "onkologia"]
 kind = "poradnia"
 
 [[benefit]]
 id = "ginekolog"
-label = "Ginekolog (poradnia ginekologiczno-położnicza)"
-query = "PORADNIA GINEKOLOGICZNO-POŁOŻNICZA"
+label = "Ginekolog (poradnia ginekologiczna)"
+query = "GINEKOLOGICZNA"
 aliases = ["ginekolog", "ginekologia", "położnik", "ginekologiczna"]
 kind = "poradnia"
 
@@ -263,6 +270,7 @@ id = "usg"
 label = "USG (badanie ultrasonograficzne)"
 query = "ULTRASONOGRAF"
 aliases = ["usg", "ultrasonografia", "ultrasonograf", "ultrasonografia jamy brzusznej"]
+note = "NFZ nie publikuje osobnych kolejek na USG: badanie wykonuje poradnia specjalistyczna albo pracownia na podstawie skierowania. Zapytaj w poradni, która je zleciła."
 kind = "badanie"
 
 [[benefit]]
@@ -270,6 +278,7 @@ id = "echo-serca"
 label = "Echo serca (echokardiografia)"
 query = "ECHOKARDIOGRAF"
 aliases = ["echo serca", "echokardiografia", "echo"]
+note = "NFZ nie publikuje osobnych kolejek na echo serca: zwykle wykonuje je poradnia kardiologiczna albo pracownia na podstawie skierowania."
 kind = "badanie"
 
 [[benefit]]
@@ -291,6 +300,7 @@ id = "mammografia"
 label = "Mammografia"
 query = "MAMMOGRAF"
 aliases = ["mammografia", "mammograf"]
+note = "Mammografię w programie profilaktyki (kobiety 45–74 lata, bez skierowania) umawia się przez Centralną e-Rejestrację: Internetowe Konto Pacjenta (pacjent.gov.pl), aplikację mojeIKP albo telefonicznie."
 kind = "badanie"
 
 [[benefit]]
@@ -298,6 +308,7 @@ id = "densytometria"
 label = "Densytometria (badanie gęstości kości)"
 query = "DENSYTOMETR"
 aliases = ["densytometria", "badanie gęstości kości", "dxa"]
+note = "NFZ nie publikuje osobnych kolejek na densytometrię: badanie zleca i wykonuje poradnia (np. osteoporozy) albo pracownia na podstawie skierowania."
 kind = "badanie"
 
 [[benefit]]
@@ -305,6 +316,7 @@ id = "holter"
 label = "Holter EKG"
 query = "HOLTER"
 aliases = ["holter", "holter ekg", "holter ciśnieniowy"]
+note = "NFZ nie publikuje osobnych kolejek na Holter EKG: badanie zleca i wykonuje poradnia (zwykle kardiologiczna) albo pracownia na podstawie skierowania."
 kind = "badanie"
 
 [[benefit]]
@@ -333,4 +345,5 @@ id = "sanatorium"
 label = "Leczenie uzdrowiskowe (sanatorium)"
 query = "UZDROWISK"
 aliases = ["sanatorium", "uzdrowisko", "leczenie uzdrowiskowe"]
+note = "Leczenia uzdrowiskowego nie ma w danych o kolejkach. Status skierowania do sanatorium sprawdzisz w Internetowym Koncie Pacjenta albo na stronie swojego oddziału NFZ."
 kind = "szpital"

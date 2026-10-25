@@ -4,6 +4,7 @@ import pytest
 
 from termin.core.benefits import Variant
 from termin.core.models import GeoPoint, SortMode
+from termin.core.ranking import is_empty_queue
 from termin.core.search import SearchError, SearchRequest
 from termin.runtime import Runtime
 from tests.fake_nfz import FakeNfz
@@ -19,15 +20,22 @@ async def test_acceptance_okulsta_gdynia_30km(runtime: Runtime) -> None:
     assert resp.provinces[0] == "11"
     assert resp.results, "powinny być wyniki"
     for r in resp.results:
-        assert r.entry.benefit == "PORADNIA OKULISTYCZNA"  # bez wariantu dla dzieci
+        assert r.entry.benefit == "ŚWIADCZENIA Z ZAKRESU OKULISTYKI"  # bez wariantu dla dzieci
         assert r.distance_km is not None and r.distance_km <= 30
-    # pozycje z poprawnym terminem przed przeszłymi i pustymi
-    tiers = [0 if (r.days_until or -1) >= 0 else 1 for r in resp.results]
+    # pozycje z poprawnym terminem przed przeszłymi, pustymi kolejkami i bez terminu
+    tiers = [
+        0 if r.days_until is not None and r.days_until >= 0 and not is_empty_queue(r.entry) else 1
+        for r in resp.results
+    ]
     assert tiers == sorted(tiers)
     best = resp.results[0]
-    assert best.entry.locality == "GDYNIA"
     assert best.explanation
-    assert resp.without_location >= 1  # pozycje bez współrzędnych pominięte i policzone
+    # API 1.4: prognoza PCUŚ zamiast terminu, położenie z TERYT, gdy brak współrzędnych
+    forecasts = [r for r in resp.results if r.entry.is_forecast]
+    assert forecasts and all(any(a.code == "forecast" for a in r.alerts) for r in forecasts)
+    approx = [r for r in resp.results if r.entry.location_approx]
+    assert approx and all(any(a.code == "approx_location" for a in r.alerts) for r in approx)
+    assert resp.without_location == 0  # nikt nie wypada z wyników przez brak współrzędnych
 
 
 async def test_ambiguous_variant_returns_question(runtime: Runtime) -> None:
@@ -74,7 +82,7 @@ async def test_explicit_province_without_point(runtime: Runtime) -> None:
     )
     assert resp.point is None
     assert all(r.distance_km is None for r in resp.results)
-    assert resp.total_found == 26  # 30 − 4 pozycje dla dzieci
+    assert resp.total_found == 32  # 37 − 5 pozycji dla dzieci
     assert resp.medians["11"] > 0
 
 
@@ -91,7 +99,7 @@ async def test_benefit_query_override(runtime: Runtime) -> None:
     resp = await runtime.search.search(
         SearchRequest(
             text="",
-            benefit_query="PORADNIA OKULISTYCZNA",
+            benefit_query="ŚWIADCZENIA Z ZAKRESU OKULISTYKI",
             variant=Variant.CHILD,
             point=GeoPoint(lat=54.52, lon=18.53, province="11"),
             radius_km=100,
@@ -100,10 +108,10 @@ async def test_benefit_query_override(runtime: Runtime) -> None:
     assert resp.results
     assert all(r.entry.is_for_children for r in resp.results)
     raw = await runtime.search.search(
-        SearchRequest(text="", benefit_query="okulistyczna", province="11", limit=100)
+        SearchRequest(text="", benefit_query="okulistyki", province="11", limit=100)
     )
     assert raw.resolution.entry is None
-    assert raw.total_found == 30
+    assert raw.total_found == 37
 
 
 async def test_radius_queries_neighbouring_provinces(runtime: Runtime, fake_nfz: FakeNfz) -> None:

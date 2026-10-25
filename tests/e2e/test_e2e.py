@@ -67,7 +67,8 @@ def test_search_flow_with_variant_choice(page) -> None:  # type: ignore[no-untyp
     page.get_by_role("button", name="Dla dorosłych").click()
     page.wait_for_selector("#result-list li")
     first = page.locator("#result-list article").first
-    assert "03.11.2026" in first.inner_text()
+    # od 07.2026 NFZ podaje prognozę (PCUŚ) zamiast pierwszego wolnego terminu
+    assert "Prognoza NFZ" in first.inner_text() and "To nie jest wolny termin" in first.inner_text()
     assert "Dlaczego tu" in first.inner_text()
     assert "stan na" in first.inner_text()
     assert first.get_by_role("link", name="Zadzwoń").get_attribute("href").startswith("tel:+48")

@@ -51,6 +51,8 @@ def call_reminder(
     ]
     if entry.first_date:
         lines_desc.append(f"Pierwszy wolny termin wg NFZ: {entry.first_date:%d.%m.%Y}")
+    elif entry.pcus:
+        lines_desc.append(f"Prognozowany czas oczekiwania wg NFZ (PCUŚ): {entry.pcus}")
     if entry.as_at:
         lines_desc.append(f"Stan na: {entry.as_at:%d.%m.%Y}")
     lines_desc += [

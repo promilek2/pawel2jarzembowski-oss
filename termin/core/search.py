@@ -22,6 +22,7 @@ from termin.core.ranking import (
     rank,
 )
 from termin.core.routing import Router
+from termin.core.teryt_geo import approx_point
 from termin.logs import get_logger
 
 log = get_logger(__name__)
@@ -171,6 +172,7 @@ class SearchService:
                 fetched.append((province_from_teryt(entry.teryt_place) or code, entry))
 
         fetched = await self._expand_many_places(fetched, point)
+        fetched = [(province, with_approx_location(entry)) for province, entry in fetched]
         response.all_entries = fetched
         response.benefit_names = sorted({e.benefit for _, e in fetched})
         response.medians = province_medians(fetched, today)
@@ -268,3 +270,15 @@ class SearchService:
             )
             for c in candidates
         ]
+
+
+def with_approx_location(entry: QueueEntry) -> QueueEntry:
+    """Placówka bez współrzędnych (częste w API 1.4) dostaje środek swojej gminy z TERYT."""
+    if any(loc.has_coords for loc in entry.all_locations):
+        return entry
+    point = approx_point(entry.teryt_place)
+    if point is None:
+        return entry
+    return entry.model_copy(
+        update={"latitude": point[0], "longitude": point[1], "location_approx": True}
+    )

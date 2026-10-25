@@ -23,9 +23,13 @@ def unsubscribe_url(settings: Settings, token: str) -> str:
 
 def build_notification(sub: Subscription, result: RankedResult, settings: Settings) -> Notification:
     entry, loc = result.entry, result.location
-    first = entry.first_date
+    first = result.expected_date
     assert first is not None and result.days_until is not None
-    title = f"Wcześniejszy termin: {sub.label}, {first:%d.%m.%Y} ({when(result.days_until)})"
+    if entry.is_forecast:
+        # od 1.07.2026 NFZ publikuje tylko prognozę (PCUŚ), nie wolny termin
+        title = f"Krótsze oczekiwanie: {sub.label}, prognoza NFZ {entry.pcus}"
+    else:
+        title = f"Wcześniejszy termin: {sub.label}, {first:%d.%m.%Y} ({when(result.days_until)})"
     address = ", ".join(x for x in (loc.address, loc.locality) if x)
     if result.distance_km is not None:
         address += f" ({format_number(result.distance_km)} km)"
@@ -35,7 +39,9 @@ def build_notification(sub: Subscription, result: RankedResult, settings: Settin
         address,
         f"Tel.: {phone}" if phone else "Brak telefonu w danych NFZ",
     ]
-    if entry.as_at:
+    if entry.is_forecast:
+        lines.append("To prognoza NFZ, a nie wolny termin. Zadzwoń i zapytaj o najbliższy termin.")
+    elif entry.as_at:
         lines.append(f"Stan na {entry.as_at:%d.%m.%Y}. Zadzwoń, aby potwierdzić termin.")
     else:
         lines.append("Zadzwoń, aby potwierdzić termin.")

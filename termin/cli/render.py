@@ -20,9 +20,13 @@ NFZ_OFFICIAL = "https://terminyleczenia.nfz.gov.pl"
 
 
 def _date_cell(r: RankedResult) -> Text:
-    first = r.entry.first_date
+    first = r.expected_date
+    if r.entry.in_cer and first is None:
+        return Text("zapisy przez IKP\n(Centralna e-Rejestracja)", style="cyan")
     if first is None or r.days_until is None:
         return Text("brak terminu", style="yellow")
+    if r.entry.is_forecast:
+        return Text(f"ok. {r.entry.pcus}\n(prognoza NFZ)", style="bold green")
     label = f"{first:%d.%m.%Y}\n{when(r.days_until)}"
     return Text(label, style="bold green" if r.days_until >= 0 else "yellow")
 

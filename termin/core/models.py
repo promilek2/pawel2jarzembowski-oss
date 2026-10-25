@@ -16,6 +16,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from termin.core.geo_math import in_poland
+from termin.core.text import parse_pcus
 
 
 def _kebab(name: str) -> str:
@@ -126,9 +127,20 @@ class Case(IntEnum):
 class Dates(NfzModel):
     applicable: bool | None = None
     date: dt.date | None = None
-    """Pierwszy wolny termin."""
+    """Pierwszy wolny termin (API 1.3; od 1.07.2026 NFZ go nie publikuje)."""
+    pcus: str | None = None
+    """Prognozowany czas oczekiwania NFZ (PCUŚ, API 1.4), tekst, np. „1 mies. 3 tyg.”."""
     date_situation_as_at: dt.date | None = None
-    """Stan na dzień (kiedy placówka zaktualizowała dane)."""
+    """Stan na dzień: kiedy placówka zaktualizowała dane albo NFZ policzył PCUŚ."""
+
+    @field_validator("pcus", mode="before")
+    @classmethod
+    def _pcus(cls, v: Any) -> str | None:
+        return to_str(v)
+
+    @property
+    def pcus_days(self) -> int | None:
+        return parse_pcus(self.pcus)
 
     @field_validator("applicable", mode="before")
     @classmethod
@@ -213,6 +225,8 @@ class Location(NfzModel):
             return data
         lat = to_float(data.get("latitude"))
         lon = to_float(data.get("longitude"))
+        if lat is not None and lon is not None and not in_poland(lat, lon) and in_poland(lon, lat):
+            lat, lon = lon, lat  # w API 1.4 część rekordów ma zamienioną szerokość z długością
         if lat is None or lon is None or not in_poland(lat, lon):
             lat = lon = None
         return {**data, "latitude": lat, "longitude": lon}
@@ -238,10 +252,14 @@ class QueueEntry(Location):
     ramp: bool | None = None
     car_park: bool | None = None
     elevator: bool | None = None
+    queue_in_cer: bool | None = None
+    """Kolejka w Centralnej e-Rejestracji (API 1.4): zapisy przez IKP, bez PCUŚ i statystyk."""
     dates: Dates | None = None
     statistics: Statistics | None = None
     extra_locations: tuple[Location, ...] = ()
     """Lokalizacje z `/many-places/{id}` (uzupełniane przez wyszukiwarkę)."""
+    location_approx: bool = False
+    """Współrzędne przybliżone (środek gminy z TERYT), bo NFZ ich nie podał."""
 
     @field_validator(
         "provider", "provider_code", "teryt_place", "age_range", "benefit", mode="before"
@@ -261,7 +279,13 @@ class QueueEntry(Location):
         return bool(to_flag(v))
 
     @field_validator(
-        "benefits_for_children", "toilet", "ramp", "car_park", "elevator", mode="before"
+        "benefits_for_children",
+        "toilet",
+        "ramp",
+        "car_park",
+        "elevator",
+        "queue_in_cer",
+        mode="before",
     )
     @classmethod
     def _flags(cls, v: Any) -> bool | None:
@@ -281,7 +305,31 @@ class QueueEntry(Location):
 
     @property
     def first_date(self) -> dt.date | None:
+        """Pierwszy wolny termin (API 1.3). Od API 1.4 jest prognoza: `expected_date`."""
         return self.dates.date if self.dates else None
+
+    def expected_date(self, today: dt.date) -> dt.date | None:
+        """Pierwszy wolny termin albo orientacyjna data z prognozy NFZ: dziś + PCUŚ.
+
+        PCUŚ to prognozowany czas oczekiwania dla kogoś, kto zapisuje się teraz, więc
+        liczymy od dzisiaj (nie od „stanu na”). To nie jest wolny termin (`is_forecast`).
+        """
+        if self.first_date is not None:
+            return self.first_date
+        days = self.dates.pcus_days if self.dates else None
+        return today + dt.timedelta(days=days) if days is not None else None
+
+    @property
+    def is_forecast(self) -> bool:
+        return bool(self.dates and self.dates.date is None and self.dates.pcus_days is not None)
+
+    @property
+    def pcus(self) -> str | None:
+        return self.dates.pcus if self.dates else None
+
+    @property
+    def in_cer(self) -> bool:
+        return bool(self.queue_in_cer)
 
     @property
     def as_at(self) -> dt.date | None:
@@ -379,6 +427,8 @@ class RankedResult(BaseModel):
     distance_km: float | None = None
     travel_min: float | None = None
     days_until: int | None = None
+    expected_date: dt.date | None = None
+    """Pierwszy wolny termin albo dziś + prognoza NFZ (PCUŚ), patrz `entry.is_forecast`."""
     score: float | None = None
     province: str | None = None
     reasons: tuple[Reason, ...] = ()
