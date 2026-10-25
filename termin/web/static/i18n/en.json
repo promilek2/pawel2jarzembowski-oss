@@ -96,7 +96,9 @@
     "average": "Clinic average: {n} days",
     "wheelchairs": "wheelchairs available",
     "automatic_door": "automatic door",
-    "transport": "Getting there:"
+    "transport": "Getting there:",
+    "copy": "Copy number",
+    "copied": "Copied {phone}."
   },
   "when": {
     "today": "today",

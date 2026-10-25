@@ -66,6 +66,30 @@
           "type": "image/png"
         }
       ]
+    },
+    {
+      "name": "Moje sprawy",
+      "short_name": "Sprawy",
+      "url": "/?konto=sprawy",
+      "icons": [
+        {
+          "src": "/static/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Pomoc: jak to działa?",
+      "short_name": "Pomoc",
+      "url": "/?pomoc=1",
+      "icons": [
+        {
+          "src": "/static/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ],
   "display_override": [

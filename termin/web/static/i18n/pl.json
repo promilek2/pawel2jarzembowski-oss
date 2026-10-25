@@ -96,7 +96,9 @@
     "average": "Średnio {n} dni wg placówki",
     "wheelchairs": "wózki inwalidzkie",
     "automatic_door": "drzwi automatyczne",
-    "transport": "Dojazd:"
+    "transport": "Dojazd:",
+    "copy": "Kopiuj numer",
+    "copied": "Skopiowano numer {phone}."
   },
   "when": {
     "today": "dziś",

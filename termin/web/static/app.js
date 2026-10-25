@@ -441,6 +441,10 @@ function renderCard(r, index, data) {
   const call = tel
     ? h("a", { class: `btn ${top ? "btn-signal" : "btn-ink"} call`, href: tel, onclick: () => { state.lastCall = { r, at: Date.now() }; } }, icon("phone"), `${t("card.call")}: ${r.phone}`)
     : null;
+  // Na komputerze link tel: zwykle nic nie robi: dajemy „Kopiuj numer”.
+  const copy = tel && matchMedia("(hover: hover) and (pointer: fine)").matches
+    ? h("button", { type: "button", class: "btn btn-outline copy-phone", onclick: () => navigator.clipboard?.writeText(r.phone).then(() => announce(t("card.copied", { phone: r.phone })), () => {}) }, t("card.copy"))
+    : null;
   const actions = h("div", { class: "actions" },
     h("a", { class: "btn btn-outline", href: directionsHref(r, data), rel: "noopener", target: "_blank" }, icon("route"), t("card.directions")),
     h("button", { type: "button", class: "btn btn-outline", onclick: () => openWatch(r, data) }, icon("bell"), t("card.watch")),
@@ -473,7 +477,7 @@ function renderCard(r, index, data) {
         r.as_at ? h("p", { class: "asat" }, t("card.as_at", { date: r.as_at })) : null,
         transport, why, alerts,
         tags.length ? h("ul", { class: "tags" }, tags.map((x) => h("li", {}, x))) : null,
-        call, actions, personal, script, history)));
+        copy ? h("div", { class: "call-row" }, call, copy) : call, actions, personal, script, history)));
 }
 
 function capitalize(text) { return text ? text[0].toUpperCase() + text.slice(1) : text; }
@@ -972,6 +976,7 @@ async function init() {
   if (config.assistant?.enabled) {
     $("#help-btn").hidden = false;
     $("#help-btn").addEventListener("click", () => chat().then((m) => m.toggleChat()));
+    if (new URLSearchParams(location.search).has("pomoc")) chat().then((m) => m.toggleChat());
   }
   if (applyUrlParams()) runSearch(formParams(), { auto: true });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});

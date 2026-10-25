@@ -493,3 +493,31 @@ def test_results_tip_points_to_faster_place(page) -> None:  # type: ignore[no-un
     tip.get_by_role("button").click()
     assert page.evaluate("() => document.activeElement.id").startswith("r-")
     assert _axe_violations(page) == []
+
+
+def test_desktop_copy_phone_and_help_shortcut(browser, base_url) -> None:  # type: ignore[no-untyped-def]
+    context = browser.new_context(viewport={"width": 1280, "height": 900})
+    context.grant_permissions(["clipboard-read", "clipboard-write"], origin=base_url)
+    context.add_init_script(NO_BANNER)
+    pg = context.new_page()
+    pg.goto(base_url)
+    search(pg, "okulista dorośli")
+    pg.wait_for_selector("#result-list li")
+    pg.locator(".copy-phone").first.click()
+    pg.wait_for_selector("#status:has-text('Skopiowano numer')")
+    assert pg.evaluate("() => navigator.clipboard.readText()").strip()
+    pg.goto(f"{base_url}/?pomoc=1")
+    pg.wait_for_selector("#chat-panel[open]")
+    context.close()
+
+
+def test_touch_phone_has_no_copy_button(browser, base_url) -> None:  # type: ignore[no-untyped-def]
+    context = browser.new_context(viewport=MOBILE, has_touch=True, is_mobile=True)
+    context.add_init_script(NO_BANNER)
+    pg = context.new_page()
+    pg.goto(base_url)
+    search(pg, "okulista dorośli")
+    pg.wait_for_selector("#result-list li")
+    assert pg.locator(".copy-phone").count() == 0
+    assert pg.locator("#result-list a.call").count() >= 1
+    context.close()
