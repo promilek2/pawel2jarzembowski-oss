@@ -4,6 +4,8 @@
 const $ = (sel) => document.querySelector(sel);
 // Konto, 2FA, „Moje sprawy” i powiadomienia ładujemy dopiero, gdy są potrzebne (budżet 150 KB).
 const account = () => import("./account.js");
+// Tryb „Dzwonię” i lista do druku: też dopiero na żądanie.
+const extras = () => import("./extras.js");
 const LANGS = ["pl", "en", "uk"];
 const STORE = {
   get(key, fallback = null) {
@@ -180,6 +182,7 @@ function formParams() {
   if (mode === "kompromis") params.set("km_per_day", data.get("km_per_day") || "2");
   params.set("case", data.get("case") || "1");
   if (state.variant) params.set("variant", state.variant);
+  if (data.get("accessible")) params.set("accessible", "true");
   return params;
 }
 
@@ -241,7 +244,7 @@ function updateShareUrl(params) {
   // Do linku nie trafia dokładna pozycja GPS: zaokrąglamy do ~1 km.
   if (params.get("lat")) share.set("lat", Number(params.get("lat")).toFixed(2));
   if (params.get("lon")) share.set("lon", Number(params.get("lon")).toFixed(2));
-  for (const [k, name] of [["radius", "r"], ["mode", "tryb"], ["case", "przypadek"], ["variant", "wariant"], ["km_per_day", "km"]]) {
+  for (const [k, name] of [["radius", "r"], ["mode", "tryb"], ["case", "przypadek"], ["variant", "wariant"], ["km_per_day", "km"], ["accessible", "dostepne"]]) {
     if (params.get(k)) share.set(name, params.get(k));
   }
   history.replaceState(null, "", `?${share}`);
@@ -408,6 +411,7 @@ function renderCard(r, index, data) {
   const alerts = r.alerts.length ? h("ul", { class: "alerts" }, r.alerts.map((a) => h("li", {}, t(`alerts.${a.code}`, a.params)))) : null;
 
   const access = Object.entries(r.accessibility).filter(([, v]) => v).map(([k]) => t(`card.${k}`));
+  const transport = r.transport ? h("p", { class: "transport" }, h("strong", {}, t("card.transport")), " ", capitalize(r.transport.toLowerCase())) : null;
   const tags = [];
   if (r.for_children) tags.push(t("card.children"));
   if (r.awaiting != null) tags.push(t("card.waiting", { n: r.awaiting }));
@@ -435,7 +439,9 @@ function renderCard(r, index, data) {
 
   const history = h("details", { class: "history", ontoggle: (e) => e.target.open && loadHistory(r.id, e.target) },
     h("summary", {}, t("card.history")), h("div", {}));
-  const script = h("details", { class: "script" }, h("summary", {}, t("card.script")), renderScript(r, data));
+  const script = h("details", { class: "script" }, h("summary", {}, t("card.script")),
+    h("button", { type: "button", class: "btn btn-ink", onclick: () => extras().then((m) => m.openCallMode(r, data)) }, icon("phone"), t("call.button")),
+    renderScript(r, data));
 
   return h("li", {},
     h("article", { class: `ticket${top ? " ticket--top" : ""}`, id: `r-${r.id}`, "aria-label": `${t("card.rank", { n: index + 1 })}: ${r.provider || ""}` },
@@ -446,7 +452,7 @@ function renderCard(r, index, data) {
         r.place && r.place !== r.benefit ? h("p", { class: "address" }, r.place) : null,
         h("p", { class: "address" }, [r.address, r.locality].filter(Boolean).join(", ")),
         r.as_at ? h("p", { class: "asat" }, t("card.as_at", { date: r.as_at })) : null,
-        why, alerts,
+        transport, why, alerts,
         tags.length ? h("ul", { class: "tags" }, tags.map((x) => h("li", {}, x))) : null,
         call, actions, personal, script, history)));
 }
@@ -918,6 +924,35 @@ function needLogin() {
   return true;
 }
 
+// ------------------------------------------------------------------ zapisane wyszukiwania
+
+// W tym urządzeniu (localStorage), tylko po kliknięciu „Zapisz wyszukiwanie” (strona /cookies).
+const SAVED_MAX = 8;
+
+function renderSaved() {
+  const saved = STORE.get("saved", []);
+  $("#saved-searches").hidden = !saved.length;
+  $("#saved-list").replaceChildren(...saved.map((s, i) => h("span", { class: "saved-chip" },
+    h("button", { type: "button", class: "chip", onclick: () => {
+      history.replaceState(null, "", s.query);
+      if (applyUrlParams()) runSearch(formParams());
+    } }, s.label),
+    h("button", { type: "button", class: "chip-remove", "aria-label": t("saved.remove", { label: s.label }), onclick: () => {
+      STORE.set("saved", STORE.get("saved", []).filter((_, j) => j !== i));
+      renderSaved();
+    } }, "×"))));
+}
+
+function saveSearch() {
+  if (!state.last || state.last.status !== "ok") return;
+  const where = state.last.point?.label ? ` · ${state.last.point.label}` : "";
+  const entry = { label: `${state.last.label}${where}`, query: location.search };
+  const saved = STORE.get("saved", []).filter((s) => s.query !== entry.query);
+  STORE.set("saved", [entry, ...saved].slice(0, SAVED_MAX));
+  renderSaved();
+  announce(t("saved.saved"));
+}
+
 // ------------------------------------------------------------------ po rozmowie: prośba o zgłoszenie
 
 // Po powrocie z rozmowy (aplikacja znów widoczna) prosimy o krótkie zgłoszenie wyniku:
@@ -1008,6 +1043,7 @@ function applyUrlParams() {
   if (kase) kase.checked = true;
   if (q.get("km")) $("#kmday").value = q.get("km");
   if (["dorosli", "dzieci"].includes(q.get("wariant"))) state.variant = q.get("wariant");
+  $("#accessible").checked = q.get("dostepne") === "true";
   return true;
 }
 
@@ -1062,6 +1098,9 @@ function bind() {
     $("#auth-show").setAttribute("aria-pressed", String(show));
   });
   document.addEventListener("visibilitychange", onReturnFromCall);
+  $("#save-search").addEventListener("click", saveSearch);
+  $("#print-list").addEventListener("click", () => extras().then((m) => m.printList(state.last)));
+  renderSaved();
   setupInstall();
   setupStorageBanner();
 }
@@ -1083,4 +1122,4 @@ async function init() {
 
 init();
 
-export { $, h, t, state, api, errorText, announce, icon, telHref, closeOnButtons, isIos, isStandalone, updateAccountButton, openAuth, onAuthChange };
+export { $, h, t, state, api, errorText, announce, icon, telHref, closeOnButtons, isIos, isStandalone, updateAccountButton, openAuth, onAuthChange, needLogin, account, fmtDate, renderScript };

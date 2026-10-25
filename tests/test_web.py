@@ -242,6 +242,8 @@ def test_bundle_size_budget() -> None:
     # konto i funkcje dla zalogowanych ładują się leniwie (import() w app.js)
     lazy = (STATIC / "account.js").stat().st_size
     assert lazy < 40_000, f"account.js {lazy} B przekracza budżet 40 KB"
+    extra = sum((STATIC / n).stat().st_size for n in ("extras.js", "extras.css"))
+    assert extra < 20_000, f"extras.js + extras.css {extra} B przekracza budżet 20 KB"
 
 
 def test_healthz_and_metrics(client: TestClient) -> None:
@@ -296,3 +298,12 @@ def test_status_diagnostics(client: TestClient) -> None:
     assert check["with_first_date"] + check["with_pcus"] >= 1
     assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in check["benefit_names"]
     assert client.get("/api/status").json()["last_ok_at"] is not None
+
+
+def test_search_returns_transport_and_accessibility(client: TestClient) -> None:
+    params = {"q": "okulista dorośli", "where": "Gdynia", "radius": 50, "limit": 100}
+    data = client.get("/api/search", params=params).json()
+    assert any(r["transport"] for r in data["results"])
+    assert {"wheelchairs", "automatic_door"} <= set(data["results"][0]["accessibility"])
+    only = client.get("/api/search", params={**params, "accessible": "true"}).json()
+    assert only["results"] and all(r["barrier_free"] for r in only["results"])

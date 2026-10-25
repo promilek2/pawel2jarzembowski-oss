@@ -36,9 +36,13 @@ def result_to_dict(r: RankedResult) -> dict[str, Any]:
         "average_period": r.entry.average_period,
         "for_children": r.entry.is_for_children,
         "many_places": r.entry.many_places,
+        "transport": r.entry.public_transport_lines,
+        "barrier_free": r.entry.barrier_free,
         "accessibility": {
             "toilet": r.entry.toilet,
             "ramp": r.entry.ramp,
+            "wheelchairs": r.entry.wheelchairs,
+            "automatic_door": r.entry.automatic_door,
             "car_park": r.entry.car_park,
             "elevator": r.entry.elevator,
         },

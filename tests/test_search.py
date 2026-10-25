@@ -119,3 +119,16 @@ async def test_radius_queries_neighbouring_provinces(runtime: Runtime, fake_nfz:
     assert {"11", "14"} <= set(resp.provinces)
     queried = {dict(r.url.params).get("province") for r in fake_nfz.requests_to("/queues")}
     assert {"11", "14"} <= queried
+
+
+async def test_barrier_free_filter(runtime: Runtime) -> None:
+    base = SearchRequest(text="okulista dorośli", where=GDYNIA, radius_km=50, limit=100)
+    everything = await runtime.search.search(base)
+    accessible = await runtime.search.search(
+        SearchRequest(
+            text="okulista dorośli", where=GDYNIA, radius_km=50, limit=100, barrier_free=True
+        )
+    )
+    assert accessible.results
+    assert all(r.entry.ramp or r.entry.elevator for r in accessible.results)
+    assert len(accessible.results) < len(everything.results)

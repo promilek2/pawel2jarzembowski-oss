@@ -53,6 +53,8 @@ class SearchRequest:
     with_travel_time: bool = False
     benefit_query: str | None = None
     """Jawny fragment nazwy świadczenia (pomija słownik), np. z wyboru w UI."""
+    barrier_free: bool = False
+    """Tylko placówki z podjazdem albo windą."""
 
 
 @dataclass(slots=True)
@@ -182,6 +184,8 @@ class SearchService:
             radius = None  # jawne województwo bez promienia: całe województwo
         candidates: list[Candidate] = []
         for province, entry in fetched:
+            if req.barrier_free and not entry.barrier_free:
+                continue
             location, distance = nearest_location(entry, point)
             if point is not None and radius is not None:
                 if distance is None:

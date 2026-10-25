@@ -115,6 +115,13 @@ def queue_item(
             "ramp": "Y" if idx % 3 else "N",
             "car-park": "Y" if idx % 4 else "N",
             "elevator": "Y" if idx % 5 else "N",
+            "wheelchairs": "Y" if idx % 3 == 0 else "N",
+            "automatic-door": "Y" if idx % 4 == 0 else "N",
+            "public-transport-lines": (
+                f"ZNAJDUJE SIĘ PRZYSTANEK KOMUNIKACJI MIEJSKIEJ - {idx % 30 + 1},{idx % 7 + 20}"
+                if idx % 2
+                else None
+            ),
             "latitude": tlat + idx * 0.001 if lat == "town" else lat,
             "longitude": tlon + idx * 0.001 if lon == "town" else lon,
             "statistics": statistics,

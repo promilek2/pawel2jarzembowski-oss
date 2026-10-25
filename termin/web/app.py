@@ -261,6 +261,7 @@ def create_app(
         km_per_day: Annotated[float | None, Query(gt=0, le=100)] = None,
         benefit: Annotated[str | None, Query(max_length=200)] = None,
         travel: bool = False,
+        accessible: bool = False,
         limit: Annotated[int, Query(ge=1, le=100)] = 30,
     ) -> dict[str, Any]:
         runtime = rt(request)
@@ -282,6 +283,7 @@ def create_app(
             limit=limit,
             with_travel_time=travel,
             benefit_query=benefit,
+            barrier_free=accessible,
         )
         SEARCHES.labels("web").inc()
         async with search_slot(request):

@@ -1,0 +1,26 @@
+/* Tryb „Dzwonię” i lista do druku (ładowane razem z extras.js) */
+
+#call-dialog { width: min(100% - 1rem, 40rem); max-height: calc(100dvh - 1rem); font-size: 1.1875rem; }
+#call-dialog h2 { font-size: 1.75rem; }
+#call-dialog h3 { margin: 0.25rem 0 0.5rem; font-size: 1.25rem; }
+.call-body { display: grid; gap: 1rem; }
+.call-address { font-weight: 600; }
+.call-when { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; }
+.call-number { font-size: 1.75rem; min-height: 72px; letter-spacing: 0.02em; }
+#call-dialog .script-steps li, #call-dialog ol li, #call-dialog ul li { margin-bottom: 0.5rem; line-height: 1.5; }
+.call-after { border-top: 1px solid var(--line-soft); padding-top: 0.75rem; }
+
+#print-sheet { display: none; }
+
+@media print {
+  body > *:not(#print-sheet) { display: none !important; }
+  #print-sheet { display: block; color: #000; font: 11pt/1.4 system-ui, sans-serif; }
+  #print-sheet h1 { font-size: 18pt; margin: 0 0 4pt; }
+  #print-sheet table { width: 100%; border-collapse: collapse; margin-top: 10pt; }
+  #print-sheet th, #print-sheet td { border: 1px solid #555; padding: 6pt; vertical-align: top; text-align: left; }
+  #print-sheet th { background: #eee; }
+  #print-sheet .print-phone { font-size: 13pt; font-weight: 700; white-space: nowrap; }
+  #print-sheet .print-check { font-size: 16pt; text-align: center; }
+  #print-sheet .print-tip, #print-sheet .print-source { margin-top: 10pt; font-size: 9pt; }
+  @page { margin: 12mm; }
+}

@@ -44,6 +44,11 @@ dać znać, gdy pojawi się wcześniejszy termin. Bez reklam, a konto jest opcjo
 - 👤 **Opcjonalne konto**: obserwacje na wielu urządzeniach, eksport i usunięcie danych
   jednym kliknięciem. Kody odzyskiwania („Nie pamiętam hasła” działa nawet bez poczty),
   weryfikacja dwuetapowa kodem z aplikacji, lista zalogowanych urządzeń. Bez konta też wszystko działa.
+- ♿ **Dojazd i dostępność**: linie komunikacji miejskiej i udogodnienia z danych NFZ (podjazd,
+  winda, wózki, drzwi automatyczne) oraz filtr „Tylko bez barier”.
+- 🖨️ **Lista do druku i tryb „Dzwonię”**: tabela z telefonami do odhaczania przy dzwonieniu oraz
+  pełnoekranowy asystent rozmowy z dużym numerem i skryptem. Zapisane wyszukiwania na stronie
+  startowej, bez konta.
 - 📞 **Po zalogowaniu**: „Sprawdziłem telefonicznie” (zbiorczo widać, czy termin z NFZ zgadza się
   z tym, co mówi rejestracja), „Moje sprawy” ze skierowaniami, datami wizyt i prywatnymi notatkami
   oraz powiadomienia prosto w telefonie (Web Push) z przypomnieniem dzień przed wizytą.

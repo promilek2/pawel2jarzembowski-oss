@@ -341,6 +341,33 @@ def test_two_factor_setup_and_login(page) -> None:  # type: ignore[no-untyped-de
     page.wait_for_selector("#account-label:has-text('Konto')")
 
 
+def test_saved_search_filter_print_and_call_mode(page) -> None:  # type: ignore[no-untyped-def]
+    page.click(".more summary")
+    page.check("#accessible")
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    assert "dostepne=true" in page.url
+    assert "Dojazd:" in page.locator("#result-list").inner_text()
+    # zapisane wyszukiwanie wraca na stronę startową
+    page.click("#save-search")
+    page.wait_for_selector("#saved-searches:not([hidden]) .saved-chip")
+    assert "Okulista" in page.locator("#saved-list").inner_text()
+    # lista do druku (bez okna drukowania w teście)
+    page.evaluate("() => { window.print = () => { document.body.dataset.printed = '1'; }; }")
+    page.click("#print-list")
+    page.wait_for_selector("body[data-printed='1']")
+    assert page.locator("#print-sheet tbody tr").count() >= 1
+    # tryb „Dzwonię”
+    card = page.locator("#result-list article").first
+    card.locator(".script summary").click()
+    card.get_by_role("button", name="Tryb rozmowy (duże litery)").click()
+    page.wait_for_selector("#call-dialog[open] .call-number")
+    assert "Co powiedzieć" in page.locator("#call-dialog").inner_text()
+    assert _axe_violations(page) == []
+    page.locator("#call-dialog").get_by_role("button", name="Sprawdziłem telefonicznie").click()
+    page.wait_for_selector("#auth-dialog[open]")  # bez konta: logowanie
+
+
 def test_report_prompt_after_call(page) -> None:  # type: ignore[no-untyped-def]
     page.clock.install()
     search(page, "okulista dorośli")

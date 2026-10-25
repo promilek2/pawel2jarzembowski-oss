@@ -252,6 +252,11 @@ class QueueEntry(Location):
     ramp: bool | None = None
     car_park: bool | None = None
     elevator: bool | None = None
+    wheelchairs: bool | None = None
+    """Placówka udostępnia wózki inwalidzkie (API 1.4)."""
+    automatic_door: bool | None = None
+    public_transport_lines: str | None = None
+    """Opis dojazdu komunikacją, np. „ZNAJDUJE SIĘ PRZYSTANEK KOMUNIKACJI MIEJSKIEJ - 2,3”."""
     queue_in_cer: bool | None = None
     """Kolejka w Centralnej e-Rejestracji (API 1.4): zapisy przez IKP, bez PCUŚ i statystyk."""
     dates: Dates | None = None
@@ -262,7 +267,13 @@ class QueueEntry(Location):
     """Współrzędne przybliżone (środek gminy z TERYT), bo NFZ ich nie podał."""
 
     @field_validator(
-        "provider", "provider_code", "teryt_place", "age_range", "benefit", mode="before"
+        "provider",
+        "provider_code",
+        "teryt_place",
+        "age_range",
+        "benefit",
+        "public_transport_lines",
+        mode="before",
     )
     @classmethod
     def _str_fields(cls, v: Any) -> str | None:
@@ -285,6 +296,8 @@ class QueueEntry(Location):
         "car_park",
         "elevator",
         "queue_in_cer",
+        "wheelchairs",
+        "automatic_door",
         mode="before",
     )
     @classmethod
@@ -330,6 +343,11 @@ class QueueEntry(Location):
     @property
     def in_cer(self) -> bool:
         return bool(self.queue_in_cer)
+
+    @property
+    def barrier_free(self) -> bool:
+        """Da się wejść bez schodów: podjazd albo winda (wg danych placówki dla NFZ)."""
+        return bool(self.ramp or self.elevator)
 
     @property
     def as_at(self) -> dt.date | None:

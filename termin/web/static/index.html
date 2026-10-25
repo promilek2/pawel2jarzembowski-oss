@@ -121,6 +121,10 @@
               <label><input type="radio" name="case" value="2"><span data-i18n="form.case_2">Pilne (przypadek pilny)</span></label>
             </div>
           </fieldset>
+          <label class="check">
+            <input type="checkbox" id="accessible" name="accessible" value="1">
+            <span data-i18n="form.accessible">Tylko bez barier (podjazd albo winda)</span>
+          </label>
         </details>
 
         <p id="form-error" class="error" role="alert" hidden></p>
@@ -129,6 +133,11 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
       </form>
+
+      <section class="popular" id="saved-searches" aria-labelledby="saved-title" hidden>
+        <h2 id="saved-title" data-i18n="saved.title">Twoje wyszukiwania</h2>
+        <div class="chips" id="saved-list"></div>
+      </section>
 
       <section class="popular" aria-labelledby="popular-title">
         <h2 id="popular-title" data-i18n="form.popular">Często szukane</h2>
@@ -155,6 +164,8 @@
           <div class="view-switch">
             <button type="button" id="toggle-map" class="pill" aria-expanded="false" aria-controls="map" data-i18n="results.show_map">Pokaż mapę</button>
             <button type="button" id="show-stats" class="pill" aria-expanded="false" aria-controls="stats" data-i18n="stats.button">Statystyki województwa</button>
+            <button type="button" id="save-search" class="pill" data-i18n="saved.save">Zapisz wyszukiwanie</button>
+            <button type="button" id="print-list" class="pill" data-i18n="print.button">Drukuj listę</button>
           </div>
         </div>
         <div id="map" class="map" role="region" hidden></div>

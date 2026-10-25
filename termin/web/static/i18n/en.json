@@ -43,7 +43,8 @@
     "variant_dzieci": "Children",
     "candidates_question": "Did you mean:",
     "required": "Type what you are looking for and where you are.",
-    "popular": "Popular searches"
+    "popular": "Popular searches",
+    "accessible": "Step-free access only (ramp or lift)"
   },
   "results": {
     "loading": "Searching…",
@@ -90,7 +91,10 @@
     "forecast_sr": "NFZ forecast: about {pcus} wait, roughly until {date}. This is not a free slot.",
     "forecast_label": "NFZ forecast · ~{date}",
     "cer": "Book via IKP",
-    "average": "Clinic average: {n} days"
+    "average": "Clinic average: {n} days",
+    "wheelchairs": "wheelchairs available",
+    "automatic_door": "automatic door",
+    "transport": "Getting there:"
   },
   "when": {
     "today": "today",
@@ -451,5 +455,27 @@
     "denied": "Notifications are blocked. Allow them in the browser settings for this site.",
     "failed": "Couldn't turn on notifications. Try again.",
     "test_sent": "Sent. The notification should appear in a few seconds."
+  },
+  "saved": {
+    "title": "Your searches",
+    "save": "Save search",
+    "saved": "Saved. You'll find it at the top of the page.",
+    "remove": "Remove saved search: {label}"
+  },
+  "print": {
+    "button": "Print list",
+    "forecast": "~{pcus} (NFZ forecast)",
+    "printed": "printed {date}",
+    "col_place": "Clinic",
+    "col_phone": "Phone",
+    "col_when": "Date / forecast",
+    "col_called": "Called",
+    "tip": "Call in order and ask for the earliest available date. Have your referral (or e-referral code) and PESEL ready.",
+    "source": "Data: NFZ “Terminy leczenia”. Termin is not an NFZ app."
+  },
+  "call": {
+    "button": "Call mode (large text)",
+    "say": "What to say",
+    "after": "After the call"
   }
 }

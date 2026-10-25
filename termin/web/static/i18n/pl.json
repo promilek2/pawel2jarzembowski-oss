@@ -43,7 +43,8 @@
     "variant_dzieci": "Dla dzieci",
     "candidates_question": "Czy chodziło Ci o:",
     "required": "Wpisz, czego szukasz, i podaj, gdzie jesteś.",
-    "popular": "Często szukane"
+    "popular": "Często szukane",
+    "accessible": "Tylko bez barier (podjazd albo winda)"
   },
   "results": {
     "loading": "Szukam terminów…",
@@ -90,7 +91,10 @@
     "forecast_sr": "Prognoza NFZ: około {pcus} oczekiwania, czyli mniej więcej do {date}. To nie jest wolny termin.",
     "forecast_label": "prognoza NFZ · ok. {date}",
     "cer": "Zapisy przez IKP",
-    "average": "Średnio {n} dni wg placówki"
+    "average": "Średnio {n} dni wg placówki",
+    "wheelchairs": "wózki inwalidzkie",
+    "automatic_door": "drzwi automatyczne",
+    "transport": "Dojazd:"
   },
   "when": {
     "today": "dziś",
@@ -453,5 +457,27 @@
     "denied": "Powiadomienia są zablokowane. Zezwól na nie w ustawieniach przeglądarki dla tej strony.",
     "failed": "Nie udało się włączyć powiadomień. Spróbuj ponownie.",
     "test_sent": "Wysłano. Powiadomienie powinno pojawić się za kilka sekund."
+  },
+  "saved": {
+    "title": "Twoje wyszukiwania",
+    "save": "Zapisz wyszukiwanie",
+    "saved": "Zapisano. Wyszukiwanie znajdziesz na górze strony.",
+    "remove": "Usuń zapisane wyszukiwanie: {label}"
+  },
+  "print": {
+    "button": "Drukuj listę",
+    "forecast": "ok. {pcus} (prognoza NFZ)",
+    "printed": "wydrukowano {date}",
+    "col_place": "Placówka",
+    "col_phone": "Telefon",
+    "col_when": "Termin / prognoza",
+    "col_called": "Dzwoniono",
+    "tip": "Zadzwoń po kolei i zapytaj o najbliższy wolny termin. Przygotuj skierowanie (albo kod e-skierowania) i PESEL.",
+    "source": "Dane: NFZ „Terminy leczenia”. Termin nie jest aplikacją NFZ."
+  },
+  "call": {
+    "button": "Tryb rozmowy (duże litery)",
+    "say": "Co powiedzieć",
+    "after": "Po rozmowie"
   }
 }

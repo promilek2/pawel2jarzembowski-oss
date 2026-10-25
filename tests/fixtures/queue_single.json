@@ -36,6 +36,9 @@
       "ramp": "Y",
       "car-park": "Y",
       "elevator": "Y",
+      "wheelchairs": "N",
+      "automatic-door": "N",
+      "public-transport-lines": "ZNAJDUJE SIĘ PRZYSTANEK KOMUNIKACJI MIEJSKIEJ - 2,21",
       "latitude": 54.5199,
       "longitude": 18.5315,
       "statistics": {

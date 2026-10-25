@@ -172,6 +172,9 @@ def search(
         False, "--czas-dojazdu", help="Licz czas dojazdu autem (wymaga TERMIN_OSRM_URL)."
     ),
     limit: int = typer.Option(10, "--limit", "-n", min=1, max=100, help="Ile wyników pokazać."),
+    barrier_free: bool = typer.Option(
+        False, "--bez-barier", help="Tylko placówki z podjazdem albo windą."
+    ),
     as_json: bool = typer.Option(False, "--json", help="Wynik jako JSON."),
 ) -> None:
     """Znajdź najszybszy termin u specjalisty na NFZ."""
@@ -199,6 +202,7 @@ def search(
         km_per_day=km_per_day,
         limit=limit,
         with_travel_time=travel_time,
+        barrier_free=barrier_free,
     )
     settings = get_settings()
 

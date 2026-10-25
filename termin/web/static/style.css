@@ -584,3 +584,9 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 .toast p { margin: 0; font-weight: 600; line-height: 1.45; }
 .toast-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .toast .btn-outline { color: var(--panel-text); border-color: var(--panel-line); }
+.transport { margin: 0; font-size: 0.9375rem; color: var(--ink-2); }
+.saved-chip { display: inline-flex; align-items: stretch; }
+.saved-chip .chip { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.chip-remove { font: inherit; font-size: 1.25rem; min-width: 44px; min-height: 44px; border: 0; border-left: 1px solid var(--line-soft); border-radius: 0 999px 999px 0; background: var(--surface); color: var(--ink); cursor: pointer; }
+.dispenser .check { color: var(--panel-text); }
+.dispenser .check input { accent-color: var(--signal); }
