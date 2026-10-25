@@ -580,3 +580,32 @@ def test_slash_focuses_search(page) -> None:  # type: ignore[no-untyped-def]
     page.keyboard.press("/")
     assert page.evaluate("() => document.activeElement.id") == "co"
     assert page.locator("#co").input_value() == ""
+
+
+def test_show_more_results(page) -> None:  # type: ignore[no-untyped-def]
+    def small_first_page(route) -> None:  # type: ignore[no-untyped-def]
+        url = route.request.url
+        route.continue_(url=url if "limit=" in url else url + "&limit=10")
+
+    page.route("**/api/search?*", small_first_page)
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    assert page.locator("#result-list > li").count() == 10
+    more = page.locator("#results-more button")
+    assert more.inner_text().startswith("Pokaż jeszcze")
+    more.click()
+    page.wait_for_selector("#result-list > li:nth-child(11)")
+    assert page.evaluate(
+        "() => document.activeElement.closest('li') === "
+        "document.querySelector('#result-list > li:nth-child(11)')"
+    )
+    assert page.locator("#results-more").is_hidden()
+
+
+def test_nfz_down_suggests_official_search(page) -> None:  # type: ignore[no-untyped-def]
+    body = {"detail": "API NFZ jest niedostępne (timeout).", "code": "nfz"}
+    page.route("**/api/search?*", lambda route: route.fulfill(status=502, json=body))
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#form-error:not([hidden]) a")
+    assert "nie odpowiada" in page.locator("#form-error").inner_text()
+    assert "nfz.gov.pl" in page.locator("#form-error a").get_attribute("href")

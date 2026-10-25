@@ -64,7 +64,9 @@
     "widen_label": "Few results. Search further?",
     "widen": "Search within {km} km",
     "tip": "Shortest forecast nearby: {place}, {km} km from you. That is about {days} {days_word} less than at the nearest facility.",
-    "tip_show": "Show this facility"
+    "tip_show": "Show this facility",
+    "more": "Show {n} more",
+    "nfz_down": "The NFZ search service is not responding right now. Try again in a few minutes or check the official search:"
   },
   "card": {
     "no_date": "No date in the data",

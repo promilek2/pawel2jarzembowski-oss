@@ -188,7 +188,7 @@ function formParams() {
   return params;
 }
 
-async function runSearch(params, { auto = false } = {}) {
+async function runSearch(params, { auto = false, keepFocus = false } = {}) {
   const error = $("#form-error");
   error.hidden = true;
   if (!params.get("q") || (!params.get("where") && !params.get("lat"))) {
@@ -208,6 +208,10 @@ async function runSearch(params, { auto = false } = {}) {
     const data = await res.json();
     if (!res.ok) {
       error.textContent = data.detail || t("results.error");
+      // NFZ nie odpowiada: podsuwamy oficjalną wyszukiwarkę zamiast zostawiać z niczym.
+      if (data.code === "nfz" && state.config?.official_url) {
+        error.replaceChildren(t("results.nfz_down"), " ", h("a", { href: state.config.official_url, rel: "noopener" }, t("footer.official")));
+      }
       error.hidden = false;
       announce("");
       return;
@@ -221,7 +225,7 @@ async function runSearch(params, { auto = false } = {}) {
     // Fokus na wynikach: czytnik ekranu przeczyta nagłówek, a telefon przewinie do listy.
     // Przy wyszukiwaniu z udostępnionego linku (bez akcji użytkownika) nie przewijamy strony,
     // żeby nie było przeskoku układu (CLS).
-    if (data.status === "ok" && !location.hash.includes("wynik=")) $("#results-heading").focus({ preventScroll: auto });
+    if (data.status === "ok" && !keepFocus && !location.hash.includes("wynik=")) $("#results-heading").focus({ preventScroll: auto });
   } catch {
     const saved = STORE.get("last");
     if (saved && saved.params === params.toString()) {
@@ -308,6 +312,7 @@ function renderResults(data) {
   announce(data.results.length ? t("results.found", { n: data.total_found }) : t("results.none"));
   renderWiden(data);
   renderTip(data);
+  renderMore(data);
   const target = location.hash.match(/wynik=([\w-]+)/);
   if (target) document.getElementById(`r-${target[1]}`)?.scrollIntoView();
   if (state.auth?.user) account().then((m) => m.loadPersonal(data));
@@ -327,6 +332,22 @@ function renderTip(data) {
   box.replaceChildren(
     t("results.tip", { km: fastest.distance_km, days: gain, place }), " ",
     h("button", { type: "button", class: "link-btn", onclick: () => { const el = document.getElementById(`r-${fastest.id}`); el?.scrollIntoView({ block: "start" }); el?.focus(); } }, t("results.tip_show")));
+}
+
+// „Pokaż więcej”: to samo wyszukiwanie z większym limitem (NFZ odpowiada z pamięci podręcznej).
+function renderMore(data) {
+  const box = $("#results-more");
+  const shown = data.results.length;
+  const rest = data.total_found - shown;
+  box.hidden = rest <= 0 || shown >= 100;
+  if (box.hidden) { box.replaceChildren(); return; }
+  box.replaceChildren(h("button", { type: "button", class: "btn btn-outline", onclick: async () => {
+    const params = new URLSearchParams(state.lastParams);
+    params.set("limit", String(Math.min(100, shown + 30)));
+    await runSearch(params, { auto: true, keepFocus: true });
+    const next = document.getElementById(`r-${state.last?.results[shown]?.id}`);
+    next?.focus({ preventScroll: false });
+  } }, t("results.more", { n: Math.min(rest, 100 - shown) })));
 }
 
 // Pusty albo skromny wynik: jednym dotknięciem większy promień albo całe województwo.

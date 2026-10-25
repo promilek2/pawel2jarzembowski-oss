@@ -64,7 +64,9 @@
     "widen_label": "Mało wyników. Poszukać dalej?",
     "widen": "Szukaj w {km} km",
     "tip": "Najkrótsza prognoza w okolicy: {place}, {km} km od Ciebie. To ok. {days} {days_word} krócej niż w najbliższej placówce.",
-    "tip_show": "Pokaż tę placówkę"
+    "tip_show": "Pokaż tę placówkę",
+    "more": "Pokaż jeszcze {n}",
+    "nfz_down": "Wyszukiwarka NFZ teraz nie odpowiada. Spróbuj za kilka minut albo sprawdź w oficjalnej wyszukiwarce:"
   },
   "card": {
     "no_date": "Brak terminu w danych",
