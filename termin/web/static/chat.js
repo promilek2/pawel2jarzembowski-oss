@@ -1,6 +1,6 @@
 // Pomocnik „Jak to działa?”: małe okienko w rogu, ładowane leniwie z app.js (ADR-0014).
 // Rozmowa żyje tylko w pamięci strony: nie zapisujemy jej w przeglądarce ani na serwerze.
-import { $, h, t, state, api, errorText } from "./app.js";
+import { $, h, t, state, api, errorText, openAuth, account, needLogin } from "./app.js";
 
 const MAX_QUESTION = 500;
 const history = [];     // [{ role: "user" | "assistant", content }]
@@ -23,15 +23,52 @@ function panel() {
   return $("#chat-panel");
 }
 
-function bubble(role, text, extra = "") {
+// „Pokaż mi”: temat odpowiedzi → miejsce w aplikacji, które od razu otwieramy.
+function focusOn(selector) {
+  const el = document.querySelector(selector);
+  el?.scrollIntoView({ block: "center" });
+  el?.focus();
+}
+
+function openOptions(selector) {
+  const more = document.querySelector("details.more");
+  if (more) more.open = true;
+  focusOn(selector);
+}
+
+const firstResult = () => (state.last?.results?.length ? focusOn("#result-list article") : focusOn("#co"));
+const myAccount = () => needLogin() || account().then((m) => m.openAccount());
+
+const ACTIONS = {
+  search: () => focusOn("#co"),
+  install: () => (state.installPrompt ? $("#install-btn").click() : $("#install-dialog").showModal()),
+  password: () => openAuth(state.config?.mail_enabled ? "forgot" : "recover"),
+  account: () => (state.auth?.user ? myAccount() : openAuth("login")),
+  twofa: myAccount,
+  push: myAccount,
+  cases: () => needLogin() || account().then((m) => m.openCases()),
+  accessible: () => openOptions("#accessible"),
+  urgent: () => openOptions('input[name="case"][value="2"]'),
+  large_text: () => focusOn("#large-text"),
+  distance: () => (state.last ? focusOn("#toggle-map") : focusOn("#gdzie")),
+  tools: () => (state.last ? focusOn("#send-list") : focusOn("#co")),
+  call: firstResult,
+  watch: firstResult,
+  forecast: firstResult,
+  privacy: () => focusOn('a[href="/prywatnosc"]'),
+};
+
+function bubble(role, text, extra = "", topic = null) {
+  const action = role === "assistant" ? ACTIONS[topic] : null;
   return h("div", { class: `chat-msg chat-${role}${extra}` },
     h("span", { class: "visually-hidden" }, role === "user" ? t("chat.you") : t("chat.helper")),
-    h("p", {}, text));
+    h("p", {}, text),
+    action ? h("button", { type: "button", class: "link-btn chat-show", onclick: () => { closeChat(false); action(); } }, t("chat.show")) : null);
 }
 
 function renderLog() {
   const log = $("#chat-log");
-  log.replaceChildren(...history.map((m) => bubble(m.role, m.content)));
+  log.replaceChildren(...history.map((m) => bubble(m.role, m.content, "", m.topic)));
   if (busy) log.append(bubble("assistant", t("chat.thinking"), " chat-busy"));
   $("#chat-suggest").hidden = history.length > 0 || !canAsk();
   log.scrollTop = log.scrollHeight;
@@ -55,11 +92,11 @@ async function ask(question) {
   history.push({ role: "user", content: question });
   busy = true;
   renderLog();
-  const res = await api("/api/assistant", { method: "POST", json: { messages: history.slice(-8), lang: state.lang } })
+  const res = await api("/api/assistant", { method: "POST", json: { messages: history.slice(-8).map(({ role, content }) => ({ role, content })), lang: state.lang } })
     .catch(() => ({ ok: false, body: null }));
   busy = false;
   if (res.ok && res.body?.reply) {
-    history.push({ role: "assistant", content: res.body.reply });
+    history.push({ role: "assistant", content: res.body.reply, topic: res.body.topic });
     renderLog();
   } else {
     history.pop();
@@ -114,10 +151,10 @@ function renderSuggest() {
     h("button", { type: "button", class: "chip", onclick: () => ask(t(key)) }, t(key))));
 }
 
-function closeChat() {
+function closeChat(refocus = true) {
   panel()?.close();
   $("#help-btn").setAttribute("aria-expanded", "false");
-  $("#help-btn").focus();
+  if (refocus) $("#help-btn").focus();
 }
 
 export async function toggleChat() {

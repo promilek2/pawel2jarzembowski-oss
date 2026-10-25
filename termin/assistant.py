@@ -299,7 +299,9 @@ class Assistant:
             output_tokens=usage.output_tokens,
             cached_tokens=usage.cache_read_input_tokens or 0,
         )
-        return Answer(text, "ai")
+        # Temat z bazy wiedzy (jeśli pytanie pasuje), żeby okienko mogło dać „Pokaż mi”.
+        topic = match_topic(history[-1].content)
+        return Answer(text, "ai", topic.id if topic else None)
 
     async def aclose(self) -> None:
         if self._client is not None:

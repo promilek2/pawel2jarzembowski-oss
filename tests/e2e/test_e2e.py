@@ -656,3 +656,20 @@ def test_call_mode_reads_aloud_with_local_voice(browser, base_url) -> None:  # t
     assert len(spoken) == 1 and spoken[0]["local"] is True
     assert "prognoza NFZ" in spoken[0]["text"] and "0 0" in spoken[0]["text"]
     context.close()
+
+
+def test_help_chat_show_me_opens_the_right_place(page) -> None:  # type: ignore[no-untyped-def]
+    page.click("#help-btn")
+    page.fill("#chat-input", "jak zainstalować aplikację?")
+    page.press("#chat-input", "Enter")
+    page.wait_for_selector("#chat-log .chat-show")
+    page.click("#chat-log .chat-show")
+    page.wait_for_selector("#install-dialog[open]")
+    assert page.locator("#chat-panel").is_hidden()
+    page.keyboard.press("Escape")
+    page.click("#help-btn")
+    page.fill("#chat-input", "gdzie filtr bez barier?")
+    page.press("#chat-input", "Enter")
+    page.wait_for_selector("#chat-log .chat-assistant:nth-of-type(4) .chat-show")
+    page.locator("#chat-log .chat-show").last.click()
+    assert page.evaluate("() => document.activeElement.id") == "accessible"

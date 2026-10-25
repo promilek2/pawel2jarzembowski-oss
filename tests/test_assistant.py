@@ -200,6 +200,7 @@ async def test_ai_answer_request_shape(tmp_path: Path) -> None:
     answer = await helper.answer(turns, "uk")
     await helper.aclose()
     assert answer.mode == "ai" and answer.reply.startswith("Kliknij")
+    assert answer.topic == "install"  # „a jak zainstalować?” → przycisk „Pokaż mi”
     body = fake.requests[0]
     assert body["model"] == "claude-opus-5-5"
     assert body["messages"][-1] == {"role": "user", "content": "a jak zainstalować?"}
