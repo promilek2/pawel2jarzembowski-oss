@@ -46,6 +46,7 @@ const ACTIONS = {
   account: () => (state.auth?.user ? myAccount() : openAuth("login")),
   twofa: myAccount,
   push: myAccount,
+  backup: myAccount,
   cases: () => needLogin() || account().then((m) => m.openCases()),
   accessible: () => openOptions("#accessible"),
   urgent: () => openOptions('input[name="case"][value="2"]'),

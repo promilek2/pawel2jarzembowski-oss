@@ -111,6 +111,7 @@ def test_every_topic_has_keywords_and_answer() -> None:
         ("Gdzie jest mapa?", "distance"),
         ("Jak szybciej dostać termin?", "tips"),
         ("Muszę odwołać wizytę", "tips"),
+        ("Zniknęły moje sprawy, jak przywrócić?", "backup"),
     ],
 )
 def test_faq_matches_topic(question: str, topic: str) -> None:

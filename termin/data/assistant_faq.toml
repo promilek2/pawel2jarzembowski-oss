@@ -310,3 +310,16 @@ answer_uk = """Кілька перевірених способів отрима
 - увімкніть «Стежити», щоб отримати повідомлення, коли прогноз скоротиться,
 - якщо направлення термінове («pilne»), одразу про це скажіть.
 Якщо візит більше не потрібен, скасуйте його: звільнене місце отримає хтось інший."""
+
+[[topic]]
+id = "backup"
+weight = 3
+keywords = ["kopi", "backup", "przywroc", "zniknel", "znikl", "stracil", "utracon", "eksport danych", "pobierz moje dane"]
+answer = """Kopię swoich danych zrobisz w „Konto” → „Pobierz moje dane”: zapisze się plik .json ze sprawami, notatkami i obserwacjami.
+Gdy konto albo sprawy znikną (np. po restarcie serwera bez stałego dysku), załóż konto ponownie i wybierz „Konto” → „Przywróć sprawy z pliku”. Duplikaty są pomijane, więc import można powtórzyć."""
+keywords_en = ["backup", "copy of my data", "restore", "disappeared", "lost", "download my data"]
+answer_en = """Make a copy in “Account” → “Download my data”: it saves a .json file with your cases, notes and watch requests.
+If your account or cases disappear (e.g. after a server restart without a permanent disk), create the account again and choose “Account” → “Restore cases from file”. Duplicates are skipped, so you can import again."""
+keywords_uk = ["резервн", "копі", "відновит", "зникл", "втрат", "завантажити мої дані"]
+answer_uk = """Копію даних зробите в «Акаунт» → «Завантажити мої дані»: збережеться файл .json зі справами, нотатками та стеженнями.
+Якщо акаунт або справи зникнуть (напр. після перезапуску сервера без постійного диска), створіть акаунт знову й оберіть «Акаунт» → «Відновити справи з файлу». Дублікати пропускаються, тож імпорт можна повторити."""
