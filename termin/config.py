@@ -10,7 +10,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -33,6 +33,11 @@ def config_file() -> Path:
     """Ścieżka pliku konfiguracyjnego (można nadpisać przez TERMIN_CONFIG)."""
     override = os.environ.get("TERMIN_CONFIG")
     return Path(override) if override else _config_dir() / "config.toml"
+
+
+def _secret_env(name: str) -> SecretStr | None:
+    value = os.environ.get(name)
+    return SecretStr(value) if value else None
 
 
 class Settings(BaseSettings):
@@ -147,6 +152,19 @@ class Settings(BaseSettings):
     """Klucz prywatny VAPID (base64url albo PEM). Brak = generujemy i zapisujemy w bazie."""
     vapid_subject: str | None = None
     """Kontakt dla usług push (`mailto:` albo https). Domyślnie TERMIN_SECURITY_CONTACT."""
+
+    # --- Pomocnik „Jak to działa?” (ADR-0014) ---
+    ai_enabled: bool = True
+    """Okienko pomocnika. Bez klucza API odpowiada z wbudowanej bazy pytań (tryb FAQ)."""
+    ai_api_key: SecretStr | None = Field(default_factory=lambda: _secret_env("ANTHROPIC_API_KEY"))
+    """Klucz Anthropic API (console.anthropic.com). Też z ANTHROPIC_API_KEY."""
+    ai_model: str = "claude-opus-5-5"
+    """Model Claude. Tańsza opcja do prostych pytań: claude-haiku-5-5."""
+    ai_daily_limit: int = Field(default=200, ge=0)
+    """Ile pytań dziennie (cała instancja) wysyłamy do API; potem tryb FAQ. Chroni rachunek."""
+    ai_rate_limit: str = "6/minute;40/day"
+    """Limit pytań do pomocnika z jednego adresu IP."""
+    ai_timeout_s: float = Field(default=30.0, gt=0)
 
     # --- Dane operatora (do regulaminu, polityki prywatności, security.txt) ---
     operator_name: str | None = None

@@ -6,6 +6,7 @@ const $ = (sel) => document.querySelector(sel);
 const account = () => import("./account.js");
 // Tryb „Dzwonię” i lista do druku: też dopiero na żądanie.
 const extras = () => import("./extras.js");
+const chat = () => import("./chat.js");
 const LANGS = ["pl", "en", "uk"];
 const STORE = {
   get(key, fallback = null) {
@@ -1116,6 +1117,10 @@ async function init() {
   handleAccountLinks();
   $("#kmday").value = $("#kmday").value || config.km_per_day;
   updateKmOutput();
+  if (config.assistant?.enabled) {
+    $("#help-btn").hidden = false;
+    $("#help-btn").addEventListener("click", () => chat().then((m) => m.toggleChat()));
+  }
   if (applyUrlParams()) runSearch(formParams(), { auto: true });
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 }

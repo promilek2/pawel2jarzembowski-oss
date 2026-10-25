@@ -195,6 +195,17 @@ zmienne `TERMIN_SMTP_HOST`, `TERMIN_SMTP_PORT` (zwykle 587), `TERMIN_SMTP_USER`,
 `TERMIN_SMTP_PASSWORD`, `TERMIN_SMTP_FROM`. Działa każdy serwer SMTP, np. darmowy plan
 Brevo albo Gmail z hasłem do aplikacji (konto z weryfikacją dwuetapową → „Hasła do aplikacji”).
 
+**Pomocnik AI (opcjonalnie):** okienko „?” działa od razu z wbudowaną pomocą. Żeby
+odpowiadał model Claude, załóż konto na <https://console.anthropic.com>, doładuj kredyty
+(Billing), utwórz klucz (API Keys → Create Key) i wklej go w Render → Environment jako
+`TERMIN_AI_API_KEY`. Domyślny model to `claude-opus-5-5`; pytania o obsługę aplikacji są
+proste, więc dużo taniej wyjdzie `TERMIN_AI_MODEL=claude-haiku-5-5`. `TERMIN_AI_DAILY_LIMIT`
+(domyślnie 200 pytań dziennie na całą instancję) chroni rachunek; w konsoli Anthropic ustaw też
+miesięczny limit wydatków. Na Render limity na IP są wspólne dla wszystkich, więc
+`TERMIN_AI_RATE_LIMIT` (6/min, 40/dzień) dotyczy całej instancji. Przed publicznym
+uruchomieniem zaakceptuj umowę powierzenia (DPA) Anthropic: polityka prywatności sama dopisze
+Anthropic jako odbiorcę, gdy klucz jest ustawiony (ADR-0014).
+
 Ograniczenia darmowego planu:
 
 - usługa zasypia po 15 min bez ruchu, pierwsze wejście potem trwa około minuty,

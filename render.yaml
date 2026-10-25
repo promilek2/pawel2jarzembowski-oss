@@ -15,6 +15,9 @@ services:
       # TERMIN_PUBLIC_URL nie trzeba: aplikacja bierze RENDER_EXTERNAL_URL.
       # Instancja publiczna: dodaj w panelu Render TERMIN_OPERATOR_NAME, _EMAIL, _ADDRESS
       # (regulamin i polityka prywatności, docs/DEPLOY.md).
+      # Pomocnik AI (opcjonalnie): klucz z console.anthropic.com. Puste = wbudowana pomoc.
+      - key: TERMIN_AI_API_KEY
+        sync: false
     # Stała baza (tylko plan płatny):
     # disk:
     #   name: termin-data

@@ -1,0 +1,160 @@
+# Baza wiedzy pomocnika „Jak to działa?” (termin/assistant.py).
+#
+# Każdy wpis to temat: `keywords` (bez polskich znaków, małymi literami; słowo pasuje,
+# gdy zaczyna się od danego rdzenia, fraza ze spacją musi wystąpić w całości) i `answer`.
+# W trybie bez klucza API pomocnik odpowiada najlepiej pasującym wpisem. Z kluczem API
+# wszystkie wpisy trafiają do instrukcji modelu jako wiedza o aplikacji.
+# Odpowiedzi: krótko, zwykły tekst, gdzie kliknąć. Bez porad medycznych.
+
+# Instrukcja dla modelu (tryb `ai`); {lang} zastępujemy językiem odpowiedzi.
+rules = """
+Jesteś pomocnikiem w aplikacji internetowej Termin, która pomaga znaleźć najszybszy termin u specjalisty na NFZ (dane z publicznego API NFZ „Terminy leczenia”). Termin nie jest oficjalną aplikacją NFZ.
+
+Twoje zadanie: krótko wyjaśniać, gdzie co jest w aplikacji i jak z niej korzystać.
+
+Zasady:
+- Odpowiadaj {lang}, w 1–5 krótkich zdaniach albo krótką listą z myślnikami. Zwykły tekst, bez Markdownu, bez nagłówków i pogrubień.
+- Opieraj się na wiedzy o aplikacji poniżej. Nazwy przycisków podawaj w cudzysłowie „…”, tak jak w aplikacji. Nie wymyślaj funkcji, których tu nie ma; gdy czegoś nie wiesz, powiedz to.
+- Nie udzielasz porad medycznych: nie oceniasz objawów, wyników, leków ani tego, do jakiego lekarza ktoś powinien iść. Odsyłasz do lekarza (zwykle lekarza rodzinnego), w nagłych sytuacjach do numeru 112.
+- Nie wskazujesz „najlepszego lekarza” ani placówki i nie obiecujesz terminów: dane NFZ to prognoza, trzeba zadzwonić.
+- Nie proś o dane osobowe (PESEL, adres, e-mail, objawy). Jeśli ktoś je poda, nie powtarzaj ich.
+- Pytania niezwiązane z aplikacją, NFZ albo zapisami do lekarza grzecznie odrzucaj jednym zdaniem.
+"""
+
+[[topic]]
+id = "medical"
+weight = 3
+keywords = ["objaw", "boli", "bol ", "diagnoz", "lekarstw", "leki ", "tabletk", "dawk", "choroba", "chorob", "co mi jest", "czy to grozne", "wynik badan", "jakie badanie"]
+answer = """Nie udzielam porad medycznych i nie oceniam objawów ani wyników badań. Z takimi pytaniami zwróć się do lekarza: zwykle najpierw do lekarza rodzinnego (POZ), który w razie potrzeby wystawi skierowanie do specjalisty.
+W nagłej sytuacji dzwoń pod 112. Nocna i świąteczna opieka zdrowotna: informacja pod numerem 800 190 590 (Telefoniczna Informacja Pacjenta NFZ)."""
+
+[[topic]]
+id = "search"
+keywords = ["szuka", "wyszuk", "jak znalez", "znalez", "jak zaczac", "jak uzywac", "obslug", "start", "specjalist", "lekarz", "poradni"]
+answer = """Na górze strony wpisz, czego szukasz (np. „okulista”, „kardiolog”, „rezonans”), i gdzie jesteś (miasto, kod pocztowy albo przycisk „Użyj mojej lokalizacji”). Kliknij „Szukaj terminu”.
+W „Więcej opcji” ustawisz zasięg w km, co jest najważniejsze (najszybciej, najbliżej albo kompromis), rodzaj skierowania (zwykłe albo pilne) i filtr „bez barier”.
+Wyniki są jak bilety: najlepsze dopasowanie jest pierwsze, przy każdym masz telefon, odległość i prognozę czasu oczekiwania."""
+
+[[topic]]
+id = "forecast"
+keywords = ["prognoz", "pcus", "okolo", "mies", "tyg", "termin nie", "pierwszy wolny", "wolny termin", "dlaczego nie ma daty", "data", "dokladn"]
+answer = """Od lipca 2026 NFZ nie podaje już pierwszego wolnego terminu. Zamiast tego publikuje prognozę czasu oczekiwania (PCUŚ), np. „1 mies. 3 tyg.”. Termin pokazuje ją jako „prognoza NFZ · ok. [data]”, czyli dzisiaj plus prognoza.
+To nie jest zarezerwowany termin. Zadzwoń do placówki i zapytaj o najbliższy wolny. „Stan na” przy wyniku mówi, z którego dnia są dane (placówki aktualizują je mniej więcej raz w tygodniu)."""
+
+[[topic]]
+id = "cer"
+weight = 2
+keywords = ["ikp", "mojeikp", "e-rejestrac", "erejestrac", "centraln", "cer", "internetowe konto", "kardiolog", "mammograf", "cytolog", "hpv", "zapisy przez"]
+answer = """„Zapisy przez IKP” oznacza Centralną e-Rejestrację. Dotyczy m.in. pierwszej wizyty u kardiologa, mammografii i badań w kierunku HPV.
+Zapiszesz się w Internetowym Koncie Pacjenta (pacjent.gov.pl), w aplikacji mojeIKP albo dzwoniąc do placówki. Termin pokazuje te miejsca z ostrzeżeniem „zapisy przez Centralną e-Rejestrację”."""
+
+[[topic]]
+id = "call"
+keywords = ["zadzwon", "telefon", "dzwoni", "rejestrac", "co powiedziec", "rozmow", "skrypt", "numer"]
+answer = """Przy każdym wyniku jest przycisk „Zadzwoń” (na telefonie od razu wybiera numer) i „Co powiedzieć przez telefon”: gotowa rozmowa i lista, co przygotować (skierowanie albo 4-cyfrowy kod e-skierowania, PESEL).
+„Tryb rozmowy (duże litery)” pokazuje numer i podpowiedzi dużą czcionką. Po rozmowie możesz kliknąć „Sprawdziłem telefonicznie” (po zalogowaniu), żeby pomóc innym."""
+
+[[topic]]
+id = "watch"
+keywords = ["obserw", "powiadom", "alert", "ntfy", "telegram", "e-mail", "email", "mail", "wczesniejsz", "zwolni"]
+answer = """Kliknij „Obserwuj” przy wyniku. Dostaniesz powiadomienie, gdy w tym obszarze pojawi się krótszy czas oczekiwania. Wybierz kanał: aplikacja ntfy (bez konta), Telegram, e-mail albo, po zalogowaniu, powiadomienie w telefonie.
+Konto nie jest potrzebne. Trzeba zaznaczyć zgodę, bo informacja o świadczeniu może dotyczyć zdrowia. Każde powiadomienie ma link do wyłączenia obserwacji."""
+
+[[topic]]
+id = "account"
+keywords = ["kont", "zaloguj", "zalog", "logowa", "rejestr", "zaloz", "wyloguj", "usun kont", "moje dane"]
+answer = """Konto jest opcjonalne i bezpłatne. Przycisk „Zaloguj” jest w prawym górnym rogu. Założysz konto w zakładce „Nowe konto” (e-mail i hasło, min. 10 znaków).
+Po zalogowaniu masz „Moje sprawy”, notatki do poradni, zgłoszenia „Sprawdziłem telefonicznie”, powiadomienia w telefonie i listę obserwacji. W „Konto” pobierzesz swoje dane albo usuniesz konto."""
+
+[[topic]]
+id = "password"
+weight = 2
+keywords = ["haslo", "hasla", "hasel", "nie pamietam", "zapomnial", "reset", "kod odzyskiw", "kody odzyskiw"]
+answer = """Kliknij „Zaloguj”, a potem „Nie pamiętam hasła”. Możesz dostać link na e-mail albo wpisać jeden z kodów odzyskiwania (zapisanych przy zakładaniu konta) i ustawić nowe hasło.
+Nowe kody odzyskiwania wygenerujesz w „Konto” → „Kody odzyskiwania”. Hasło zmienisz w „Konto” → „Zmień hasło”."""
+
+[[topic]]
+id = "twofa"
+weight = 2
+keywords = ["2fa", "dwuetap", "dwuskladnik", "authenticator", "totp", "kod z aplikacji", "qr"]
+answer = """Weryfikację dwuetapową włączysz w „Konto” → „Weryfikacja dwuetapowa”. Potrzebujesz aplikacji uwierzytelniającej (np. Google Authenticator, Microsoft Authenticator, Aegis). Zeskanuj kod QR i wpisz 6 cyfr.
+Bez telefonu zalogujesz się kodem odzyskiwania."""
+
+[[topic]]
+id = "install"
+weight = 2
+keywords = ["instal", "zainstal", "aplikac", "ekran", "ikon", "pobrac", "pobierz", "android", "iphone", "ios", "pwa", "sklep"]
+answer = """Termin instaluje się bez sklepu z aplikacjami. Kliknij „Zainstaluj” na górze strony.
+iPhone (Safari): „Udostępnij” → „Do ekranu początkowego” → „Dodaj”. Android (Chrome): menu z trzema kropkami → „Zainstaluj aplikację”. Komputer: ikona instalacji na końcu paska adresu."""
+
+[[topic]]
+id = "no_results"
+weight = 2
+keywords = ["wynik", "zadn", "brak", "nie ma", "zero", "nic nie", "malo wynik", "nie znalaz", "zaden", "pusto", "nie dziala", "blad"]
+answer = """Gdy wyników jest mało, zwiększ zasięg w „Więcej opcji” albo kliknij „Szukaj w … km” pod listą. Spróbuj też innej nazwy (np. „okulista” zamiast „oczy”) albo wybierz podpowiedź z listy.
+Przy dużym zasięgu wyszukiwanie może trwać do minuty, bo NFZ pozwala na 10 zapytań na 10 sekund. Część świadczeń (np. pierwsza wizyta u kardiologa) ma zapisy przez IKP."""
+
+[[topic]]
+id = "children"
+weight = 2
+keywords = ["dzieck", "dzieci", "dziecko", "syn", "corka", "pediatr", "maluch", "nastolat"]
+answer = """Jeśli dane świadczenie ma osobny wariant dla dzieci, Termin zapyta „Dla kogo szukasz?”. Wybierz „Dla dzieci”. Przy wynikach dla dzieci jest oznaczenie „dla dzieci”. Do rozmowy przygotuj PESEL dziecka."""
+
+[[topic]]
+id = "urgent"
+keywords = ["pilne", "pilny", "pilnie", "przypadek pilny", "rodzaj skierowania", "szybciej"]
+answer = """Jeśli lekarz oznaczył skierowanie jako „pilne”, w „Więcej opcji” wybierz „Pilne (przypadek pilny)”. Kolejki dla przypadków pilnych są zwykle krótsze. O tym, czy skierowanie jest pilne, decyduje lekarz, który je wystawia."""
+
+[[topic]]
+id = "accessible"
+keywords = ["barier", "wozek", "winda", "podjazd", "niepelnospraw", "dostepn", "parking", "toalet"]
+answer = """W „Więcej opcji” zaznacz „Tylko bez barier (podjazd albo winda)”. Przy wynikach widać udogodnienia z danych NFZ: podjazd, winda, toaleta, parking, drzwi automatyczne, wózki inwalidzkie i linie dojazdu."""
+
+[[topic]]
+id = "distance"
+keywords = ["odleglosc", "km", "daleko", "dojazd", "mapa", "mape", "gmin", "przyblizon", "nawigac"]
+answer = """Odległość liczymy od miejsca, które podasz. Przycisk „Dojazd” otwiera nawigację, a „Pokaż mapę” nad wynikami pokazuje placówki na mapie.
+NFZ często nie podaje współrzędnych placówki. Wtedy liczymy odległość do środka gminy i oznaczamy ją jako przybliżoną („~”)."""
+
+[[topic]]
+id = "cases"
+keywords = ["moje spraw", "sprawy", "sprawa", "notatk", "wizyt", "przypomn", "kalendarz", "ics"]
+answer = """„Moje sprawy” (po zalogowaniu, przycisk w „Konto” albo „Do moich spraw” przy wyniku) zbierają skierowania i wizyty: status, datę wizyty, notatkę i eksport do kalendarza. Przypomnienie przyjdzie dzień przed wizytą, jeśli włączysz powiadomienia w telefonie.
+Przycisk „Notatka” przy wyniku zapisuje prywatną notatkę do poradni. „Przypomnij mi” przy wyniku dodaje przypomnienie do kalendarza bez konta."""
+
+[[topic]]
+id = "push"
+keywords = ["push", "powiadomienia w telefon", "na telefon", "dzwonek"]
+answer = """Powiadomienia w telefonie włączysz po zalogowaniu: „Konto” → „Powiadomienia w telefonie” → „Włącz na tym urządzeniu”. Na iPhonie najpierw zainstaluj aplikację (Udostępnij → Do ekranu początkowego) i otwórz ją z ikony."""
+
+[[topic]]
+id = "tools"
+keywords = ["drukuj", "druk", "wydruk", "zapisz wyszukiw", "zapisane", "udostepnij", "link", "historia", "statystyk", "mediana", "eksport", "csv"]
+answer = """Nad wynikami: „Pokaż mapę”, „Statystyki województwa” (mediana czasu oczekiwania), „Zapisz wyszukiwanie” (pojawi się na górze strony) i „Drukuj listę” (tabela z telefonami do odhaczania).
+Przy wyniku: „Udostępnij” (link, np. do SMS-a) i „Historia terminu” (jak zmieniała się kolejka)."""
+
+[[topic]]
+id = "large_text"
+keywords = ["duzy tekst", "czcionk", "litery", "slabo widze", "powieksz", "jezyk", "english", "ukrain", "angielsk"]
+answer = """Przycisk „A+ Duży tekst” na górze strony powiększa napisy. Obok wybierzesz język: polski, angielski albo ukraiński. „Tryb rozmowy (duże litery)” przy wyniku pokazuje numer i podpowiedzi bardzo dużą czcionką."""
+
+[[topic]]
+id = "referral"
+keywords = ["skierowan", "e-skierow", "eskierow", "bez skierowania", "kod skierowania"]
+answer = """Do większości specjalistów na NFZ potrzebujesz skierowania (np. od lekarza rodzinnego). Bez skierowania przyjmują m.in. ginekolog i położnik, dentysta, wenerolog, onkolog i psychiatra (okulista i dermatolog wymagają skierowania).
+Przy zapisie podajesz 4-cyfrowy kod e-skierowania i PESEL. Zapytaj w rejestracji, do kiedy dostarczyć skierowanie."""
+
+[[topic]]
+id = "privacy"
+keywords = ["prywatn", "rodo", "dane osob", "sledz", "cookie", "ciasteczk", "bezpieczn", "kto widzi"]
+answer = """Termin nie używa reklam ani śledzenia. Wyszukiwanie działa bez konta. Lokalizację w obserwacjach zaokrąglamy do ok. 1 km i nie zapisujemy jej w logach. Szczegóły: „Polityka prywatności” i „Cookies” w stopce strony."""
+
+[[topic]]
+id = "official"
+keywords = ["nfz", "oficjal", "kto zrobil", "czyje", "zrodlo", "skad dane", "aktualn", "stan na"]
+answer = """Termin nie jest oficjalną aplikacją NFZ. Pokazuje dane z publicznego API NFZ „Terminy leczenia”. Placówki aktualizują je mniej więcej raz w tygodniu, dlatego przy każdym wyniku jest „stan na”. Oficjalna wyszukiwarka NFZ: link w stopce. Kod Termin jest otwarty (link „Kod źródłowy”)."""
+
+[[topic]]
+id = "about_me"
+keywords = ["kim jestes", "czym jestes", "co umiesz", "pomoc", "help", "ai", "czat", "chat", "bot"]
+answer = """Jestem pomocnikiem aplikacji Termin. Podpowiem, gdzie co jest i jak z niej korzystać: jak szukać, co znaczy „prognoza NFZ”, jak zadzwonić, obserwować termin, zainstalować aplikację albo odzyskać konto. Nie udzielam porad medycznych."""

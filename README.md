@@ -52,6 +52,9 @@ dać znać, gdy pojawi się wcześniejszy termin. Bez reklam, a konto jest opcjo
 - 📞 **Po zalogowaniu**: „Sprawdziłem telefonicznie” (zbiorczo widać, czy termin z NFZ zgadza się
   z tym, co mówi rejestracja), „Moje sprawy” ze skierowaniami, datami wizyt i prywatnymi notatkami
   oraz powiadomienia prosto w telefonie (Web Push) z przypomnieniem dzień przed wizytą.
+- ❓ **Pomocnik „Jak to działa?”**: małe okienko „?” w rogu podpowiada, gdzie co jest i jak
+  zapisać się na wizytę. Działa bez konfiguracji (wbudowana pomoc), a z kluczem Anthropic API
+  odpowiada model AI Claude. Nie udziela porad medycznych i nie zapisuje rozmów.
 - 🔒 **Bezpieczeństwo i prywatność**: zgoda RODO na dane o zdrowiu, brak śledzenia,
   bezpieczne sesje, ochrona CSRF, CSP, limity logowania (szczegóły w [SECURITY.md](SECURITY.md)).
   Regulamin, polityka prywatności, cookies i deklaracja dostępności są wbudowane.

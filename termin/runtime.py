@@ -10,6 +10,7 @@ from types import TracebackType
 from typing import Self
 
 import httpx
+import httpx2
 
 from termin.config import Settings
 from termin.core.benefits import BenefitCatalog
@@ -31,6 +32,8 @@ class Transports:
     geo: httpx.AsyncBaseTransport | None = None
     osrm: httpx.AsyncBaseTransport | None = None
     notify: httpx.AsyncBaseTransport | None = None
+    ai: httpx2.AsyncBaseTransport | None = None
+    """Pomocnik (Anthropic SDK używa httpx2, nie httpx)."""
 
 
 class Runtime:

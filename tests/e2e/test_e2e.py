@@ -442,3 +442,43 @@ def test_install_dialog_and_legal_pages(page, base_url) -> None:  # type: ignore
         page.goto(base_url + path)
         assert page.locator("h1").first.inner_text()
         assert _axe_violations(page) == [], path
+
+
+def test_help_chat_faq_mode(page) -> None:  # type: ignore[no-untyped-def]
+    page.wait_for_selector("#help-btn:not([hidden])")
+    page.click("#help-btn")
+    page.wait_for_selector("#chat-panel[open] #chat-input")
+    assert page.locator("#help-btn").get_attribute("aria-expanded") == "true"
+    assert "wbudowanej pomocy" in page.locator("#chat-intro").inner_text()
+    page.locator("#chat-suggest").get_by_role("button", name="Jak zainstalować aplikację?").click()
+    page.wait_for_selector("#chat-log .chat-assistant:not(.chat-busy)")
+    assert "Zainstaluj" in page.locator("#chat-log .chat-assistant").last.inner_text()
+    assert page.locator("#chat-suggest").is_hidden()
+    page.fill("#chat-input", "zapomniałem hasła")
+    page.press("#chat-input", "Enter")
+    page.wait_for_selector("#chat-log .chat-assistant:nth-of-type(4)")
+    assert "Nie pamiętam hasła" in page.locator("#chat-log").inner_text()
+    assert no_horizontal_scroll(page)
+    assert _axe_violations(page) == []
+    page.keyboard.press("Escape")
+    page.wait_for_selector("#chat-panel", state="hidden")
+    assert page.evaluate("() => document.activeElement.id") == "help-btn"
+
+
+def test_help_chat_ai_notice(page) -> None:  # type: ignore[no-untyped-def]
+    reply = {"reply": "Kliknij „Pokaż mapę” nad wynikami.", "mode": "ai", "topic": None}
+    info = {"enabled": True, "ai": True}
+    page.route(
+        "**/api/assistant",
+        lambda route: route.fulfill(json=info if route.request.method == "GET" else reply),
+    )
+    page.click("#help-btn")
+    page.wait_for_selector("#chat-notice:not([hidden])")
+    assert page.locator("#chat-form").is_hidden()
+    assert "Anthropic" in page.locator("#chat-notice").inner_text()
+    assert _axe_violations(page) == []
+    page.get_by_role("button", name="Rozumiem").click()
+    page.fill("#chat-input", "gdzie mapa?")
+    page.press("#chat-input", "Enter")
+    page.wait_for_selector("#chat-log .chat-assistant:not(.chat-busy)")
+    assert "Pokaż mapę" in page.locator("#chat-log").inner_text()

@@ -479,5 +479,23 @@
     "button": "Tryb rozmowy (duże litery)",
     "say": "Co powiedzieć",
     "after": "Po rozmowie"
+  },
+  "chat": {
+    "open": "Pomoc: jak to działa?",
+    "title": "Jak to działa?",
+    "intro_ai": "Zapytaj, gdzie co jest i jak korzystać z aplikacji. Nie udzielam porad medycznych.",
+    "intro_faq": "Zapytaj, gdzie co jest i jak korzystać z aplikacji. Odpowiadam z wbudowanej pomocy. Nie udzielam porad medycznych.",
+    "placeholder": "Zadaj pytanie…",
+    "send": "Wyślij",
+    "thinking": "Piszę odpowiedź…",
+    "error": "Nie udało się. Spróbuj za chwilę.",
+    "privacy_ai": "Odpowiedzi przygotowuje model AI Claude firmy Anthropic, więc Twoje pytanie zostanie tam wysłane. Nie zapisujemy rozmowy. Nie wpisuj danych osobowych ani informacji o zdrowiu.",
+    "ok": "Rozumiem",
+    "foot": "Odpowiedzi mogą zawierać błędy. W sprawach zdrowia pytaj lekarza.",
+    "you": "Ty:",
+    "helper": "Pomocnik:",
+    "s1": "Co znaczy „prognoza NFZ”?",
+    "s2": "Jak zainstalować aplikację?",
+    "s3": "Jak obserwować termin?"
   }
 }

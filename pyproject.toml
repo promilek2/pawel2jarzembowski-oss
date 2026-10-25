@@ -40,6 +40,7 @@ dependencies = [
   "prometheus-client>=0.20",
   "segno>=1.6",
   "cryptography>=42",
+  "anthropic>=2.3,<3",
 ]
 
 [project.optional-dependencies]

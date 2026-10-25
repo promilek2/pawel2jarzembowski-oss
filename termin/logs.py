@@ -44,6 +44,11 @@ SENSITIVE_KEYS = frozenset(
         "endpoint",
         "p256dh",
         "note",
+        "messages",
+        "question",
+        "content",
+        "reply",
+        "ai_api_key",
     }
 )
 

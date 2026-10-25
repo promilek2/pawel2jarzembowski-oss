@@ -51,6 +51,11 @@ Każda zmiana kończy się zielonymi: `pytest`, `ruff check`, `ruff format --che
   `watcher.py` (grupowanie po zapytaniu, deduplikacja „tylko lepszy termin”, cooldown),
   `telegram_bot.py` (long polling). Subskrypcje: `termin/store/subscriptions.py`
   (token, współrzędne zaokrąglone do 0,01°, `wipe_user_data`).
+- `termin/assistant.py` + `termin/web/assistant.py` (ADR-0014): pomocnik „Jak to działa?”
+  (`/api/assistant`). Baza wiedzy i zasady modelu w `termin/data/assistant_faq.toml`; bez klucza
+  tryb FAQ, z `TERMIN_AI_API_KEY` Claude przez SDK `anthropic` (httpx2, w testach
+  `Transports.ai` = `httpx2.MockTransport`). Frontend: leniwy `static/chat.js` + `chat.css`.
+  Zmieniając nazwy przycisków w UI, popraw odpowiedzi w bazie wiedzy.
 - `termin/config.py`: `Settings` (env `TERMIN_*`, plik `~/.config/termin/config.toml`,
   nadpisywany przez `TERMIN_CONFIG`).
 - `termin/logs.py`: structlog z procesorem `redact_pii`. **Nigdy nie loguj lokalizacji

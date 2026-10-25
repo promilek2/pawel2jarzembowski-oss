@@ -244,6 +244,8 @@ def test_bundle_size_budget() -> None:
     assert lazy < 40_000, f"account.js {lazy} B przekracza budżet 40 KB"
     extra = sum((STATIC / n).stat().st_size for n in ("extras.js", "extras.css"))
     assert extra < 20_000, f"extras.js + extras.css {extra} B przekracza budżet 20 KB"
+    chat = sum((STATIC / n).stat().st_size for n in ("chat.js", "chat.css"))
+    assert chat < 12_000, f"chat.js + chat.css {chat} B przekracza budżet 12 KB"
 
 
 def test_healthz_and_metrics(client: TestClient) -> None:

@@ -20,7 +20,7 @@ TODAY = dt.date(2026, 10, 24)
 def _isolate_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
     """Żaden test nie czyta prawdziwego configu ani nie pisze do $HOME."""
     for key in list(__import__("os").environ):
-        if key.startswith("TERMIN_"):
+        if key.startswith(("TERMIN_", "ANTHROPIC_")):
             monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("TERMIN_CONFIG", str(tmp_path / "config.toml"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))

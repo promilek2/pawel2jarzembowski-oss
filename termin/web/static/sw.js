@@ -1,6 +1,6 @@
 // Service worker: pliki aplikacji offline (stale-while-revalidate), bez danych z API,
 // oraz powiadomienia Web Push (treść szyfrowana, odszyfrowuje ją przeglądarka).
-const VERSION = "termin-v6";
+const VERSION = "termin-v7";
 const SHELL = [
   "/",
   "/static/style.css",

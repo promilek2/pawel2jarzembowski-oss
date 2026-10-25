@@ -477,5 +477,23 @@
     "button": "Call mode (large text)",
     "say": "What to say",
     "after": "After the call"
+  },
+  "chat": {
+    "open": "Help: how does it work?",
+    "title": "How does it work?",
+    "intro_ai": "Ask where things are and how to use the app. I don't give medical advice.",
+    "intro_faq": "Ask where things are and how to use the app. Answers come from the built-in help (in Polish). I don't give medical advice.",
+    "placeholder": "Ask a question…",
+    "send": "Send",
+    "thinking": "Writing an answer…",
+    "error": "Something went wrong. Try again in a moment.",
+    "privacy_ai": "Answers are prepared by Anthropic's Claude AI model, so your question is sent there. We don't store the conversation. Don't enter personal or health information.",
+    "ok": "I understand",
+    "foot": "Answers may contain mistakes. For health matters, ask a doctor.",
+    "you": "You:",
+    "helper": "Helper:",
+    "s1": "What does “NFZ forecast” mean?",
+    "s2": "How do I install the app?",
+    "s3": "How do I watch for an earlier date?"
   }
 }

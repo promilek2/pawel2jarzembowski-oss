@@ -22,6 +22,7 @@ from slowapi.util import get_remote_address
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from termin import REPO_URL, __version__
+from termin.assistant import Assistant
 from termin.config import Settings, get_settings
 from termin.core.benefits import Variant
 from termin.core.client import NfzError, QueueQuery
@@ -42,6 +43,7 @@ from termin.security import BusyError
 from termin.store.push import PushStore
 from termin.store.snapshots import to_csv, to_json
 from termin.store.subscriptions import SubscriptionStore
+from termin.web.assistant import build_assistant_router
 from termin.web.auth import Mailer, build_auth_router, csrf_guard, current_user, default_mailer
 from termin.web.ics import call_reminder
 from termin.web.legal import LEGAL_PAGES, missing_operator_fields, render_legal, security_txt
@@ -100,6 +102,7 @@ def create_app(
             if settings.push_enabled
             else None
         )
+        app.state.assistant = Assistant(settings, transport=runtime.transports.ai, today=today)
         missing = missing_operator_fields(settings)
         if missing:
             log.warning("legal.operator_missing", fields=",".join(missing))
@@ -116,6 +119,7 @@ def create_app(
                 task.cancel()
                 with suppress(asyncio.CancelledError):
                     await task
+            await app.state.assistant.aclose()
             await runtime.aclose()
 
     app = FastAPI(
@@ -176,6 +180,7 @@ def create_app(
 
     app.include_router(build_auth_router(settings, limiter))
     app.include_router(build_personal_router(settings, limiter))
+    app.include_router(build_assistant_router(settings, limiter))
 
     def rt(request: Request) -> Runtime:
         runtime: Runtime = request.app.state.runtime
@@ -227,6 +232,10 @@ def create_app(
             "accounts_enabled": settings.accounts_enabled,
             "mail_enabled": settings.mail_enabled,
             "legal_pages": LEGAL_PAGES,
+            "assistant": {
+                "enabled": settings.ai_enabled,
+                "ai": request.app.state.assistant.ai_available,
+            },
         }
 
     @app.get("/api/suggest")

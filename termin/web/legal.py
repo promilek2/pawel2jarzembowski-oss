@@ -71,7 +71,27 @@ def legal_values(settings: Settings) -> dict[str, str]:
         "session_days": str(settings.session_days),
         "unverified_days": str(settings.unverified_account_days),
         "session_cookie": session_cookie_name(settings),
+        "assistant_recipient": ASSISTANT_RECIPIENT if _assistant_ai(settings) else "",
+        "assistant_where": (
+            "; w trybie AI także u Anthropic (punkt 4)" if _assistant_ai(settings) else ""
+        ),
     }
+
+
+ASSISTANT_RECIPIENT = (
+    "<li><strong>Anthropic PBC</strong> (USA; model AI Claude), tylko gdy zadajesz pytanie "
+    "pomocnikowi „Jak to działa?”: otrzymuje treść pytania i wcześniejszych wiadomości tej "
+    "rozmowy, żeby przygotować odpowiedź. Działa jako podmiot przetwarzający na podstawie "
+    "warunków komercyjnych i umowy powierzenia Anthropic; dane z API nie służą do trenowania "
+    "modeli. Przekazanie do USA odbywa się na podstawie mechanizmu z rozdziału V RODO "
+    "przewidzianego w tej umowie (np. standardowych klauzul umownych). Przed pierwszym "
+    "pytaniem pokazujemy o tym informację. Nie wpisuj w pomocniku danych osobowych ani "
+    "informacji o zdrowiu.</li>"
+)
+
+
+def _assistant_ai(settings: Settings) -> bool:
+    return settings.ai_enabled and settings.ai_api_key is not None
 
 
 def render_legal(name: str, settings: Settings) -> str:

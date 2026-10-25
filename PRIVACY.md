@@ -73,6 +73,15 @@ Temat ntfy działa jak hasło: wybierz trudny do zgadnięcia.
 | OSRM (opcjonalnie) | czas dojazdu | współrzędne punktu startu i placówek |
 | Kafelki mapy (OSM) | otwarcie mapy w panelu | standardowe żądania kafelków (IP, zakres mapy) |
 | ntfy / Telegram / SMTP | wysłanie powiadomienia | treść powiadomienia i cel |
+| Anthropic API (opcjonalnie) | pytanie do pomocnika „Jak to działa?”, gdy instancja ma klucz `TERMIN_AI_API_KEY` | treść pytania i wcześniejszych wiadomości tej rozmowy |
+
+### Pomocnik „Jak to działa?”
+
+Okienko „?” w rogu odpowiada na pytania o obsługę aplikacji. Bez klucza API odpowiada z
+wbudowanej bazy (`termin/data/assistant_faq.toml`) i nic nie wychodzi poza serwer. Z kluczem
+pytanie trafia do Anthropic (model Claude); przed pierwszym pytaniem pokazujemy o tym
+informację. Rozmowy nie zapisujemy ani w bazie, ani w przeglądarce, a jej treści nie logujemy
+(`messages`, `question`, `reply` są w `SENSITIVE_KEYS`). Pomocnik nie udziela porad medycznych.
 
 ## Panel web
 
