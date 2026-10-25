@@ -944,6 +944,12 @@ function bind() {
   }
   $("#lang").addEventListener("change", (e) => { STORE.set("lang", e.target.value); loadLang(e.target.value); });
   $("#theme").addEventListener("change", (e) => setTheme(e.target.value));
+  // „/” jak w wielu wyszukiwarkach: skok do pola „Czego szukasz?” (poza polami tekstowymi).
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.("input, textarea, select, [contenteditable], dialog[open]")) return;
+    e.preventDefault();
+    $("#co").focus();
+  });
   $("#large-text").addEventListener("click", () => setLargeText(!document.documentElement.classList.contains("large-text")));
   $("#toggle-map").addEventListener("click", () => insights().then((m) => m.toggleMap()));
   $("#show-stats").addEventListener("click", () => insights().then((m) => m.toggleStats()));

@@ -573,3 +573,10 @@ def test_theme_switch_persists(page) -> None:  # type: ignore[no-untyped-def]
     page.select_option("#theme", "auto")
     assert page.evaluate("() => document.documentElement.dataset.theme") is None
     assert page.evaluate("() => getComputedStyle(document.body).backgroundColor") != bg
+
+
+def test_slash_focuses_search(page) -> None:  # type: ignore[no-untyped-def]
+    page.locator("body").click(position={"x": 5, "y": 300})
+    page.keyboard.press("/")
+    assert page.evaluate("() => document.activeElement.id") == "co"
+    assert page.locator("#co").input_value() == ""
