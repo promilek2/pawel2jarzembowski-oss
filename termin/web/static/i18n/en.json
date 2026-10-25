@@ -531,5 +531,9 @@
   "update": {
     "ready": "A new version of Termin is available.",
     "reload": "Reload"
+  },
+  "changes": {
+    "shorter": "Since your last check ({date}): {days} {days_word} shorter",
+    "longer": "Since your last check ({date}): {days} {days_word} longer"
   }
 }

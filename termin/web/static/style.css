@@ -624,3 +624,7 @@ dialog.wide { width: min(46rem, calc(100vw - 2rem)); }
 .filters .chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 #result-list.f-phone > li:not([data-phone]), #result-list.f-nocer > li[data-cer], #result-list.f-exact > li[data-approx] { display: none; }
 .filters-count { font-weight: 650; color: var(--ink-2); }
+.change { margin: 0.25rem 0 0; font-weight: 750; }
+.change--better::before { content: "▼ "; }
+.change--worse { color: var(--ink-2); }
+.change--worse::before { content: "▲ "; }

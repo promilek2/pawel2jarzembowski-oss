@@ -313,7 +313,7 @@ function renderResults(data) {
   renderWiden(data);
   renderTip(data);
   renderMore(data);
-  insights().then((m) => m.renderFilters(data));
+  insights().then((m) => { m.renderFilters(data); m.markChanges(data); });
   const target = location.hash.match(/wynik=([\w-]+)/);
   if (target) document.getElementById(`r-${target[1]}`)?.scrollIntoView();
   if (state.auth?.user) account().then((m) => m.loadPersonal(data));
@@ -828,6 +828,7 @@ function saveSearch() {
   const entry = { label: `${state.last.label}${where}`, query: location.search };
   const saved = STORE.get("saved", []).filter((s) => s.query !== entry.query);
   STORE.set("saved", [entry, ...saved].slice(0, SAVED_MAX));
+  insights().then((m) => m.markChanges(state.last)); // pierwszy punkt odniesienia dla zmian
   renderSaved();
   announce(t("saved.saved"));
 }
@@ -1002,4 +1003,4 @@ window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); stat
 
 init();
 
-export { $, h, t, state, fmtNumber, plural, api, errorText, announce, icon, telHref, closeOnButtons, isIos, isStandalone, updateAccountButton, openAuth, onAuthChange, needLogin, account, fmtDate, renderScript };
+export { $, h, t, state, STORE, fmtNumber, plural, api, errorText, announce, icon, telHref, closeOnButtons, isIos, isStandalone, updateAccountButton, openAuth, onAuthChange, needLogin, account, fmtDate, renderScript };

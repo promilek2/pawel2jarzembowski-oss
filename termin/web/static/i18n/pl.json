@@ -533,5 +533,9 @@
   "update": {
     "ready": "Jest nowa wersja Termin z poprawkami.",
     "reload": "Odśwież"
+  },
+  "changes": {
+    "shorter": "Od ostatniego sprawdzenia ({date}): krócej o {days} {days_word}",
+    "longer": "Od ostatniego sprawdzenia ({date}): dłużej o {days} {days_word}"
   }
 }

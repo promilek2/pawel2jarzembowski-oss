@@ -1,5 +1,5 @@
 // Historia placówki, statystyki województwa i mapa: ładowane leniwie z app.js.
-import { $, h, t, state, fmtDate, fmtNumber, plural, announce } from "./app.js";
+import { $, h, t, state, STORE, fmtDate, fmtNumber, plural, announce } from "./app.js";
 
 // ------------------------------------------------------------------ historia
 
@@ -197,4 +197,37 @@ export function renderFilters(data) {
       e.currentTarget.setAttribute("aria-pressed", String(on));
       update();
     } }, t(key))), count);
+}
+
+// ------------------------------------------------------------------ zmiany od ostatniego razu
+
+// Dla zapisanego wyszukiwania pamiętamy (w termin:saved) prognozy placówek z ostatniego
+// sprawdzenia i przy kolejnym pokazujemy, gdzie czeka się krócej albo dłużej.
+const DAY = 86_400_000;
+
+function changeDays(now, before) {
+  if (now.forecast || before.p) return now.days_until - before.d;
+  if (!now.first_date || !before.f) return 0;
+  return Math.round((Date.parse(now.first_date) - Date.parse(before.f)) / DAY);
+}
+
+export function markChanges(data) {
+  const saved = STORE.get("saved", []);
+  const entry = saved.find((s) => s.query === location.search);
+  if (!entry || data.status !== "ok") return;
+  const snap = entry.snap || {};
+  for (const r of data.results) {
+    const before = snap[r.id];
+    if (!before || r.days_until == null) continue;
+    const diff = changeDays(r, before);
+    if (!diff) continue;
+    const key = diff < 0 ? "changes.shorter" : "changes.longer";
+    document.querySelector(`#r-${CSS.escape(r.id)} .provider`)
+      ?.after(h("p", { class: `change ${diff < 0 ? "change--better" : "change--worse"}` },
+        t(key, { days: Math.abs(diff), date: entry.snapAt })));
+  }
+  entry.snap = Object.fromEntries(data.results.slice(0, 30).filter((r) => r.days_until != null)
+    .map((r) => [r.id, { d: r.days_until, f: r.first_date, p: Boolean(r.forecast) }]));
+  entry.snapAt = new Date().toISOString().slice(0, 10);
+  STORE.set("saved", saved);
 }

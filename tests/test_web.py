@@ -249,7 +249,7 @@ def test_bundle_size_budget() -> None:
     later = (STATIC / "later.js").stat().st_size
     assert later < 6_000, f"later.js {later} B przekracza budżet 6 KB"
     insights = (STATIC / "insights.js").stat().st_size
-    assert insights < 12_000, f"insights.js {insights} B przekracza budżet 12 KB"
+    assert insights < 16_000, f"insights.js {insights} B przekracza budżet 16 KB"
 
 
 def test_healthz_and_metrics(client: TestClient) -> None:

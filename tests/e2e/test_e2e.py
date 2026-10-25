@@ -692,3 +692,23 @@ def test_restore_cases_from_backup_file(page) -> None:  # type: ignore[no-untype
     page.click("#account-cases")
     page.wait_for_selector("#cases-dialog[open] .case")
     assert "Ortopeda" in page.locator("#cases-list").inner_text()
+
+
+def test_saved_search_shows_changes_since_last_check(page) -> None:  # type: ignore[no-untyped-def]
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    page.click("#save-search")
+    page.wait_for_selector("#saved-searches:not([hidden]) .saved-chip")
+    # udajemy, że przy poprzednim sprawdzeniu pierwsza placówka miała prognozę o 10 dni dłuższą
+    page.evaluate("""() => {
+      const saved = JSON.parse(localStorage.getItem('termin:saved'));
+      const [id, snap] = Object.entries(saved[0].snap)[0];
+      snap.d += 10; snap.f = null; snap.p = true;
+      saved[0].snapAt = '2026-10-01';
+      localStorage.setItem('termin:saved', JSON.stringify(saved));
+      window.__changed = id;
+    }""")
+    page.locator("#saved-list .chip").first.click()
+    page.wait_for_selector(".change--better")
+    assert "krócej o 10 dni" in page.locator(".change--better").first.inner_text()
+    assert page.locator(".change").count() == 1
