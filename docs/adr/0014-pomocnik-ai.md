@@ -17,7 +17,7 @@ porad medycznych, bez śledzenia, nie logujemy danych wrażliwych, testy bez sie
   o ok. 2 KB (budżet 150 KB, osobny budżet 12 KB na czat w teście).
 - Okienko to nie-modalny `<dialog>`: strona działa dalej, Escape zamyka i oddaje fokus
   przyciskowi, log ma `role="log"` i `aria-live`.
-- Baza wiedzy w `termin/data/assistant_faq.toml`: tematy ze słowami kluczowymi i krótkimi
+- Baza wiedzy w `termin/data/assistant_faq.toml` (po polsku, angielsku i ukraińsku): tematy ze słowami kluczowymi i krótkimi
   odpowiedziami (gdzie kliknąć). Bez klucza API (domyślnie) pomocnik odpowiada najlepiej
   pasującym tematem. Działa od razu na każdej instancji i nic nie wychodzi poza serwer.
 - Z kluczem `TERMIN_AI_API_KEY` (albo `ANTHROPIC_API_KEY`) pytanie idzie do Claude przez

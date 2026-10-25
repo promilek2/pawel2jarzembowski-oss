@@ -43,18 +43,51 @@ UNKNOWN_ANSWER = (
     "co znaczy „prognoza NFZ”, jak zadzwonić i co powiedzieć, jak obserwować termin, "
     "zainstalować aplikację albo odzyskać konto. Spróbuj zapytać innymi słowami."
 )
+UNKNOWN_ANSWERS = {
+    "pl": UNKNOWN_ANSWER,
+    "en": (
+        "I don't have a ready answer to that. I can explain how to search, what “NFZ forecast” "
+        "means, how to call and what to say, how to watch for an earlier date, install the app "
+        "or recover your account. Try asking in other words."
+    ),
+    "uk": (
+        "У мене немає готової відповіді на це запитання. Можу підказати, як шукати, що означає "
+        "«прогноз NFZ», як подзвонити й що сказати, як стежити за терміном, встановити "
+        "застосунок чи відновити акаунт. Спробуйте запитати іншими словами."
+    ),
+}
 REFUSAL_ANSWER = (
     "Nie mogę pomóc w tej sprawie. Pytaj o obsługę aplikacji Termin: wyszukiwanie, "
     "prognozy NFZ, zapisy przez telefon albo IKP, konto i powiadomienia."
 )
 
 
+REFUSAL_ANSWERS = {
+    "pl": REFUSAL_ANSWER,
+    "en": (
+        "I can't help with that. Ask about using Termin: searching, NFZ forecasts, booking by "
+        "phone or IKP, your account and notifications."
+    ),
+    "uk": (
+        "Я не можу допомогти з цим. Запитуйте про користування Termin: пошук, прогнози NFZ, "
+        "запис телефоном або через IKP, акаунт і сповіщення."
+    ),
+}
+
+
 @dataclass(frozen=True)
 class Topic:
     id: str
     keywords: tuple[str, ...]
-    answer: str
+    answers: dict[str, str]
     weight: int = 1
+
+    @property
+    def answer(self) -> str:
+        return self.answers["pl"]
+
+    def answer_in(self, lang: str) -> str:
+        return self.answers.get(lang) or self.answers["pl"]
 
 
 @dataclass(frozen=True)
@@ -70,13 +103,28 @@ class Turn:
     content: str
 
 
+def _keyword(raw: str) -> str:
+    # Spacja na końcu znaczy „całe słowo” (np. „leki ”), więc zostaje po normalizacji.
+    return fold(raw) + (" " if raw.endswith(" ") else "")
+
+
 @lru_cache(maxsize=1)
 def topics() -> tuple[Topic, ...]:
     return tuple(
         Topic(
             id=t["id"],
-            keywords=tuple(t["keywords"]),
-            answer=t["answer"].strip(),
+            keywords=tuple(
+                dict.fromkeys(  # bez powtórzeń: „nfz” w trzech językach liczy się raz
+                    _keyword(k)
+                    for key in ("keywords", "keywords_en", "keywords_uk")
+                    for k in t.get(key, [])
+                )
+            ),
+            answers={
+                lang: t[key].strip()
+                for lang, key in (("pl", "answer"), ("en", "answer_en"), ("uk", "answer_uk"))
+                if key in t
+            },
             weight=int(t.get("weight", 1)),
         )
         for t in _data()["topic"]
@@ -100,11 +148,11 @@ def match_topic(question: str) -> Topic | None:
     return best
 
 
-def faq_answer(question: str) -> Answer:
+def faq_answer(question: str, lang: str = "pl") -> Answer:
     topic = match_topic(question)
     if topic is None:
-        return Answer(UNKNOWN_ANSWER, "faq")
-    return Answer(topic.answer, "faq", topic.id)
+        return Answer(UNKNOWN_ANSWERS.get(lang, UNKNOWN_ANSWER), "faq")
+    return Answer(topic.answer_in(lang), "faq", topic.id)
 
 
 @lru_cache(maxsize=1)
@@ -183,20 +231,20 @@ class Assistant:
     async def answer(self, turns: list[Turn], lang: Lang = "pl") -> Answer:
         history = clean_history(turns)
         if not history or history[-1].role != "user":
-            return Answer(UNKNOWN_ANSWER, "faq")
+            return Answer(UNKNOWN_ANSWERS[lang], "faq")
         question = history[-1].content
         if self._client is None:
-            return faq_answer(question)
+            return faq_answer(question, lang)
         if not self._take_budget():
             log.warning("assistant.daily_limit")
-            return faq_answer(question)
+            return faq_answer(question, lang)
         try:
             return await self._ask(history, lang)
         except anthropic.APIStatusError as exc:
             log.warning("assistant.api_error", status=exc.status_code)
         except anthropic.APIConnectionError as exc:
             log.warning("assistant.connection_error", reason=type(exc).__name__)
-        return faq_answer(question)
+        return faq_answer(question, lang)
 
     async def _ask(self, history: list[Turn], lang: Lang) -> Answer:
         assert self._client is not None
@@ -218,11 +266,11 @@ class Assistant:
             response = await self._client.beta.messages.create(**params)
         if response.stop_reason == "refusal":
             log.info("assistant.refusal")
-            return Answer(REFUSAL_ANSWER, "ai")
+            return Answer(REFUSAL_ANSWERS[lang], "ai")
         text = "\n".join(b.text for b in response.content if b.type == "text").strip()
         if not text:
             log.warning("assistant.empty_reply", stop_reason=response.stop_reason)
-            return faq_answer(history[-1].content)
+            return faq_answer(history[-1].content, lang)
         usage = response.usage
         log.info(
             "assistant.reply",

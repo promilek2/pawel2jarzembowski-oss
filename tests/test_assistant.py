@@ -89,8 +89,9 @@ def test_every_topic_has_keywords_and_answer() -> None:
     assert len(ids) == len(set(ids)) >= 20
     for topic in topics():
         assert topic.keywords and topic.answer
+        assert set(topic.answers) == {"pl", "en", "uk"}, topic.id
         for kw in topic.keywords:
-            assert kw == kw.lower() and not set(kw) & set("ąćęłńóśźż"), kw
+            assert kw.strip() and not set(kw) & set("ąćęłńóśźżАБВ"), kw
 
 
 @pytest.mark.parametrize(
@@ -113,6 +114,31 @@ def test_every_topic_has_keywords_and_answer() -> None:
 def test_faq_matches_topic(question: str, topic: str) -> None:
     found = match_topic(question)
     assert found is not None and found.id == topic
+
+
+@pytest.mark.parametrize(
+    ("question", "lang", "topic", "fragment"),
+    [
+        ("How do I install the app?", "en", "install", "Install"),
+        ("What does the NFZ forecast mean?", "en", "forecast", "forecast"),
+        ("I forgot my password", "en", "password", "I forgot my password"),
+        ("How do I find an appointment?", "en", "search", "Find appointments"),
+        ("Як встановити застосунок?", "uk", "install", "Встановити"),
+        ("Що означає прогноз?", "uk", "forecast", "прогноз NFZ"),
+        ("Шукаю для дитини", "uk", "children", "Для дітей"),
+        ("Болить голова, які ліки?", "uk", "medical", "112"),
+        ("jak zainstalować?", "uk", "install", "Встановити"),  # pytanie po polsku, UI po ukraińsku
+    ],
+)
+def test_faq_in_other_languages(question: str, lang: str, topic: str, fragment: str) -> None:
+    answer = faq_answer(question, lang)
+    assert answer.topic == topic
+    assert fragment in answer.reply
+
+
+def test_faq_unknown_question_translated() -> None:
+    assert faq_answer("qwerty", "en").reply.startswith("I don't have")
+    assert faq_answer("qwerty", "uk").reply.startswith("У мене")
 
 
 def test_faq_unknown_question() -> None:

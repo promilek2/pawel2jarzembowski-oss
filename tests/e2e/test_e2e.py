@@ -521,3 +521,14 @@ def test_touch_phone_has_no_copy_button(browser, base_url) -> None:  # type: ign
     assert pg.locator(".copy-phone").count() == 0
     assert pg.locator("#result-list a.call").count() >= 1
     context.close()
+
+
+def test_help_chat_in_ukrainian(page) -> None:  # type: ignore[no-untyped-def]
+    page.select_option("#lang", "uk")
+    page.wait_for_selector("html[lang=uk]", state="attached")
+    page.click("#help-btn")
+    page.wait_for_selector("#chat-panel[open]")
+    assert page.locator("#chat-title").inner_text() == "Як це працює?"
+    page.locator("#chat-suggest button").nth(1).click()
+    page.wait_for_selector("#chat-log .chat-assistant:not(.chat-busy)")
+    assert "Встановити" in page.locator("#chat-log .chat-assistant").last.inner_text()

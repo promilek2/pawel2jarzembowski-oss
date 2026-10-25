@@ -485,7 +485,7 @@
   "chat": {
     "title": "How does it work?",
     "intro_ai": "Ask where things are and how to use the app. I don't give medical advice.",
-    "intro_faq": "Ask where things are and how to use the app. Answers come from the built-in help (in Polish). I don't give medical advice.",
+    "intro_faq": "Ask where things are and how to use the app. Answers come from the built-in help. I don't give medical advice.",
     "placeholder": "Ask a question…",
     "send": "Send",
     "thinking": "Writing an answer…",

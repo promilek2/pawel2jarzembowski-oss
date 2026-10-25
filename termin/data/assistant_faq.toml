@@ -5,6 +5,9 @@
 # W trybie bez klucza API pomocnik odpowiada najlepiej pasującym wpisem. Z kluczem API
 # wszystkie wpisy trafiają do instrukcji modelu jako wiedza o aplikacji.
 # Odpowiedzi: krótko, zwykły tekst, gdzie kliknąć. Bez porad medycznych.
+# `answer_en`/`answer_uk` i `keywords_en`/`keywords_uk`: wersje dla interfejsu po angielsku
+# i ukraińsku (nazwy przycisków jak w static/i18n/*.json). Słowa kluczowe ze wszystkich
+# języków pasują zawsze, a odpowiedź jest w języku interfejsu.
 
 # Instrukcja dla modelu (tryb `ai`); {lang} zastępujemy językiem odpowiedzi.
 rules = """
@@ -27,6 +30,12 @@ weight = 3
 keywords = ["objaw", "boli", "bol ", "diagnoz", "lekarstw", "leki ", "tabletk", "dawk", "choroba", "chorob", "co mi jest", "czy to grozne", "wynik badan", "jakie badanie"]
 answer = """Nie udzielam porad medycznych i nie oceniam objawów ani wyników badań. Z takimi pytaniami zwróć się do lekarza: zwykle najpierw do lekarza rodzinnego (POZ), który w razie potrzeby wystawi skierowanie do specjalisty.
 W nagłej sytuacji dzwoń pod 112. Nocna i świąteczna opieka zdrowotna: informacja pod numerem 800 190 590 (Telefoniczna Informacja Pacjenta NFZ)."""
+keywords_en = ["symptom", "pain", "hurt", "diagnos", "medicine", "medication", "pill", "dose", "disease", "illness", "sick", "what is wrong", "test result"]
+answer_en = """I don't give medical advice and I don't assess symptoms or test results. Please ask a doctor: usually your family doctor (POZ) first, who can refer you to a specialist.
+In an emergency call 112. Night and holiday care information: 800 190 590 (NFZ Patient Information Line)."""
+keywords_uk = ["симптом", "болить", "біль", "діагноз", "ліки", "таблетк", "доз", "хвороб", "хворий", "що зі мною", "результат аналіз"]
+answer_uk = """Я не надаю медичних порад і не оцінюю симптоми чи результати аналізів. Зверніться до лікаря: зазвичай спочатку до сімейного лікаря (POZ), який за потреби дасть направлення до спеціаліста.
+У невідкладній ситуації телефонуйте 112. Інформація про нічну та святкову допомогу: 800 190 590 (Телефонна інформація для пацієнтів NFZ)."""
 
 [[topic]]
 id = "search"
@@ -34,12 +43,26 @@ keywords = ["szuka", "wyszuk", "jak znalez", "znalez", "jak zaczac", "jak uzywac
 answer = """Na górze strony wpisz, czego szukasz (np. „okulista”, „kardiolog”, „rezonans”), i gdzie jesteś (miasto, kod pocztowy albo przycisk „Użyj mojej lokalizacji”). Kliknij „Szukaj terminu”.
 W „Więcej opcji” ustawisz zasięg w km, co jest najważniejsze (najszybciej, najbliżej albo kompromis), rodzaj skierowania (zwykłe albo pilne) i filtr „bez barier”.
 Wyniki są jak bilety: najlepsze dopasowanie jest pierwsze, przy każdym masz telefon, odległość i prognozę czasu oczekiwania."""
+keywords_en = ["search", "find", "look for", "how to use", "how do i start", "specialist", "doctor", "clinic"]
+answer_en = """At the top, type what you need (e.g. “okulista” for an eye doctor, “kardiolog”, “rezonans” for MRI) and where you are (city, postcode or “Use my location”). Tap “Find appointments”.
+In “More options” you can set the distance, what matters most (earliest, nearest or balanced), the referral type (regular or urgent) and the “Step-free access only” filter.
+Results look like tickets: the best match is first, each with a phone number, distance and the waiting-time forecast."""
+keywords_uk = ["шука", "знайти", "пошук", "як користуват", "з чого почат", "спеціаліст", "лікар", "поліклінік"]
+answer_uk = """Угорі введіть, що шукаєте (напр. «okulista» — окуліст, «kardiolog», «rezonans» — МРТ), і де ви (місто, поштовий код або «Використати моє місцезнаходження»). Натисніть «Шукати прийом».
+У «Більше параметрів» можна задати відстань, що найважливіше (найшвидше, найближче або компроміс), тип направлення (звичайне чи термінове) і фільтр «Лише без бар’єрів».
+Результати виглядають як квитки: найкращий — перший, у кожному є телефон, відстань і прогноз очікування."""
 
 [[topic]]
 id = "forecast"
 keywords = ["prognoz", "pcus", "okolo", "mies", "tyg", "termin nie", "pierwszy wolny", "wolny termin", "dlaczego nie ma daty", "data", "dokladn"]
 answer = """Od lipca 2026 NFZ nie podaje już pierwszego wolnego terminu. Zamiast tego publikuje prognozę czasu oczekiwania (PCUŚ), np. „1 mies. 3 tyg.”. Termin pokazuje ją jako „prognoza NFZ · ok. [data]”, czyli dzisiaj plus prognoza.
 To nie jest zarezerwowany termin. Zadzwoń do placówki i zapytaj o najbliższy wolny. „Stan na” przy wyniku mówi, z którego dnia są dane (placówki aktualizują je mniej więcej raz w tygodniu)."""
+keywords_en = ["forecast", "pcus", "month", "week", "first free", "free date", "exact date", "why no date"]
+answer_en = """Since July 2026 NFZ no longer publishes the first available date. Instead it publishes a waiting-time forecast (PCUŚ), e.g. “1 mies. 3 tyg.” (1 month 3 weeks). Termin shows it as “NFZ forecast · ~[date]”, i.e. today plus the forecast.
+It is not a booked appointment. Call the facility and ask for the nearest free date. “as of” next to a result tells you which day the data is from (facilities update it about once a week)."""
+keywords_uk = ["прогноз", "pcus", "місяц", "тижн", "перший вільн", "вільн", "точн дат", "чому немає дат"]
+answer_uk = """З липня 2026 NFZ більше не публікує першу вільну дату. Натомість публікується прогноз часу очікування (PCUŚ), напр. «1 mies. 3 tyg.» (1 місяць 3 тижні). Termin показує його як «прогноз NFZ · ~[дата]», тобто сьогодні плюс прогноз.
+Це не заброньований прийом. Зателефонуйте до закладу й запитайте про найближчу вільну дату. «станом на» біля результату показує, з якого дня дані (заклади оновлюють їх приблизно раз на тиждень)."""
 
 [[topic]]
 id = "cer"
@@ -47,24 +70,48 @@ weight = 2
 keywords = ["ikp", "mojeikp", "e-rejestrac", "erejestrac", "centraln", "cer", "internetowe konto", "kardiolog", "mammograf", "cytolog", "hpv", "zapisy przez"]
 answer = """„Zapisy przez IKP” oznacza Centralną e-Rejestrację. Dotyczy m.in. pierwszej wizyty u kardiologa, mammografii i badań w kierunku HPV.
 Zapiszesz się w Internetowym Koncie Pacjenta (pacjent.gov.pl), w aplikacji mojeIKP albo dzwoniąc do placówki. Termin pokazuje te miejsca z ostrzeżeniem „zapisy przez Centralną e-Rejestrację”."""
+keywords_en = ["ikp", "mojeikp", "e-registration", "central", "patient account", "cardiolog", "mammogra", "hpv", "book via"]
+answer_en = """“Book via IKP” means the Central e-Registration. It applies e.g. to a first visit to a cardiologist, mammography and HPV tests.
+You can book in the Internet Patient Account (pacjent.gov.pl), in the mojeIKP app or by phoning the facility."""
+keywords_uk = ["ikp", "mojeikp", "e-реєстрац", "централ", "кабінет пацієнт", "кардіолог", "мамограф", "hpv", "запис через"]
+answer_uk = """«Запис через IKP» означає Центральну e-реєстрацію. Це стосується, зокрема, першого візиту до кардіолога, мамографії та тестів на HPV.
+Записатися можна в Інтернет-кабінеті пацієнта (pacjent.gov.pl), у застосунку mojeIKP або зателефонувавши до закладу."""
 
 [[topic]]
 id = "call"
 keywords = ["zadzwon", "telefon", "dzwoni", "rejestrac", "co powiedziec", "rozmow", "skrypt", "numer"]
 answer = """Przy każdym wyniku jest przycisk „Zadzwoń” (na telefonie od razu wybiera numer) i „Co powiedzieć przez telefon”: gotowa rozmowa i lista, co przygotować (skierowanie albo 4-cyfrowy kod e-skierowania, PESEL).
 „Tryb rozmowy (duże litery)” pokazuje numer i podpowiedzi dużą czcionką. Po rozmowie możesz kliknąć „Sprawdziłem telefonicznie” (po zalogowaniu), żeby pomóc innym."""
+keywords_en = ["call", "phone", "ring", "what to say", "conversation", "reception", "number"]
+answer_en = """Each result has a “Call” button (on a phone it dials straight away) and “What to say on the phone”: a ready script and a list of what to prepare (the referral or the 4-digit e-referral code, PESEL).
+“Call mode (large text)” shows the number and tips in a large font. After the call you can tap “I checked by phone” (when logged in) to help others. Tip: Polish registration desks usually speak Polish; the script helps."""
+keywords_uk = ["подзвон", "телефон", "дзвін", "що сказат", "розмов", "реєстратур", "номер"]
+answer_uk = """У кожному результаті є кнопка «Подзвонити» (на телефоні одразу набирає номер) і «Що сказати по телефону»: готова розмова і список, що підготувати (направлення або 4-значний код e-направлення, PESEL).
+«Режим розмови (великий шрифт)» показує номер і підказки великим шрифтом. Після дзвінка можна натиснути «Я перевірив телефоном» (після входу), щоб допомогти іншим. Порада: реєстратури зазвичай говорять польською, тож скрипт стане в пригоді."""
 
 [[topic]]
 id = "watch"
 keywords = ["obserw", "powiadom", "alert", "ntfy", "telegram", "e-mail", "email", "mail", "wczesniejsz", "zwolni"]
 answer = """Kliknij „Obserwuj” przy wyniku. Dostaniesz powiadomienie, gdy w tym obszarze pojawi się krótszy czas oczekiwania. Wybierz kanał: aplikacja ntfy (bez konta), Telegram, e-mail albo, po zalogowaniu, powiadomienie w telefonie.
 Konto nie jest potrzebne. Trzeba zaznaczyć zgodę, bo informacja o świadczeniu może dotyczyć zdrowia. Każde powiadomienie ma link do wyłączenia obserwacji."""
+keywords_en = ["watch", "notif", "alert", "ntfy", "telegram", "e-mail", "email", "earlier", "freed"]
+answer_en = """Tap “Watch” on a result. You'll get a notification when a shorter waiting time appears in that area. Choose a channel: the ntfy app (no account), Telegram, e-mail or, when logged in, a phone notification.
+No account is needed. You have to tick the consent box, because the service you search for may reveal health information. Every notification has a link to stop watching."""
+keywords_uk = ["стеж", "сповіщ", "повідомл", "ntfy", "telegram", "e-mail", "email", "раніш", "звільн"]
+answer_uk = """Натисніть «Стежити» біля результату. Ви отримаєте сповіщення, коли в цьому районі з’явиться коротший час очікування. Оберіть канал: застосунок ntfy (без акаунта), Telegram, e-mail або, після входу, сповіщення на телефоні.
+Акаунт не потрібен. Потрібно позначити згоду, бо послуга, яку ви шукаєте, може стосуватися здоров’я. У кожному сповіщенні є посилання, щоб припинити стеження."""
 
 [[topic]]
 id = "account"
 keywords = ["kont", "zaloguj", "zalog", "logowa", "rejestr", "zaloz", "wyloguj", "usun kont", "moje dane"]
 answer = """Konto jest opcjonalne i bezpłatne. Przycisk „Zaloguj” jest w prawym górnym rogu. Założysz konto w zakładce „Nowe konto” (e-mail i hasło, min. 10 znaków).
 Po zalogowaniu masz „Moje sprawy”, notatki do poradni, zgłoszenia „Sprawdziłem telefonicznie”, powiadomienia w telefonie i listę obserwacji. W „Konto” pobierzesz swoje dane albo usuniesz konto."""
+keywords_en = ["account", "log in", "login", "sign in", "sign up", "register", "log out", "delete account", "my data"]
+answer_en = """An account is optional and free. The “Log in” button is in the top right corner. Create an account in the “New account” tab (e-mail and a password of at least 10 characters).
+When logged in you get “My cases”, notes, “I checked by phone” reports, phone notifications and your watch list. In “Account” you can download your data or delete the account."""
+keywords_uk = ["акаунт", "обліков", "увійти", "вхід", "зареєстр", "вийти", "видалити акаунт", "мої дані"]
+answer_uk = """Акаунт необов’язковий і безкоштовний. Кнопка «Увійти» у правому верхньому куті. Створити акаунт можна на вкладці «Новий акаунт» (e-mail і пароль щонайменше з 10 символів).
+Після входу доступні «Мої справи», нотатки, «Я перевірив телефоном», сповіщення на телефоні та список стежень. В «Акаунт» можна завантажити свої дані або видалити акаунт."""
 
 [[topic]]
 id = "password"
@@ -72,6 +119,12 @@ weight = 2
 keywords = ["haslo", "hasla", "hasel", "nie pamietam", "zapomnial", "reset", "kod odzyskiw", "kody odzyskiw"]
 answer = """Kliknij „Zaloguj”, a potem „Nie pamiętam hasła”. Możesz dostać link na e-mail albo wpisać jeden z kodów odzyskiwania (zapisanych przy zakładaniu konta) i ustawić nowe hasło.
 Nowe kody odzyskiwania wygenerujesz w „Konto” → „Kody odzyskiwania”. Hasło zmienisz w „Konto” → „Zmień hasło”."""
+keywords_en = ["password", "forgot", "reset", "recovery code"]
+answer_en = """Tap “Log in”, then “I forgot my password”. You can get a link by e-mail or enter one of your recovery codes (saved when you created the account) and set a new password.
+New recovery codes: “Account” → “Recovery codes”. Change your password: “Account” → “Change password”."""
+keywords_uk = ["пароль", "забу", "скин", "код відновлен", "коди відновлен"]
+answer_uk = """Натисніть «Увійти», потім «Я забув(-ла) пароль». Можна отримати посилання на e-mail або ввести один із кодів відновлення (збережених під час створення акаунта) і задати новий пароль.
+Нові коди відновлення: «Акаунт» → «Коди відновлення». Змінити пароль: «Акаунт» → «Змінити пароль»."""
 
 [[topic]]
 id = "twofa"
@@ -79,6 +132,12 @@ weight = 2
 keywords = ["2fa", "dwuetap", "dwuskladnik", "authenticator", "totp", "kod z aplikacji", "qr"]
 answer = """Weryfikację dwuetapową włączysz w „Konto” → „Weryfikacja dwuetapowa”. Potrzebujesz aplikacji uwierzytelniającej (np. Google Authenticator, Microsoft Authenticator, Aegis). Zeskanuj kod QR i wpisz 6 cyfr.
 Bez telefonu zalogujesz się kodem odzyskiwania."""
+keywords_en = ["2fa", "two-step", "two-factor", "authenticator", "totp", "qr"]
+answer_en = """Turn on two-step verification in “Account” → “Two-step verification”. You need an authenticator app (e.g. Google Authenticator, Microsoft Authenticator, Aegis). Scan the QR code and enter the 6 digits.
+Without your phone you can log in with a recovery code."""
+keywords_uk = ["2fa", "двоетап", "двофактор", "authenticator", "totp", "qr"]
+answer_uk = """Двоетапну перевірку вмикають в «Акаунт» → «Двоетапна перевірка». Потрібен застосунок-автентифікатор (напр. Google Authenticator, Microsoft Authenticator, Aegis). Відскануйте QR-код і введіть 6 цифр.
+Без телефону можна увійти за допомогою коду відновлення."""
 
 [[topic]]
 id = "install"
@@ -86,6 +145,12 @@ weight = 2
 keywords = ["instal", "zainstal", "aplikac", "ekran", "ikon", "pobrac", "pobierz", "android", "iphone", "ios", "pwa", "sklep"]
 answer = """Termin instaluje się bez sklepu z aplikacjami. Kliknij „Zainstaluj” na górze strony.
 iPhone (Safari): „Udostępnij” → „Do ekranu początkowego” → „Dodaj”. Android (Chrome): menu z trzema kropkami → „Zainstaluj aplikację”. Komputer: ikona instalacji na końcu paska adresu."""
+keywords_en = ["install", "app ", "apps", "home screen", "icon", "download", "android", "iphone", "ios", "pwa", "store"]
+answer_en = """Termin installs without an app store. Tap “Install” at the top of the page.
+iPhone (Safari): “Share” → “Add to Home Screen” → “Add”. Android (Chrome): the three-dot menu → “Install app”. Computer: the install icon at the end of the address bar."""
+keywords_uk = ["встанов", "застосун", "додат", "екран", "іконк", "завантаж", "android", "iphone", "ios", "pwa", "магазин"]
+answer_uk = """Termin встановлюється без магазину застосунків. Натисніть «Встановити» вгорі сторінки.
+iPhone (Safari): «Поділитися» → «На Початковий екран» → «Додати». Android (Chrome): меню з трьома крапками → «Встановити застосунок». Комп’ютер: значок встановлення в кінці адресного рядка."""
 
 [[topic]]
 id = "no_results"
@@ -93,68 +158,130 @@ weight = 2
 keywords = ["wynik", "zadn", "brak", "nie ma", "zero", "nic nie", "malo wynik", "nie znalaz", "zaden", "pusto", "nie dziala", "blad"]
 answer = """Gdy wyników jest mało, zwiększ zasięg w „Więcej opcji” albo kliknij „Szukaj w … km” pod listą. Spróbuj też innej nazwy (np. „okulista” zamiast „oczy”) albo wybierz podpowiedź z listy.
 Przy dużym zasięgu wyszukiwanie może trwać do minuty, bo NFZ pozwala na 10 zapytań na 10 sekund. Część świadczeń (np. pierwsza wizyta u kardiologa) ma zapisy przez IKP."""
+keywords_en = ["no result", "nothing", "zero", "empty", "not found", "few results", "doesn't work", "error"]
+answer_en = """If there are few results, increase the distance in “More options” or tap “Search within … km” below the list. Try another name too (e.g. “okulista” instead of “eyes”) or pick a suggestion from the list.
+With a large distance the search can take up to a minute (NFZ allows 10 requests per 10 seconds). Some services (e.g. a first cardiology visit) are booked via IKP."""
+keywords_uk = ["немає результат", "нічого", "нуль", "порожн", "не знайд", "мало результат", "не працює", "помилк"]
+answer_uk = """Якщо результатів мало, збільште відстань у «Більше параметрів» або натисніть «Шукати в межах … км» під списком. Спробуйте також іншу назву (напр. «okulista» замість «очі») або оберіть підказку зі списку.
+При великій відстані пошук може тривати до хвилини (NFZ дозволяє 10 запитів за 10 секунд). Деякі послуги (напр. перший візит до кардіолога) записуються через IKP."""
 
 [[topic]]
 id = "children"
 weight = 2
 keywords = ["dzieck", "dzieci", "dziecko", "syn", "corka", "pediatr", "maluch", "nastolat"]
 answer = """Jeśli dane świadczenie ma osobny wariant dla dzieci, Termin zapyta „Dla kogo szukasz?”. Wybierz „Dla dzieci”. Przy wynikach dla dzieci jest oznaczenie „dla dzieci”. Do rozmowy przygotuj PESEL dziecka."""
+keywords_en = ["child", "kid", "son", "daughter", "pediatr", "paediatr", "teen", "baby"]
+answer_en = """If a service has a separate variant for children, Termin asks “Who is it for?”. Choose “Children”. Results for children are marked “for children”. Have the child's PESEL ready for the call."""
+keywords_uk = ["дитин", "діт", "син", "доньк", "дочк", "педіатр", "підліт", "малюк"]
+answer_uk = """Якщо послуга має окремий варіант для дітей, Termin запитає «Для кого шукаєте?». Оберіть «Для дітей». Результати для дітей позначені «для дітей». Для дзвінка підготуйте PESEL дитини."""
 
 [[topic]]
 id = "urgent"
 keywords = ["pilne", "pilny", "pilnie", "przypadek pilny", "rodzaj skierowania", "szybciej"]
 answer = """Jeśli lekarz oznaczył skierowanie jako „pilne”, w „Więcej opcji” wybierz „Pilne (przypadek pilny)”. Kolejki dla przypadków pilnych są zwykle krótsze. O tym, czy skierowanie jest pilne, decyduje lekarz, który je wystawia."""
+keywords_en = ["urgent", "pilne", "faster", "referral type"]
+answer_en = """If the doctor marked the referral as urgent (“pilne”), choose “Urgent (urgent case)” in “More options”. Waiting lists for urgent cases are usually shorter. Whether a referral is urgent is decided by the doctor who issues it."""
+keywords_uk = ["термінов", "pilne", "швидше", "тип направлен"]
+answer_uk = """Якщо лікар позначив направлення як термінове («pilne»), оберіть «Термінове (pilne)» у «Більше параметрів». Черги для термінових випадків зазвичай коротші. Чи є направлення терміновим, вирішує лікар, який його видає."""
 
 [[topic]]
 id = "accessible"
 keywords = ["barier", "wozek", "winda", "podjazd", "niepelnospraw", "dostepn", "parking", "toalet"]
 answer = """W „Więcej opcji” zaznacz „Tylko bez barier (podjazd albo winda)”. Przy wynikach widać udogodnienia z danych NFZ: podjazd, winda, toaleta, parking, drzwi automatyczne, wózki inwalidzkie i linie dojazdu."""
+keywords_en = ["barrier", "wheelchair", "lift", "elevator", "ramp", "disab", "accessib", "parking", "toilet"]
+answer_en = """In “More options” tick “Step-free access only (ramp or lift)”. Results show amenities from NFZ data: ramp, lift, toilet, parking, automatic door, wheelchairs and public transport lines."""
+keywords_uk = ["бар’єр", "барьер", "візок", "ліфт", "пандус", "інвалід", "доступн", "парков", "туалет"]
+answer_uk = """У «Більше параметрів» позначте «Лише без бар’єрів (пандус або ліфт)». У результатах видно зручності з даних NFZ: пандус, ліфт, туалет, парковка, автоматичні двері, візки та лінії транспорту."""
 
 [[topic]]
 id = "distance"
 keywords = ["odleglosc", "km", "daleko", "dojazd", "mapa", "mape", "gmin", "przyblizon", "nawigac"]
 answer = """Odległość liczymy od miejsca, które podasz. Przycisk „Dojazd” otwiera nawigację, a „Pokaż mapę” nad wynikami pokazuje placówki na mapie.
 NFZ często nie podaje współrzędnych placówki. Wtedy liczymy odległość do środka gminy i oznaczamy ją jako przybliżoną („~”)."""
+keywords_en = ["distance", "km", "far", "directions", "map", "approximate", "navigat", "route"]
+answer_en = """We measure distance from the place you enter. “Directions” opens navigation and “Show map” above the results shows facilities on a map.
+NFZ often doesn't provide a facility's coordinates. Then we measure to the centre of the municipality and mark the distance as approximate (“~”)."""
+keywords_uk = ["відстан", "км", "далеко", "маршрут", "карт", "приблизн", "навігац"]
+answer_uk = """Відстань рахуємо від місця, яке ви вкажете. «Маршрут» відкриває навігацію, а «Показати карту» над результатами показує заклади на карті.
+NFZ часто не надає координат закладу. Тоді рахуємо відстань до центру гміни й позначаємо її як приблизну («~»)."""
 
 [[topic]]
 id = "cases"
 keywords = ["moje spraw", "sprawy", "sprawa", "notatk", "wizyt", "przypomn", "kalendarz", "ics"]
 answer = """„Moje sprawy” (po zalogowaniu, przycisk w „Konto” albo „Do moich spraw” przy wyniku) zbierają skierowania i wizyty: status, datę wizyty, notatkę i eksport do kalendarza. Przypomnienie przyjdzie dzień przed wizytą, jeśli włączysz powiadomienia w telefonie.
 Przycisk „Notatka” przy wyniku zapisuje prywatną notatkę do poradni. „Przypomnij mi” przy wyniku dodaje przypomnienie do kalendarza bez konta."""
+keywords_en = ["my cases", "case", "note", "visit", "remind", "calendar", "ics"]
+answer_en = """“My cases” (when logged in: the button in “Account” or “Add to my cases” on a result) collects referrals and visits: status, visit date, a note and calendar export. A reminder comes the day before the visit if phone notifications are on.
+“Note” on a result saves a private note about the clinic. “Remind me” adds a calendar reminder without an account."""
+keywords_uk = ["мої справ", "справ", "нотатк", "візит", "нагада", "календар", "ics"]
+answer_uk = """«Мої справи» (після входу: кнопка в «Акаунт» або «До моїх справ» біля результату) збирають направлення та візити: статус, дату візиту, нотатку й експорт у календар. Нагадування прийде за день до візиту, якщо увімкнено сповіщення на телефоні.
+«Нотатка» біля результату зберігає приватну нотатку про заклад. «Нагадати» додає нагадування в календар без акаунта."""
 
 [[topic]]
 id = "push"
 keywords = ["push", "powiadomienia w telefon", "na telefon", "dzwonek"]
 answer = """Powiadomienia w telefonie włączysz po zalogowaniu: „Konto” → „Powiadomienia w telefonie” → „Włącz na tym urządzeniu”. Na iPhonie najpierw zainstaluj aplikację (Udostępnij → Do ekranu początkowego) i otwórz ją z ikony."""
+keywords_en = ["push", "phone notification", "on my phone"]
+answer_en = """Phone notifications are available when logged in: “Account” → “Phone notifications” → “Turn on for this device”. On an iPhone, first install the app (Share → Add to Home Screen) and open it from the icon."""
+keywords_uk = ["push", "сповіщення на телефон", "на телефон"]
+answer_uk = """Сповіщення на телефоні доступні після входу: «Акаунт» → «Сповіщення на телефоні» → «Увімкнути на цьому пристрої». На iPhone спочатку встановіть застосунок («Поділитися» → «На Початковий екран») і відкрийте його з іконки."""
 
 [[topic]]
 id = "tools"
 keywords = ["drukuj", "druk", "wydruk", "zapisz wyszukiw", "zapisane", "udostepnij", "link", "historia", "statystyk", "mediana", "eksport", "csv"]
 answer = """Nad wynikami: „Pokaż mapę”, „Statystyki województwa” (mediana czasu oczekiwania), „Zapisz wyszukiwanie” (pojawi się na górze strony) i „Drukuj listę” (tabela z telefonami do odhaczania).
 Przy wyniku: „Udostępnij” (link, np. do SMS-a) i „Historia terminu” (jak zmieniała się kolejka)."""
+keywords_en = ["print", "save search", "saved", "share", "link", "history", "statistic", "median", "export", "csv"]
+answer_en = """Above the results: “Show map”, “Province statistics” (median waiting time), “Save search” (appears at the top of the page) and “Print list” (a table of phone numbers to tick off).
+On a result: “Share” (a link, e.g. for a text message) and “Date history” (how the queue has changed)."""
+keywords_uk = ["друк", "зберегти пошук", "збережен", "поділит", "посилан", "історі", "статистик", "медіан", "експорт", "csv"]
+answer_uk = """Над результатами: «Показати карту», «Статистика воєводства» (медіана очікування), «Зберегти пошук» (з’явиться вгорі сторінки) і «Друкувати список» (таблиця телефонів, щоб відмічати).
+Біля результату: «Поділитися» (посилання, напр. для SMS) та «Історія дат» (як змінювалася черга)."""
 
 [[topic]]
 id = "large_text"
 keywords = ["duzy tekst", "czcionk", "litery", "slabo widze", "powieksz", "jezyk", "english", "ukrain", "angielsk"]
 answer = """Przycisk „A+ Duży tekst” na górze strony powiększa napisy. Obok wybierzesz język: polski, angielski albo ukraiński. „Tryb rozmowy (duże litery)” przy wyniku pokazuje numer i podpowiedzi bardzo dużą czcionką."""
+keywords_en = ["large text", "font", "letters", "bigger", "zoom", "language", "english", "ukrain", "polish"]
+answer_en = """The “A+ Large text” button at the top enlarges the text. Next to it you can choose the language: Polish, English or Ukrainian. “Call mode (large text)” on a result shows the number and tips in a very large font."""
+keywords_uk = ["великий текст", "шрифт", "літер", "збільш", "мов", "англій", "україн", "польськ"]
+answer_uk = """Кнопка «A+ Великий текст» угорі збільшує написи. Поруч можна обрати мову: польську, англійську або українську. «Режим розмови (великий шрифт)» біля результату показує номер і підказки дуже великим шрифтом."""
 
 [[topic]]
 id = "referral"
 keywords = ["skierowan", "e-skierow", "eskierow", "bez skierowania", "kod skierowania"]
 answer = """Do większości specjalistów na NFZ potrzebujesz skierowania (np. od lekarza rodzinnego). Bez skierowania przyjmują m.in. ginekolog i położnik, dentysta, wenerolog, onkolog i psychiatra (okulista i dermatolog wymagają skierowania).
 Przy zapisie podajesz 4-cyfrowy kod e-skierowania i PESEL. Zapytaj w rejestracji, do kiedy dostarczyć skierowanie."""
+keywords_en = ["referral", "e-referral", "without referral", "referral code"]
+answer_en = """For most NFZ specialists you need a referral (e.g. from your family doctor). Without a referral you can see e.g. a gynaecologist/obstetrician, dentist, venereologist, oncologist and psychiatrist (an eye doctor and a dermatologist need a referral).
+When booking you give the 4-digit e-referral code and PESEL. Ask the registration desk by when to deliver the referral."""
+keywords_uk = ["направлен", "e-направлен", "без направлен", "код направлен"]
+answer_uk = """До більшості спеціалістів NFZ потрібне направлення (напр. від сімейного лікаря). Без направлення приймають, зокрема, гінеколог-акушер, стоматолог, венеролог, онколог і психіатр (до окуліста та дерматолога потрібне направлення).
+Під час запису називаєте 4-значний код e-направлення та PESEL. Запитайте в реєстратурі, до коли треба донести направлення."""
 
 [[topic]]
 id = "privacy"
 keywords = ["prywatn", "rodo", "dane osob", "sledz", "cookie", "ciasteczk", "bezpieczn", "kto widzi"]
 answer = """Termin nie używa reklam ani śledzenia. Wyszukiwanie działa bez konta. Lokalizację w obserwacjach zaokrąglamy do ok. 1 km i nie zapisujemy jej w logach. Szczegóły: „Polityka prywatności” i „Cookies” w stopce strony."""
+keywords_en = ["privacy", "gdpr", "personal data", "tracking", "cookie", "safe", "who can see"]
+answer_en = """Termin has no ads and no tracking. Search works without an account. In watch requests we round your location to about 1 km and never write it to logs. Details: “Privacy policy” and “Cookies” in the page footer."""
+keywords_uk = ["конфіденц", "gdpr", "rodo", "персональн дан", "стеженн за", "cookie", "безпечн", "хто бачить"]
+answer_uk = """Termin не має реклами й відстеження. Пошук працює без акаунта. У стеженнях ми округлюємо ваше місцезнаходження приблизно до 1 км і не записуємо його в журнали. Детальніше: «Політика конфіденційності» та «Cookies» внизу сторінки."""
 
 [[topic]]
 id = "official"
 keywords = ["nfz", "oficjal", "kto zrobil", "czyje", "zrodlo", "skad dane", "aktualn", "stan na"]
 answer = """Termin nie jest oficjalną aplikacją NFZ. Pokazuje dane z publicznego API NFZ „Terminy leczenia”. Placówki aktualizują je mniej więcej raz w tygodniu, dlatego przy każdym wyniku jest „stan na”. Oficjalna wyszukiwarka NFZ: link w stopce. Kod Termin jest otwarty (link „Kod źródłowy”)."""
+keywords_en = ["nfz", "official", "who made", "source", "where is the data", "up to date", "as of"]
+answer_en = """Termin is not an official NFZ app. It shows data from the public NFZ “Terminy leczenia” API. Facilities update it about once a week, so every result shows “as of”. The official NFZ search is linked in the footer. Termin's code is open (“Source code”)."""
+keywords_uk = ["nfz", "офіцій", "хто зробив", "джерел", "звідки дан", "актуальн", "станом на"]
+answer_uk = """Termin не є офіційним застосунком NFZ. Він показує дані з публічного API NFZ «Terminy leczenia». Заклади оновлюють їх приблизно раз на тиждень, тому в кожному результаті є «станом на». Посилання на офіційний пошук NFZ — внизу сторінки. Код Termin відкритий («Вихідний код»)."""
 
 [[topic]]
 id = "about_me"
 keywords = ["kim jestes", "czym jestes", "co umiesz", "pomoc", "help", "ai", "czat", "chat", "bot"]
 answer = """Jestem pomocnikiem aplikacji Termin. Podpowiem, gdzie co jest i jak z niej korzystać: jak szukać, co znaczy „prognoza NFZ”, jak zadzwonić, obserwować termin, zainstalować aplikację albo odzyskać konto. Nie udzielam porad medycznych."""
+keywords_en = ["who are you", "what are you", "what can you do", "help", "ai", "chat", "bot"]
+answer_en = """I'm Termin's helper. I can tell you where things are and how to use the app: how to search, what “NFZ forecast” means, how to call, watch for an earlier date, install the app or recover your account. I don't give medical advice."""
+keywords_uk = ["хто ти", "що ти", "що вмієш", "допомог", "ші", "чат", "бот"]
+answer_uk = """Я помічник застосунку Termin. Підкажу, де що знаходиться і як ним користуватися: як шукати, що означає «прогноз NFZ», як подзвонити, стежити за терміном, встановити застосунок чи відновити акаунт. Я не надаю медичних порад."""
