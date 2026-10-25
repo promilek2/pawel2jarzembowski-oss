@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     """API „Terminy leczenia” 1.4 (od 10.07.2026, z PCUŚ). Stare 1.3: …/app-itl-api."""
     nfz_api_version: str | None = None
     """Parametr `api-version`; dla 1.4 go nie wysyłamy, dla starego adresu ustaw „1.3”."""
+    nfz_fallback_url: str | None = "https://api.nfz.gov.pl/app-itl-api"
+    """Zapasowe API 1.3, gdy 1.4 nie odpowiada (pusta wartość wyłącza)."""
     nfz_requests_per_10s: int = Field(default=9, ge=1, le=10)
     """API 1.4 przyjmuje najwyżej 10 zapytań na 10 sekund (potem HTTP 429)."""
     nfz_concurrency: int = Field(default=4, ge=1, le=4)

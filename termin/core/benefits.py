@@ -11,6 +11,7 @@ import re
 import tomllib
 from dataclasses import dataclass, field
 from enum import StrEnum
+from functools import lru_cache
 from importlib import resources
 from pathlib import Path
 from typing import Literal
@@ -222,6 +223,13 @@ class BenefitCatalog:
 
         candidates = self.suggest(text, limit=5)
         exact = self._exact.get(cleaned)
+        if exact is None and len(cleaned) >= 5:
+            # „kardiochirurg”, „hepatolog”: prawdziwa nazwa NFZ zawiera całe słowo, a żaden
+            # synonim nie, więc nie zgadujemy podobnego specjalisty (chirurg, hematolog)
+            direct = direct_nfz_name(cleaned, variant)
+            top_aliases = [fold(a) for a in candidates[0].entry.aliases] if candidates else []
+            if direct and not any(cleaned in alias for alias in top_aliases):
+                return Resolution("fallback", text, direct)
         if exact is not None:
             chosen: BenefitEntry | None = exact
         elif (
@@ -232,11 +240,17 @@ class BenefitCatalog:
         ):
             chosen = candidates[0].entry
         elif candidates:
+            match = best_nfz_match(cleaned, variant)
+            if match and match[1] - candidates[0].score >= NFZ_NAME_MARGIN:
+                return Resolution("fallback", text, match[0])  # słabi kandydaci, lepsza nazwa NFZ
             return Resolution(
                 "ambiguous", text, candidates[0].entry.query, candidates=tuple(candidates)
             )
         else:
-            return Resolution("fallback", text, text.strip().upper())
+            # spoza słownika: najbliższa prawdziwa nazwa NFZ („hepatolog” → PORADNIA
+            # HEPATOLOGICZNA), a dopiero gdy nic nie pasuje, tekst wprost
+            name = best_nfz_name(cleaned, variant)
+            return Resolution("fallback", text, name or text.strip().upper())
 
         assert chosen is not None
         if variant is None and chosen.has_child_variant:
@@ -263,3 +277,49 @@ def _score(query: str, choice: str, **_: object) -> float:
         elif any(word.startswith(query) for word in choice.split()):
             score = max(score, 92.0)
     return score
+
+
+@lru_cache(maxsize=1)
+def known_benefit_names() -> tuple[str, ...]:
+    """Prawdziwe nazwy świadczeń z API NFZ 1.4 (stan 2026-10, `data/nfz_benefit_names.txt`)."""
+    text = resources.files("termin.data").joinpath("nfz_benefit_names.txt").read_text("utf-8")
+    return tuple(line for line in text.splitlines() if line and not line.startswith("#"))
+
+
+NFZ_NAME_MIN_SCORE = 78
+NFZ_NAME_MARGIN = 10
+"""O ile nazwa NFZ musi pasować lepiej od kandydatów ze słownika, żeby ich zastąpić."""
+
+
+def _prefer(names: list[str], variant: Variant | None) -> str:
+    """Poradnia przed oddziałem, wariant dorosły/dziecięcy zgodny z pytaniem, potem najkrótsza
+    nazwa (jako fragment łapie też dłuższe warianty, np. „dla dzieci”)."""
+    want_child = variant is Variant.CHILD
+    return min(
+        names,
+        key=lambda n: (not n.startswith("PORADNIA"), ("DLA DZIECI" in n) != want_child, len(n)),
+    )
+
+
+def direct_nfz_name(text: str, variant: Variant | None = None) -> str | None:
+    """Poradnia NFZ, której nazwa zawiera całe wpisane słowo (bez polskich znaków)."""
+    folded = fold(text)
+    hits = [n for n in known_benefit_names() if n.startswith("PORADNIA") and folded in fold(n)]
+    return _prefer(hits, variant) if hits else None
+
+
+def best_nfz_match(text: str, variant: Variant | None = None) -> tuple[str, float] | None:
+    folded = fold(text)
+    if len(folded) < 3:
+        return None
+    scored = [(float(fuzz.WRatio(folded, fold(name))), name) for name in known_benefit_names()]
+    best = max((score for score, _ in scored), default=0.0)
+    if best < NFZ_NAME_MIN_SCORE:
+        return None
+    return _prefer([n for s, n in scored if s >= best - 0.5], variant), best
+
+
+def best_nfz_name(text: str, variant: Variant | None = None) -> str | None:
+    """Najbliższa prawdziwa nazwa świadczenia NFZ albo None."""
+    match = best_nfz_match(text, variant)
+    return match[0] if match else None

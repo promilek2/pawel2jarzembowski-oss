@@ -1,7 +1,7 @@
 """Generator ZREKONSTRUOWANYCH fixtures API NFZ (patrz ADR-0007 i ADR-0013).
 
 Środowisko budowy nie ma dostępu do api.nfz.gov.pl, więc odpowiedzi są odtworzone.
-Nazwy świadczeń są prawdziwe (stan 2026-10, tests/fixtures/nfz_benefit_names_2026-10.txt),
+Nazwy świadczeń są prawdziwe (stan 2026-10, termin/data/nfz_benefit_names.txt),
 nazwy placówek i numery telefonów fikcyjne. Pozycje 1–30 mają dawny format 1.3
 (pierwszy wolny termin `dates.date`), pozycje 31–38 format 1.4 (od 10.07.2026):
 prognoza PCUŚ tekstem, zwykle bez współrzędnych, czasem z zamienionymi, kolejki w CeR.

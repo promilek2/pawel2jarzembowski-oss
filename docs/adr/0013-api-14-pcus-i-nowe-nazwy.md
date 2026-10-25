@@ -27,7 +27,7 @@ do api.nfz.gov.pl.
 ## Decyzja
 
 - Słownik synonimów poprawiony do prawdziwych nazw; test porównuje każdy fragment z listą
-  `tests/fixtures/nfz_benefit_names_2026-10.txt`. Pole `note` dla świadczeń bez kolejek
+  `termin/data/nfz_benefit_names.txt`. Pole `note` dla świadczeń bez kolejek
   (CeR: kardiolog, mammografia; USG, echo, Holter, densytometria, sanatorium).
 - `QueueEntry.expected_date(today)`: pierwszy wolny termin albo **dziś + PCUŚ** (PCUŚ to
   oczekiwanie dla kogoś, kto zapisuje się teraz). `is_forecast` zawsze widoczne w UI („~5 dni,

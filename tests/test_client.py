@@ -55,12 +55,42 @@ async def test_gives_up_after_max_retries(settings: Settings, fake_nfz: FakeNfz)
         sleeps.append(s)
 
     fake_nfz.fail_with = [503] * 10
+    settings = settings.model_copy(update={"nfz_fallback_url": None})
     async with NfzClient(settings, transport=fake_nfz.transport(), sleep=fake_sleep) as c:
         with pytest.raises(NfzUnavailableError):
             await c.queues_page(Q)
     assert len(fake_nfz.calls) == settings.nfz_max_retries
     assert len(sleeps) == settings.nfz_max_retries - 1
     assert sleeps == sorted(sleeps)  # backoff rośnie
+
+
+async def test_falls_back_to_api_13_when_14_is_down(settings: Settings, fake_nfz: FakeNfz) -> None:
+    async def no_sleep(_: float) -> None:
+        return None
+
+    fake_nfz.fail_with = [503] * settings.nfz_max_retries  # całe API 1.4 nie odpowiada
+    async with NfzClient(settings, transport=fake_nfz.transport(), sleep=no_sleep) as c:
+        page = await c.queues_page(Q)
+        assert page.entries
+        assert await c.queue("nie-ma-takiej") is None  # 404 dla id: bez szukania w 1.3
+    last = fake_nfz.calls[settings.nfz_max_retries]
+    assert last.url.host == "api.nfz.gov.pl" and last.url.path == "/app-itl-api/queues"
+    assert last.url.params["api-version"] == "1.3"
+    assert all(
+        c.url.host == "apinfz.nfz.gov.pl" for c in fake_nfz.calls[: settings.nfz_max_retries]
+    )
+
+
+async def test_benefits_dictionary_falls_back_to_bundled_names(
+    settings: Settings, fake_nfz: FakeNfz
+) -> None:
+    async def no_sleep(_: float) -> None:
+        return None
+
+    fake_nfz.fail_with = [503] * (settings.nfz_max_retries * 2)
+    async with NfzClient(settings, transport=fake_nfz.transport(), sleep=no_sleep) as c:
+        names = await c.benefits("okulist")
+    assert "ŚWIADCZENIA Z ZAKRESU OKULISTYKI" in names
 
 
 async def test_network_errors_are_retried(settings: Settings) -> None:

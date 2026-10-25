@@ -165,13 +165,10 @@ def test_every_synonym_matches_real_nfz_names() -> None:
     Lista z API 1.4 (2026-10-20). Gdy NFZ zmieni nazwy (jak w lipcu 2026: „PORADNIA
     OKULISTYCZNA” → „ŚWIADCZENIA Z ZAKRESU OKULISTYKI”), ten test pokaże, co poprawić.
     """
-    from pathlib import Path
-
-    from termin.core.benefits import BenefitCatalog
+    from termin.core.benefits import BenefitCatalog, known_benefit_names
     from termin.core.text import fold
 
-    path = Path(__file__).parent / "fixtures" / "nfz_benefit_names_2026-10.txt"
-    names = [fold(n) for n in path.read_text("utf-8").splitlines() if n and not n.startswith("#")]
+    names = [fold(n) for n in known_benefit_names()]
     assert len(names) > 400
     missing = []
     for entry in BenefitCatalog.load().entries:
@@ -181,3 +178,29 @@ def test_every_synonym_matches_real_nfz_names() -> None:
             if not any(fold(fragment) in name for name in names):
                 missing.append(f"{entry.id}: {fragment}")
     assert missing == [], "fragmenty bez odpowiednika w nazwach NFZ: " + "; ".join(missing)
+
+
+@pytest.mark.parametrize(
+    ("text", "query"),
+    [
+        ("hepatolog", "PORADNIA HEPATOLOGICZNA"),  # nie hematolog
+        ("kardiochirurg", "PORADNIA KARDIOCHIRURGICZNA"),  # nie chirurg ogólny
+        ("proktolog", "PORADNIA PROKTOLOGICZNA"),  # nie onkolog
+        ("foniatra", "PORADNIA FONIATRYCZNA"),
+        ("genetyk", "PORADNIA GENETYCZNA"),
+        ("zez", "PORADNIA LECZENIA ZEZA"),
+        ("dializa", "STACJA DIALIZ"),
+    ],
+)
+def test_out_of_dictionary_uses_real_nfz_names(
+    catalog: BenefitCatalog, text: str, query: str
+) -> None:
+    res = catalog.resolve(text)
+    assert res.status == "fallback"
+    assert res.query == query
+
+
+def test_dictionary_still_wins_for_known_words(catalog: BenefitCatalog) -> None:
+    assert catalog.resolve("chirurg").entry is not None
+    assert catalog.resolve("kolano").status == "ambiguous"
+    assert catalog.resolve("kardio").status == "ambiguous"

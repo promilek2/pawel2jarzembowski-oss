@@ -22,7 +22,7 @@
 # `termin swiadczenia <fragment>`. Od 07.2026 NFZ nazywa część poradni „ŚWIADCZENIA Z ZAKRESU …”
 # (np. okulistyki), a wariant dla dzieci rozpoznaje po fladze, nie po nazwie (ADR-0013).
 # Każdy `query` bez `note` musi pasować do listy prawdziwych nazw
-# (tests/fixtures/nfz_benefit_names_2026-10.txt, pilnuje tego test).
+# (termin/data/nfz_benefit_names.txt, pilnuje tego test).
 
 [[benefit]]
 id = "kardiolog"

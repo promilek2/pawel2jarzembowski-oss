@@ -39,6 +39,7 @@ log = get_logger(__name__)
 
 PAGE_LIMIT = 25  # maksimum API NFZ
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+LIST_ENDPOINTS = frozenset({"/queues", "/benefits", "/localities"})
 MAX_BACKOFF_S = 30.0
 
 
@@ -139,15 +140,39 @@ class NfzClient:
             return cached
         CACHE_LOOKUPS.labels("miss").inc()
 
-        payload = await self._fetch(path, params)
+        try:
+            payload = await self._fetch(path, params)
+        except (NfzUnavailableError, NfzNotFoundError) as exc:
+            payload = await self._fallback(path, params, exc)
         self._cache.set(key, payload, ttl_s)
         return payload
 
-    async def _fetch(self, path: str, params: dict[str, str]) -> Any:
+    async def _fallback(self, path: str, params: dict[str, str], exc: NfzError) -> Any:
+        """API 1.4 nie działa (albo nie zna listy): próbujemy zapasowego API 1.3."""
+        fallback = self._settings.nfz_fallback_url
+        is_list = path in LIST_ENDPOINTS
+        if not fallback or fallback.rstrip("/") == self._settings.nfz_base_url.rstrip("/"):
+            raise exc
+        if isinstance(exc, NfzNotFoundError) and not is_list:
+            raise exc  # nieznane id kolejki: 1.3 ma inne identyfikatory, nie szukamy dalej
+        log.warning("nfz.fallback", path=path, reason=type(exc).__name__)
+        NFZ_REQUESTS.labels(path.split("/")[1], "fallback").inc()
+        return await self._fetch(path, params, base=fallback.rstrip("/"), api_version="1.3")
+
+    async def _fetch(
+        self,
+        path: str,
+        params: dict[str, str],
+        *,
+        base: str | None = None,
+        api_version: str | None = None,
+    ) -> Any:
         endpoint = path.split("/")[1] if path.count("/") else path
         full = {**params, "format": "json"}
-        if self._settings.nfz_api_version:
-            full["api-version"] = self._settings.nfz_api_version
+        version = api_version or self._settings.nfz_api_version
+        if version:
+            full["api-version"] = version
+        url = f"{base}{path}" if base else path
         attempts = self._settings.nfz_max_retries
         last_error = "brak odpowiedzi"
         for attempt in range(attempts):
@@ -157,7 +182,7 @@ class NfzClient:
                     await self._throttle()
                     started = time.perf_counter()
                     self.requests_made += 1
-                    response = await self._http.get(path, params=full)
+                    response = await self._http.get(url, params=full)
                     NFZ_LATENCY.labels(endpoint).observe(time.perf_counter() - started)
             except httpx.TransportError as exc:
                 NFZ_REQUESTS.labels(endpoint, "network_error").inc()
@@ -275,8 +300,15 @@ class NfzClient:
         return list(dict.fromkeys(names))
 
     async def benefits(self, name: str, max_pages: int = 4) -> list[str]:
-        """Nazwy świadczeń zawierające `name` (słownik NFZ)."""
-        return await self._dictionary("/benefits", {"name": name}, max_pages)
+        """Nazwy świadczeń zawierające `name` (słownik NFZ; bez niego lista wbudowana)."""
+        try:
+            return await self._dictionary("/benefits", {"name": name}, max_pages)
+        except NfzError:
+            from termin.core.benefits import known_benefit_names
+            from termin.core.text import fold
+
+            needle = fold(name)
+            return [n for n in known_benefit_names() if needle in fold(n)]
 
     async def localities(
         self, name: str, province: str | None = None, max_pages: int = 2
