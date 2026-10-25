@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Body, HTTPException, Query, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from slowapi import Limiter
@@ -29,6 +29,7 @@ from termin.store.personal import (
     PhoneReportStore,
     give_consent,
     has_consent,
+    import_personal,
     valid_queue_id,
     withdraw_consent,
 )
@@ -141,6 +142,17 @@ def build_personal_router(settings: Settings, limiter: Limiter) -> APIRouter:
         removed = withdraw_consent(conn, user.id)
         log.info("personal.consent_withdrawn")
         return {"health_consent": False, "removed": removed}
+
+    @router.post("/me/import")
+    @writes
+    async def import_backup(
+        request: Request, payload: Annotated[dict[str, Any], Body()]
+    ) -> dict[str, int]:
+        """Przywraca sprawy i notatki z pliku „Pobierz moje dane” (np. po utracie bazy)."""
+        user = consented(request)
+        result = import_personal(rt(request).conn, user.id, payload)
+        log.info("personal.imported", cases=result["cases"], notes=result["notes"])
+        return result
 
     # ------------------------------------------------------------------ „Sprawdziłem telefonicznie”
 

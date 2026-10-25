@@ -5,6 +5,7 @@ Wymagają `pip install -e ".[e2e]"` i przeglądarki Chromium (`playwright instal
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import Iterator
 
@@ -673,3 +674,21 @@ def test_help_chat_show_me_opens_the_right_place(page) -> None:  # type: ignore[
     page.wait_for_selector("#chat-log .chat-assistant:nth-of-type(4) .chat-show")
     page.locator("#chat-log .chat-show").last.click()
     assert page.evaluate("() => document.activeElement.id") == "accessible"
+
+
+def test_restore_cases_from_backup_file(page) -> None:  # type: ignore[no-untyped-def]
+    _register(page, "kopia@example.com")
+    page.click("#account-btn")
+    page.wait_for_selector("#account-dialog[open] #account-restore")
+    backup = {"personal": {"cases": [{"label": "Ortopeda", "visit_date": "2026-12-10"}],
+                           "facility_notes": []}}  # fmt: skip
+    raw = json.dumps(backup).encode()
+    file = {"name": "termin.json", "mimeType": "application/json", "buffer": raw}
+    page.locator("#account-restore + input[type=file]").set_input_files(files=[file])
+    page.wait_for_selector("#health-dialog[open]")
+    page.check("#health-check")
+    page.click("#health-accept")
+    page.wait_for_selector("#account-status:has-text('Przywrócono: spraw 1')")
+    page.click("#account-cases")
+    page.wait_for_selector("#cases-dialog[open] .case")
+    assert "Ortopeda" in page.locator("#cases-list").inner_text()

@@ -349,7 +349,10 @@
     "new_email": "New email address",
     "save_email": "Save address",
     "email_changed": "Email address changed.",
-    "email_changed_verify": "Address changed. We sent a confirmation link to the new address."
+    "email_changed_verify": "Address changed. We sent a confirmation link to the new address.",
+    "restore": "Restore cases from file",
+    "restore_bad": "This is not a file from “Download my data”.",
+    "restored": "Restored: {cases} cases, {notes} notes."
   },
   "storage": {
     "title": "No tracking",

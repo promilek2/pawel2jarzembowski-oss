@@ -352,3 +352,75 @@ def export_personal(conn: sqlite3.Connection, user_id: int) -> dict[str, Any]:
         "phone_reports": PhoneReportStore(conn).for_user(user_id),
         "push_devices": [dict(r) for r in devices],
     }
+
+
+MAX_IMPORT_ITEMS = 500
+
+
+def _parse_date(value: Any) -> dt.date | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return dt.date.fromisoformat(value[:10])
+    except ValueError:
+        return None
+
+
+def import_personal(conn: sqlite3.Connection, user_id: int, data: dict[str, Any]) -> dict[str, int]:
+    """Przywraca sprawy i notatki z pliku eksportu (`/api/account/export`).
+
+    Przyjmuje cały eksport albo jego część `personal`. Pomija to, co już jest (ta sama sprawa:
+    nazwa, placówka i data wizyty; notatka do tej samej poradni), więc import można powtórzyć.
+    Zgłoszeń z telefonu nie przywracamy: liczą się tylko z ostatnich dni.
+    """
+    nested = data.get("personal")
+    personal: dict[str, Any] = nested if isinstance(nested, dict) else data
+    raw_cases, raw_notes = personal.get("cases"), personal.get("facility_notes")
+    cases_in: list[Any] = raw_cases if isinstance(raw_cases, list) else []
+    notes_in: list[Any] = raw_notes if isinstance(raw_notes, list) else []
+    store = CaseStore(conn)
+    existing = {(c["label"], c["provider"], c["visit_date"]) for c in store.list_for(user_id)}
+    added_cases = skipped = 0
+    for item in cases_in[:MAX_IMPORT_ITEMS]:
+        if not isinstance(item, dict) or not isinstance(item.get("label"), str):
+            skipped += 1
+            continue
+        visit = _parse_date(item.get("visit_date"))
+        label = _clean(item["label"], 200)
+        provider = _clean(item["provider"], 300) if isinstance(item.get("provider"), str) else None
+        key = (label, provider, visit.isoformat() if visit else None)
+        if key in existing:
+            skipped += 1
+            continue
+        fields: dict[str, Any] = {
+            k: item[k] if isinstance(item.get(k), str) else None
+            for k in ("label", "provider", "address", "phone", "note")
+        }
+        fields["visit_date"] = visit
+        if item.get("status") in CASE_STATUSES:
+            fields["status"] = item["status"]
+        if isinstance(item.get("queue_id"), str) and valid_queue_id(item["queue_id"]):
+            fields["queue_id"] = item["queue_id"]
+        try:
+            store.create(user_id, fields)
+        except PersonalDataError:
+            skipped += 1
+            continue
+        existing.add(key)
+        added_cases += 1
+    notes = NoteStore(conn)
+    added_notes = 0
+    for item in notes_in[:MAX_IMPORT_ITEMS]:
+        if not isinstance(item, dict):
+            continue
+        qid, note = item.get("queue_id"), item.get("note")
+        if not (isinstance(qid, str) and isinstance(note, str) and valid_queue_id(qid)):
+            continue
+        if notes.get_many(user_id, [qid]):
+            continue
+        try:
+            notes.put(user_id, qid, note)
+        except PersonalDataError:
+            continue
+        added_notes += 1
+    return {"cases": added_cases, "notes": added_notes, "skipped": skipped}

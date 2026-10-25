@@ -446,3 +446,37 @@ async def test_oversized_payload_keeps_device(runtime: Runtime, browser: Browser
     async with httpx.AsyncClient() as client:
         assert not await notifier.send_to(store.for_user(user.id)[0], b"x" * 5000, client)
     assert store.count(user.id) == 1
+
+
+def test_import_backup_restores_cases_and_notes(web: TestClient) -> None:
+    h = login(web)
+    consent(web, h)
+    web.post(
+        "/api/cases",
+        json={"label": "okulista", "provider": "Poradnia A", "visit_date": "2026-11-05"},
+        headers=h,
+    )
+    web.put("/api/notes/q-1", json={"note": "dzwonić po 7:30"}, headers=h)
+    backup = web.get("/api/account/export").json()
+    # baza „znika” (np. restart na Render bez dysku): nowe konto i import z pliku
+    h2 = login(web, "nowe@example.com")
+    assert web.post("/api/me/import", json=backup, headers=h2).status_code == 428
+    consent(web, h2)
+    res = web.post("/api/me/import", json=backup, headers=h2)
+    assert res.status_code == 200, res.text
+    assert res.json() == {"cases": 1, "notes": 1, "skipped": 0}
+    cases = web.get("/api/cases").json()
+    assert cases[0]["label"] == "okulista" and cases[0]["visit_date"] == "2026-11-05"
+    assert web.get("/api/notes?ids=q-1").json() == {"q-1": "dzwonić po 7:30"}
+    again = web.post("/api/me/import", json=backup["personal"], headers=h2).json()
+    assert again == {"cases": 0, "notes": 0, "skipped": 1}
+
+
+def test_import_ignores_garbage(web: TestClient) -> None:
+    h = login(web)
+    consent(web, h)
+    data = {"cases": [None, {"label": 5}, {"label": "x", "provider": 7, "visit_date": "zła"}],
+            "facility_notes": [{"queue_id": "../etc", "note": "x"}, "y"]}  # fmt: skip
+    res = web.post("/api/me/import", json=data, headers=h)
+    assert res.json() == {"cases": 1, "notes": 0, "skipped": 2}
+    assert web.post("/api/me/import", json=[1, 2], headers=h).status_code == 422

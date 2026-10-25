@@ -351,7 +351,10 @@
     "new_email": "Nowy adres e-mail",
     "save_email": "Zapisz adres",
     "email_changed": "Adres e-mail zmieniony.",
-    "email_changed_verify": "Adres zmieniony. Wysłaliśmy link potwierdzający na nowy adres."
+    "email_changed_verify": "Adres zmieniony. Wysłaliśmy link potwierdzający na nowy adres.",
+    "restore": "Przywróć sprawy z pliku",
+    "restore_bad": "To nie jest plik z „Pobierz moje dane”.",
+    "restored": "Przywrócono: spraw {cases}, notatek {notes}."
   },
   "storage": {
     "title": "Bez śledzenia",

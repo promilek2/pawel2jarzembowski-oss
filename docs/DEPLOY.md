@@ -212,6 +212,8 @@ Ograniczenia darmowego planu:
 
 - usługa zasypia po 15 min bez ruchu, pierwsze wejście potem trwa około minuty,
 - bez dysku: baza (historia, obserwacje, konta) znika przy restarcie i każdym wdrożeniu.
+  „Moje sprawy” i notatki odzyskasz z pliku: przed wdrożeniem „Konto” → „Pobierz moje dane”,
+  potem nowe konto i „Przywróć sprawy z pliku”.
   Na stałe: plan płatny i w `render.yaml` odkomentuj sekcję `disk`,
 - obserwator powiadomień nie działa niezawodnie, bo usługa śpi,
   (obejście: darmowy monitoring, np. UptimeRobot albo cron-job.org, który co 10 minut

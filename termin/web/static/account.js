@@ -45,8 +45,27 @@ async function openAccount() {
       } }, t("account.resend")));
   }
   $("#account-status").textContent = "";
+  addRestoreButton();
   await Promise.all([renderAccountSubs(), renderSecurity(), renderSessions(), renderPush()]);
   $("#account-dialog").showModal();
+}
+
+// „Przywróć z pliku”: sprawy i notatki z pliku „Pobierz moje dane” (np. po utracie bazy
+// na serwerze bez stałego dysku). Import pomija to, co już jest.
+function addRestoreButton() {
+  if ($("#account-restore")) return;
+  const file = h("input", { type: "file", accept: "application/json,.json", hidden: true });
+  const button = h("button", { type: "button", id: "account-restore", class: "btn btn-outline", onclick: () => file.click() }, t("account.restore"));
+  file.addEventListener("change", async () => {
+    const chosen = file.files?.[0];
+    file.value = "";
+    if (!chosen) return;
+    let data;
+    try { data = JSON.parse(await chosen.text()); } catch { $("#account-status").textContent = t("account.restore_bad"); return; }
+    const r = await personalApi("/api/me/import", { method: "POST", json: data });
+    $("#account-status").textContent = r.ok ? t("account.restored", { cases: r.body.cases, notes: r.body.notes }) : errorText(r.body);
+  });
+  $(`section[aria-labelledby="account-data-title"] .account-actions`).append(button, file);
 }
 
 async function renderSecurity() {
