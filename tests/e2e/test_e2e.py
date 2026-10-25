@@ -558,3 +558,18 @@ def test_send_list_copies_short_text(browser, base_url) -> None:  # type: ignore
     assert "1. " in text and "tel. " in text and "5. " in text and "6. " not in text
     assert "prognoza NFZ" in text and base_url in text
     context.close()
+
+
+def test_theme_switch_persists(page) -> None:  # type: ignore[no-untyped-def]
+    page.select_option("#theme", "dark")
+    assert page.evaluate("() => document.documentElement.dataset.theme") == "dark"
+    bg = page.evaluate("() => getComputedStyle(document.body).backgroundColor")
+    page.reload()
+    page.wait_for_selector("html[data-theme=dark]", state="attached")
+    assert page.locator("#theme").input_value() == "dark"
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    assert _axe_violations(page) == []
+    page.select_option("#theme", "auto")
+    assert page.evaluate("() => document.documentElement.dataset.theme") is None
+    assert page.evaluate("() => getComputedStyle(document.body).backgroundColor") != bg

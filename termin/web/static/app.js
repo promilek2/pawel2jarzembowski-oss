@@ -886,6 +886,13 @@ function setLargeText(on) {
   STORE.set("large", on);
 }
 
+function setTheme(theme) {
+  if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+  else delete document.documentElement.dataset.theme;
+  $("#theme").value = document.documentElement.dataset.theme || "auto";
+  STORE.set("theme", document.documentElement.dataset.theme || null);
+}
+
 function applyUrlParams() {
   const q = new URLSearchParams(location.search);
   if (!q.get("q")) return false;
@@ -936,6 +943,7 @@ function bind() {
     });
   }
   $("#lang").addEventListener("change", (e) => { STORE.set("lang", e.target.value); loadLang(e.target.value); });
+  $("#theme").addEventListener("change", (e) => setTheme(e.target.value));
   $("#large-text").addEventListener("click", () => setLargeText(!document.documentElement.classList.contains("large-text")));
   $("#toggle-map").addEventListener("click", () => insights().then((m) => m.toggleMap()));
   $("#show-stats").addEventListener("click", () => insights().then((m) => m.toggleStats()));
@@ -966,6 +974,7 @@ function bind() {
 async function init() {
   setLargeText(Boolean(STORE.get("large", false)));
   bind();
+  setTheme(STORE.get("theme"));
   // Polski domyślnie; ukraiński podpowiadamy, jeśli przeglądarka jest po ukraińsku.
   const preferred = STORE.get("lang") || ((navigator.language || "").startsWith("uk") ? "uk" : "pl");
   const [config] = await Promise.all([fetch("/api/config").then((r) => r.json()), loadLang(LANGS.includes(preferred) ? preferred : "pl")]);

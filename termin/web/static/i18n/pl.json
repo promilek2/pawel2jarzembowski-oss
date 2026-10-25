@@ -206,7 +206,11 @@
   },
   "settings": {
     "large_text": "Duży tekst",
-    "language": "Język"
+    "language": "Język",
+    "theme": "Motyw",
+    "theme_auto": "Jak w systemie",
+    "theme_light": "Jasny",
+    "theme_dark": "Ciemny"
   },
   "footer": {
     "disclaimer": "Termin nie jest oficjalną aplikacją NFZ i nie udziela porad medycznych. Pokazujemy dane z publicznego API NFZ „Terminy leczenia”, które placówki aktualizują mniej więcej raz w tygodniu. Zawsze potwierdź termin telefonicznie.",

@@ -86,6 +86,6 @@ informację. Rozmowy nie zapisujemy ani w bazie, ani w przeglądarce, a jej tre�
 ## Panel web
 
 Brak ciasteczek śledzących i analityki. Ciasteczko sesji powstaje tylko po zalogowaniu.
-Preferencje (język, tryb „duży tekst”) zapisujemy w pamięci przeglądarki. Ostatnie wyniki
+Preferencje (język, tryb „duży tekst”, motyw) zapisujemy w pamięci przeglądarki. Ostatnie wyniki
 offline zapisujemy wyłącznie po wyrażeniu zgody w banerze (szczegóły: `/cookies`). Ograniczenie liczby zapytań (rate limiting) korzysta z adresu IP
 tylko w pamięci procesu, bez zapisu.

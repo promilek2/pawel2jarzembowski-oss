@@ -40,6 +40,9 @@ def running_server(port: int | None = None) -> Iterator[str]:
             rate_limit="1000/minute",
             # wszystkie testy idą z 127.0.0.1, więc limity na IP podnosimy
             login_rate_limit="1000/minute",
+            rate_limit_light="10000/minute",
+            ai_rate_limit="1000/minute",
+            subscribe_rate_limit="1000/hour",
             global_requests_per_minute=100_000,
         )
         app = create_app(
