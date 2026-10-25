@@ -45,6 +45,7 @@ from termin.store.snapshots import to_csv, to_json
 from termin.store.subscriptions import SubscriptionStore
 from termin.web.assistant import build_assistant_router
 from termin.web.auth import Mailer, build_auth_router, csrf_guard, current_user, default_mailer
+from termin.web.compress import SelectiveGZipMiddleware
 from termin.web.ics import call_reminder
 from termin.web.legal import LEGAL_PAGES, missing_operator_fields, render_legal, security_txt
 from termin.web.personal import build_personal_router
@@ -575,6 +576,7 @@ def create_app(
         return response
 
     # Kolejność: ostatnio dodany działa pierwszy (najbardziej zewnętrzny).
+    app.add_middleware(SelectiveGZipMiddleware)
     app.add_middleware(BodyLimitMiddleware, max_bytes=max_body)
     if settings.allowed_hosts:
         app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)

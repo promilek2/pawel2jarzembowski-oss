@@ -532,3 +532,12 @@ def test_help_chat_in_ukrainian(page) -> None:  # type: ignore[no-untyped-def]
     page.locator("#chat-suggest button").nth(1).click()
     page.wait_for_selector("#chat-log .chat-assistant:not(.chat-busy)")
     assert "Встановити" in page.locator("#chat-log .chat-assistant").last.inner_text()
+
+
+def test_help_chat_suggestions_follow_results(page) -> None:  # type: ignore[no-untyped-def]
+    search(page, "okulista dorośli")
+    page.wait_for_selector("#result-list li")
+    page.click("#help-btn")
+    page.wait_for_selector("#chat-panel[open] #chat-suggest button")
+    first = page.locator("#chat-suggest button").first.inner_text()
+    assert "IKP" in first or "przybliżona" in first

@@ -500,6 +500,9 @@
     "s1": "Co znaczy „prognoza NFZ”?",
     "s2": "Jak zainstalować aplikację?",
     "s3": "Jak obserwować termin?",
-    "pill": "Pomoc"
+    "pill": "Pomoc",
+    "s_none": "Dlaczego nie ma wyników?",
+    "s_cer": "Co znaczy „Zapisy przez IKP”?",
+    "s_approx": "Dlaczego odległość jest przybliżona?"
   }
 }

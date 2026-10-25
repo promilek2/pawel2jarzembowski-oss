@@ -311,3 +311,14 @@ def test_search_returns_transport_and_accessibility(client: TestClient) -> None:
     assert {"wheelchairs", "automatic_door"} <= set(data["results"][0]["accessibility"])
     only = client.get("/api/search", params={**params, "accessible": "true"}).json()
     assert only["results"] and all(r["barrier_free"] for r in only["results"])
+
+
+def test_gzip_only_for_responses_without_secrets(client: TestClient) -> None:
+    gz = {"Accept-Encoding": "gzip"}
+    app_js = client.get("/static/app.js", headers=gz)
+    assert app_js.headers.get("content-encoding") == "gzip"
+    assert "Content-Security-Policy" in app_js.headers
+    assert client.get("/", headers=gz).headers.get("content-encoding") == "gzip"
+    me = client.get("/api/auth/me", headers=gz)
+    assert "content-encoding" not in me.headers
+    assert client.get("/api/config", headers=gz).headers.get("content-encoding") is None

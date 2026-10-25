@@ -498,6 +498,9 @@
     "s1": "What does “NFZ forecast” mean?",
     "s2": "How do I install the app?",
     "s3": "How do I watch for an earlier date?",
-    "pill": "Help"
+    "pill": "Help",
+    "s_none": "Why are there no results?",
+    "s_cer": "What does “Book via IKP” mean?",
+    "s_approx": "Why is the distance approximate?"
   }
 }

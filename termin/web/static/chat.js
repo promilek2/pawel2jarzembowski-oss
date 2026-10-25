@@ -82,15 +82,13 @@ function build() {
     input.value = "";
     ask(q);
   });
-  const suggestions = ["chat.s1", "chat.s2", "chat.s3"].map((key) =>
-    h("button", { type: "button", class: "chip", onclick: () => ask(t(key)) }, t(key)));
   const box = h("dialog", { id: "chat-panel", class: "chat-panel", "aria-labelledby": "chat-title" },
     h("div", { class: "chat-head" },
       h("h2", { id: "chat-title" }, t("chat.title")),
       h("button", { type: "button", class: "icon-close", "aria-label": t("common.close"), onclick: closeChat }, "×")),
     h("p", { id: "chat-intro", class: "chat-intro" }),
     h("div", { id: "chat-log", class: "chat-log", role: "log", "aria-live": "polite", tabindex: "0", "aria-label": t("chat.title") }),
-    h("div", { id: "chat-suggest", class: "chat-suggest" }, ...suggestions),
+    h("div", { id: "chat-suggest", class: "chat-suggest" }),
     h("div", { id: "chat-notice", class: "chat-notice", hidden: true },
       h("p", {}, t("chat.privacy_ai")),
       h("button", { type: "button", class: "btn btn-ink", onclick: () => { noticeAccepted = true; renderGate(); input.focus(); } }, t("chat.ok"))),
@@ -99,6 +97,21 @@ function build() {
   box.addEventListener("keydown", (e) => { if (e.key === "Escape") { e.preventDefault(); closeChat(); } });
   document.body.append(box);
   return box;
+}
+
+// Podpowiedzi pytań: najpierw te, które pasują do tego, co widać w wynikach.
+function suggestionKeys() {
+  const results = state.last?.results;
+  const keys = [];
+  if (results && !results.length) keys.push("chat.s_none");
+  if (results?.some((r) => r.in_cer)) keys.push("chat.s_cer");
+  if (results?.some((r) => r.location_approx)) keys.push("chat.s_approx");
+  return [...keys, "chat.s1", "chat.s2", "chat.s3"].slice(0, 3);
+}
+
+function renderSuggest() {
+  $("#chat-suggest").replaceChildren(...suggestionKeys().map((key) =>
+    h("button", { type: "button", class: "chip", onclick: () => ask(t(key)) }, t(key))));
 }
 
 function closeChat() {
@@ -118,6 +131,7 @@ export async function toggleChat() {
   if (panel() && panel().dataset.lang !== state.lang) panel().remove();
   const box = panel() || build();
   box.dataset.lang = state.lang;
+  renderSuggest();
   renderGate();
   box.show();
   $("#help-btn").setAttribute("aria-expanded", "true");
